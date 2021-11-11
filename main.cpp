@@ -11,21 +11,68 @@ using namespace cv;
 /**
  * Get ROI of the Image
  * @param src -- Mat image
- * @param y_coordinate -- upper bound of ROI
  * @return Mat dst -- Rect(0, y_coordinate, IMAGE_WIDTH, IMAGE_HEIGHT - y_coordinate)
  */
-Mat getRoi(Mat src, int y_coordinate = 430)
+Mat get_roi(const Mat& src)
 {
     Mat dst;
-    Rect roi(0, y_coordinate, src.cols, src.rows - y_coordinate);
+    int delta = 0; // for PATH1 100, for PATH2 0 -- чтобы обрезать капот на первом видео
+    int y_coordinate = 500; // for PATH 430, for PATH2 500
+    Rect roi(0, y_coordinate, src.cols, src.rows - y_coordinate - delta);
     dst = src(roi);
 
     return dst;
 }
 
 
-template <class T>
-void bird_view(T PATH)
+Point get_vanishing_point()
+{
+    return Point(595, 422);  // for PATH1
+}
+
+
+Mat get_bird_view(const Mat& frame)
+{
+    Mat frame_roi = get_roi(frame);
+
+    Point pt1(0, frame_roi.rows);
+    Point pt2(frame_roi.cols, frame_roi.rows);
+    Point pt3(0, 0);
+    Point pt4(frame_roi.cols, 0);
+
+    int delta = 71;
+
+//    Point pt11(569, frame_roi.rows);
+//    Point pt22(711, frame_roi.rows);
+    Point pt11(frame_roi.cols / 2 - delta, frame_roi.rows);
+    Point pt22(frame_roi.cols / 2 + delta, frame_roi.rows);
+
+    Point pt33(0, 0);
+    Point pt44(frame_roi.cols, 0);
+
+    std::vector<Point2f> dst_corners(4), source(4);
+
+    source[0] = pt1;
+    source[1] = pt2;
+    source[2] = pt3;
+    source[3] = pt4;
+
+    dst_corners[0] = pt11;
+    dst_corners[1] = pt22;
+    dst_corners[2] = pt33;
+    dst_corners[3] = pt44;
+
+    Mat M = getPerspectiveTransform(source, dst_corners);
+
+    Mat warped_image(frame_roi.rows, frame_roi.cols, frame_roi.type());
+    warpPerspective(frame_roi, warped_image, M, warped_image.size()); // do perspective transformation
+
+    //imshow("Warped Image", warped_image);
+    return warped_image;
+}
+
+
+void find_lines(const std::string& PATH)
 {
     VideoCapture capture(PATH);
     if (!capture.isOpened())
@@ -40,63 +87,15 @@ void bird_view(T PATH)
     {
         capture >> frame;
 
-        Mat frame_roi = getRoi(frame);
+        Mat frame_birdview = get_bird_view(frame);
 
-        Point pt1(0, frame_roi.rows);
-        Point pt2(frame_roi.cols, frame_roi.rows);
-        Point pt3(0, 0);
-        Point pt4(frame_roi.cols, 0);
+        Mat frame_canny;
+        Canny(frame_birdview, frame_canny, 130, 200);
 
-        Point pt11(569, frame_roi.rows);
-        Point pt22(711, frame_roi.rows);
-        Point pt33(0, 0);
-        Point pt44(frame_roi.cols, 0);
+        imshow("source", frame);
+        imshow("birdview", frame_birdview);
+        //imshow("canny", frame_canny);
 
-        std::vector<Point2f> dst_corners(4), source(4);
-
-        source[0] = pt1;
-        source[1] = pt2;
-        source[2] = pt3;
-        source[3] = pt4;
-
-        dst_corners[0] = pt11;
-        dst_corners[1] = pt22;
-        dst_corners[2] = pt33;
-        dst_corners[3] = pt44;
-
-        Mat M = getPerspectiveTransform(source, dst_corners);
-
-        Mat warped_image(frame_roi.rows, frame_roi.cols, frame_roi.type());
-        warpPerspective(frame_roi, warped_image, M, warped_image.size()); // do perspective transformation
-
-        imshow("Warped Image", warped_image);
-
-        int stop = waitKey(24);
-        if (stop == 27)
-        {
-            break;
-        }
-    }
-}
-
-
-template <class T>
-void test(T PATH)
-{
-    VideoCapture capture(PATH);
-    if (!capture.isOpened())
-    {
-        std::cerr<<"Error"<<std::endl;
-        return;
-    }
-
-    Mat src;
-
-    while (true)
-    {
-        capture >> src;
-
-        getRoi(src);
 
         int k = waitKey(24);
         if (k == 27)
@@ -107,11 +106,55 @@ void test(T PATH)
 }
 
 
+void play_video(const std::string& PATH)
+{
+    VideoCapture capture(PATH);
+    if (!capture.isOpened())
+    {
+        std::cerr << "Error" << std::endl;
+        return;
+    }
+
+    Mat frame;
+
+    while (true)
+    {
+        capture >> frame;
+
+        imshow("frame", frame);
+
+        int k = waitKey(24);
+        if (k == 107)
+        {
+            while (true)
+            {
+                int l = waitKey(0);
+                if (l == 107)
+                {
+                    break;
+                }
+            }
+
+        }
+        if (k == 27)
+        {
+            break;
+        }
+    }
+}
+
+
 int main() {
-    const std::string PATH = "../videos/video.mp4";
+    const std::string PATH1 = "../videos/video.mp4";
+    const std::string PATH2 = "../videos/video2.mp4";
 
-    //test(PATH);
+    /**
+     * Различие в PATH
+     * 1) В фукнции get_roi переменная y_coordinate
+     * 2) В функции get_roi переменная delta
+     */
 
-    bird_view(PATH);
+    find_lines(PATH2);
+    //play_video(PATH1);
     return 0;
 }
