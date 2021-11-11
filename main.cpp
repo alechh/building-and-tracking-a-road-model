@@ -40,13 +40,10 @@ Mat get_bird_view(const Mat& frame)
     Point pt3(0, 0);
     Point pt4(frame_roi.cols, 0);
 
-    int delta = 71;
+    int delta = 50; // 71 for PATH1, 50 for PATH2
 
-//    Point pt11(569, frame_roi.rows);
-//    Point pt22(711, frame_roi.rows);
     Point pt11(frame_roi.cols / 2 - delta, frame_roi.rows);
     Point pt22(frame_roi.cols / 2 + delta, frame_roi.rows);
-
     Point pt33(0, 0);
     Point pt44(frame_roi.cols, 0);
 
@@ -152,6 +149,7 @@ int main() {
      * Различие в PATH
      * 1) В фукнции get_roi переменная y_coordinate
      * 2) В функции get_roi переменная delta
+     * 3) В функции get_bird_view переменная delta
      */
 
     find_lines(PATH2);
