@@ -6,7 +6,10 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(test_functions_for_vkr main.cpp)
 
+include_directories(src)
 
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( test_functions_for_vkr ${OpenCV_LIBS} )
+
+add_subdirectory(Tests)
