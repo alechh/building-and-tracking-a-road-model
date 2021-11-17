@@ -140,26 +140,28 @@ void play_video(const std::string& PATH)
     }
 }
 
-std::vector<double> getCurvature(std::vector<cv::Point> const& vecContourPoints, int step)
+std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step)
 {
-    std::vector< double > vecCurvature( vecContourPoints.size() );
+    std::vector<double> vecCurvature(vecContourPoints.size());
 
     if (vecContourPoints.size() < step)
+    {
         return vecCurvature;
+    }
 
     auto frontToBack = vecContourPoints.front() - vecContourPoints.back();
     bool isClosed = ((int)std::max(std::abs(frontToBack.x), std::abs(frontToBack.y))) <= 1;
 
     cv::Point2f pplus, pminus;
     cv::Point2f f1stDerivative, f2ndDerivative;
-    for (int i = 0; i < vecContourPoints.size(); i++ )
+    for (int i = 0; i < vecContourPoints.size(); i++)
     {
         const cv::Point2f& pos = vecContourPoints[i];
 
         int maxStep = step;
         if (!isClosed)
         {
-            maxStep = std::min(std::min(step, i), (int)vecContourPoints.size()-1-i);
+            maxStep = std::min(std::min(step, i), (int)vecContourPoints.size() - 1 - i);
             if (maxStep == 0)
             {
                 vecCurvature[i] = std::numeric_limits<double>::infinity();
@@ -172,18 +174,17 @@ std::vector<double> getCurvature(std::vector<cv::Point> const& vecContourPoints,
         pminus = vecContourPoints[iminus < 0 ? iminus + vecContourPoints.size() : iminus];
         pplus = vecContourPoints[iplus > vecContourPoints.size() ? iplus - vecContourPoints.size() : iplus];
 
-
-        f1stDerivative.x = (pplus.x -           pminus.x) / (iplus-iminus);
-        f1stDerivative.y = (pplus.y -           pminus.y) / (iplus-iminus);
-        f2ndDerivative.x = (pplus.x - 2*pos.x + pminus.x) / ((iplus-iminus)/2*(iplus-iminus)/2);
-        f2ndDerivative.y = (pplus.y - 2*pos.y + pminus.y) / ((iplus-iminus)/2*(iplus-iminus)/2);
+        f1stDerivative.x = (pplus.x - pminus.x) / float(iplus - iminus);
+        f1stDerivative.y = (pplus.y - pminus.y) / float(iplus - iminus);
+        f2ndDerivative.x = (pplus.x - 2 * pos.x + pminus.x) / float(float(iplus - iminus) / 2 * float(iplus - iminus) / 2);
+        f2ndDerivative.y = (pplus.y - 2 * pos.y + pminus.y) / float(float(iplus - iminus) / 2 * float(iplus - iminus) / 2);
 
         double curvature2D;
-        double divisor = f1stDerivative.x*f1stDerivative.x + f1stDerivative.y*f1stDerivative.y;
-        if ( std::abs(divisor) > 10e-8 )
+        double divisor = f1stDerivative.x * f1stDerivative.x + f1stDerivative.y * f1stDerivative.y;
+        if (std::abs(divisor) > 10e-15)  // 10e-8
         {
-            curvature2D =  std::abs(f2ndDerivative.y*f1stDerivative.x - f2ndDerivative.x*f1stDerivative.y) /
-                           pow(divisor, 3.0/2.0 )  ;
+            curvature2D =  std::abs(f2ndDerivative.y * f1stDerivative.x - f2ndDerivative.x * f1stDerivative.y) /
+                           pow(divisor, 3.0 / 2.0 )  ;
         }
         else
         {
@@ -205,7 +206,7 @@ void draw_contours_using_curvature(Mat &dst, const std::vector<Point>& contour, 
 }
 
 
-void calculation_of_curvature(const std::string& PATH)
+void test_calculation_of_curvature(const std::string& PATH)
 {
     VideoCapture capture(PATH);
     if (!capture.isOpened())
@@ -228,7 +229,7 @@ void calculation_of_curvature(const std::string& PATH)
 
         for (int i = 0; i < contours.size(); i++)
         {
-            std::vector<double> cucc_curvature = getCurvature(contours[i], 1);
+            std::vector<double> cucc_curvature = calculate_curvature(contours[i], 1);
             draw_contours_using_curvature(frame_contours, contours[i], cucc_curvature);
         }
 
@@ -240,6 +241,87 @@ void calculation_of_curvature(const std::string& PATH)
             break;
         }
     }
+}
+
+
+std::vector<Point> get_circle_contour(const int& R)
+{
+    std::vector<Point> contour;
+    double t = 0;
+    double epsilon = 10e-4;
+    while (t < 2 * CV_PI)
+    {
+        contour.emplace_back(500 + R * cos(t),300 + R * sin(t));
+        t += epsilon;
+        //std::cout << "t = " << t << std::endl;
+    }
+    return contour;
+}
+
+
+void test_circle_curvature()
+{
+    // Curvature of circle = 1/R, where R -- radius of the circle
+
+    const int radius = 10000000;
+
+    Mat image_contours(600, 1000, 16);
+
+    std::vector<double> circle_curvature;
+
+    std::vector< std::vector<Point> > contours;
+    std::vector<Point> circle_contour = get_circle_contour(radius);
+    contours.emplace_back(circle_contour);
+    std::cout << "Circle contour size = " << circle_contour.size() << std::endl;
+
+//        for (const auto& i : circle_contour)
+//        {
+//            std::cout << i << std::endl;
+//        }
+
+    drawContours(image_contours, contours, 0, Scalar(255, 255, 255));
+    circle_curvature = calculate_curvature(circle_contour, 1);
+
+    double max_error = 0, min_error = 1;
+    int count_inf = 0, count_zero = 0;
+
+    for (auto i : circle_curvature)
+    {
+        if (i == circle_curvature[0])
+        {
+            continue;
+        }
+
+        //std::cout << "i = " << i << std::endl;
+
+        if (i == std::numeric_limits<double>::infinity())
+        {
+            count_inf++;
+            continue;
+        }
+        if (i == 0)
+        {
+            count_zero++;
+            continue;
+        }
+
+        double error = std::abs(1.0 / radius - i);
+
+        if (error > max_error)
+        {
+            max_error = error;
+        }
+        if (error < min_error)
+        {
+            min_error = error;
+        }
+        //std::cout << "Error = " << error << std::endl;
+    }
+    std::cout <<  "Max Error = " << max_error << std::endl;
+    std::cout << "Min Error = " << min_error << std::endl;
+    std::cout << std::endl << "Number of inf = " << count_inf << std::endl;
+    std::cout << "Number of zero = " << count_zero << std::endl;
+    std::cout << "Number of non inf/zero = " << circle_contour.size() - count_zero - count_inf << std::endl;
 }
 
 
@@ -257,6 +339,8 @@ int main()
 
     //find_lines(PATH2);
     //play_video(PATH1);
-    calculation_of_curvature(PATH2);
+    //calculation_of_curvature(PATH2);
+    test_circle_curvature();
+
     return 0;
 }
