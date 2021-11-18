@@ -2,7 +2,7 @@
 // Created by alechh on 17.11.2021.
 //
 
-#include "utils.h"
+#include "Utils.h"
 
 std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step)
 {

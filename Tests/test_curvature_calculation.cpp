@@ -2,7 +2,7 @@
 // Created by alechh on 17.11.2021.
 //
 #include "gtest/gtest.h"
-#include "utils.h"
+#include "Utils.cpp"
 
 std::vector<cv::Point> get_circle_contour(const int& R)
 {
