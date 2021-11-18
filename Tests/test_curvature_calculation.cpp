@@ -221,7 +221,7 @@ TEST(CurvatureTest, ParabolaCurvature)
             continue;
         }
 
-        double exactValue = 6.0 / pow(1 + 36 * pow(x ,2), 1.5);
+        double exactValue = 6.0 / pow(1 + 36 * pow(x, 2), 1.5);
         EXPECT_EQ(parabolaCurvature[i],  exactValue);
 
         x += x_step;
@@ -229,4 +229,17 @@ TEST(CurvatureTest, ParabolaCurvature)
     }
 
     EXPECT_EQ(count_inf, 0);
+}
+
+
+TEST(CurvatureTest, EmptyContour)
+{
+    std::vector<double> curvature;
+
+    std::vector<cv::Point> empty_contour;
+
+    Utils ut;
+    curvature = ut.calculate_curvature(empty_contour, 1);
+
+    EXPECT_EQ(curvature.size(), 0);
 }
