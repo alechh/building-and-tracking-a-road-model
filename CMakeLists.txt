@@ -1,12 +1,23 @@
 cmake_minimum_required(VERSION 3.20)
-project(test_functions_for_vkr)
+project(building-and-tracking-a-road-model)
 
 set(CMAKE_CXX_STANDARD 14)
 
+add_executable(building-and-tracking-a-road-model
+		src/main.cpp
+		src/Utils.cpp)
 
-add_executable(test_functions_for_vkr main.cpp)
+# include_directories(src)
 
+target_include_directories(
+	building-and-tracking-a-road-model
+	PUBLIC
+	src)
 
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
-target_link_libraries( test_functions_for_vkr ${OpenCV_LIBS} )
+target_link_libraries(building-and-tracking-a-road-model ${OpenCV_LIBS} )
+
+enable_testing()
+
+add_subdirectory(Tests)
