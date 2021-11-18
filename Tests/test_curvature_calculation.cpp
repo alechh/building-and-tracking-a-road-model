@@ -55,8 +55,6 @@ TEST(CurvatureTest, CircleCurvature)
 {
     // Curvature of circle = 1/R, where R -- radius of the circle
 
-    Utils ut;
-
     const int radius = 10000000;
 
     std::vector<double> circle_curvature;
@@ -65,7 +63,7 @@ TEST(CurvatureTest, CircleCurvature)
     std::vector<cv::Point> circle_contour = get_circle_contour(radius);
     contours.emplace_back(circle_contour);
 
-    circle_curvature = ut.calculate_curvature(circle_contour, 1);
+    circle_curvature = Utils::calculate_curvature(circle_contour, 1);
 
     double max_error = 0, min_error = 1;
     int count_inf = 0, count_zero = 0;
@@ -111,14 +109,13 @@ TEST(CurvatureTest, StraightVerticalLineCurvature)
 {
     // Curvature of the straight line = 0
 
-    Utils ut;
     std::vector<double> lineCurvature;
 
     std::vector< std::vector<cv::Point> > contours;
     std::vector<cv::Point> line_contour = get_straight_line_contour();
     contours.emplace_back(line_contour);
 
-    lineCurvature = ut.calculate_curvature(line_contour, 1);
+    lineCurvature = Utils::calculate_curvature(line_contour, 1);
 
     double max_error = 0, min_error = 1;
 
@@ -150,14 +147,13 @@ TEST(CurvatureTest, StraightHorizontalLineCurvature)
 {
     // Curvature of the straight line = 0
 
-    Utils ut;
     std::vector<double> lineCurvature;
 
     std::vector< std::vector<cv::Point> > contours;
     std::vector<cv::Point> line_contour = get_straight_line_contour(false);
     contours.emplace_back(line_contour);
 
-    lineCurvature = ut.calculate_curvature(line_contour, 1);
+    lineCurvature = Utils::calculate_curvature(line_contour, 1);
 
     double max_error = 0, min_error = 1;
 
@@ -189,7 +185,6 @@ TEST(CurvatureTest, ParabolaCurvature)
 {
     // Curvature of parabola 3x^2 = 6 / (1 + 36 * x * x)^(3 / 2)
 
-    Utils ut;
     std::vector<double> parabolaCurvature;
 
     int left_x_boundary = -50;
@@ -200,7 +195,7 @@ TEST(CurvatureTest, ParabolaCurvature)
     std::vector<cv::Point> parabola_contour = get_parabola_contour(x_step, left_x_boundary, right_x_boundary);
     contours.emplace_back(parabola_contour);
 
-    parabolaCurvature = ut.calculate_curvature(parabola_contour, 1);
+    parabolaCurvature = Utils::calculate_curvature(parabola_contour, 1);
 
     double x = left_x_boundary;
     int i = 0;
@@ -238,8 +233,7 @@ TEST(CurvatureTest, EmptyContour)
 
     std::vector<cv::Point> empty_contour;
 
-    Utils ut;
-    curvature = ut.calculate_curvature(empty_contour, 1);
+    curvature = Utils::calculate_curvature(empty_contour, 1);
 
     EXPECT_EQ(curvature.size(), 0);
 }
