@@ -5,6 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
 #include <algorithm>
+#include "Utils.h"
 
 using namespace cv;
 
@@ -53,7 +54,7 @@ Mat build_bird_view(const Mat& frame_roi)
     Point pt3(0, 0);
     Point pt4(frame_roi.cols, 0);
 
-    int delta = 60; // 40 for PATH1 , 50 for PATH2
+    int delta = 58; // 40 for PATH1 , 50 for PATH2
 
     int x_offset = 7; // 50 for PATH1, 0 for PATH2
 
@@ -248,6 +249,35 @@ void simple_find_lines(const std::string& PATH)
 }
 
 
+/**
+ * Arithmetic mean of curvature std::vector<double>
+ * @param curvature
+ * @return
+ */
+double mean_curvature(const std::vector<double>& curvature)
+{
+    double res = 0;
+    int count = 0;
+
+    for (auto i : curvature)
+    {
+        if (i != 0 and i != std::numeric_limits<double>::infinity())
+        {
+            res += i;
+            ++count;
+        }
+    }
+
+    if (count != 0)
+    {
+        res /= count;
+    }
+
+    return res;
+}
+
+
+
 void test_curvature_calculations_on_video(const std::string& PATH)
 {
     VideoCapture capture(PATH);
@@ -280,10 +310,43 @@ void test_curvature_calculations_on_video(const std::string& PATH)
             drawContours(frame_contours, contours, i, Scalar(255, 255, 255));
         }
 
-        imshow("frame_birdview_vertical_roi", frame_birdview_vertical_roi);
+        std::vector< std::vector<double> > contoursCurvature(contours.size());
+
+        for (int i = 0; i < contours.size(); ++i)
+        {
+            contoursCurvature[i] = Utils::calculate_curvature(contours[i]);
+        }
+
+        int resize = 5;
+        cv::resize(frame_contours, frame_contours, cv::Size(), resize, resize);
+
+        for (int i = 0; i < contoursCurvature.size(); ++i)
+        {
+            double curr_curvature_mean = mean_curvature(contoursCurvature[i]);
+
+            std::string text = std::to_string(curr_curvature_mean);
+            int fontFace = FONT_HERSHEY_PLAIN;
+            double fontScale = 1;
+            int thickness = 1;
+            int baseline=0;
+            Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+            baseline += thickness;
+
+            int offset = 30;
+            Point textOrg(contours[i].begin()->x * resize - offset,contours[i].begin()->y * resize - offset);  // Position of the text
+            putText(frame_contours, text, textOrg, fontFace, fontScale,
+                    Scalar(0, 255, 0), thickness, FILLED);
+            std::cout << curr_curvature_mean << std::endl;
+        }
+
+
+
+
+        imshow("source", frame);
+        //imshow("frame_birdview_vertical_roi", frame_birdview_vertical_roi);
         imshow("frame_contours", frame_contours);
 
-        int k = waitKey(24);
+        int k = waitKey(0);
         pause(k);
         if (k == 27)
         {

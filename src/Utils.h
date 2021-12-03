@@ -11,7 +11,7 @@
 
 class Utils {
 public:
-    static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step);
+    static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step = 1);
 };
 
 
