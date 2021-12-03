@@ -18,7 +18,7 @@ Mat get_horizontal_roi(const Mat& src)
 {
     Mat dst;
     int delta = 0; // for PATH1 100, for PATH2 0 -- чтобы обрезать капот на первом видео
-    int y_coordinate = 500; // for PATH 430, for PATH2 500
+    int y_coordinate = 585; // for PATH 430, for PATH2 500
     Rect roi(0, y_coordinate, src.cols, src.rows - y_coordinate - delta);
     dst = src(roi);
 
@@ -29,8 +29,8 @@ Mat get_horizontal_roi(const Mat& src)
 Mat get_vertical_roi(const Mat& src)
 {
     Mat dst;
-    int delta = 50; // 50 for PATH1, 70 (50?) for PATH2
-    int x_offset = 20; // 30 for PATH1, 0 (20?) for PATH2
+    int delta = 40; // 50 for PATH1, 70 (50?) for PATH2
+    int x_offset = 10; // 30 for PATH1, 0 (20?) for PATH2
     int x_coordinate = src.cols / 2 - x_offset;
     Rect roi(x_coordinate - delta, 0, 2 * delta, src.rows);
     dst = src(roi);
@@ -45,18 +45,17 @@ Point get_vanishing_point()
 }
 
 
-Mat build_bird_view(const Mat& frame)
+Mat build_bird_view(const Mat& frame_roi)
 {
-    Mat frame_roi = get_horizontal_roi(frame);
 
     Point pt1(0, frame_roi.rows);
     Point pt2(frame_roi.cols, frame_roi.rows);
     Point pt3(0, 0);
     Point pt4(frame_roi.cols, 0);
 
-    int delta = 50; // 40 for PATH1 , 50 for PATH2
+    int delta = 60; // 40 for PATH1 , 50 for PATH2
 
-    int x_offset = 0; // 50 for PATH1, 0 for PATH2
+    int x_offset = 7; // 50 for PATH1, 0 for PATH2
 
     Point pt11(frame_roi.cols / 2 - delta - x_offset, frame_roi.rows);
     Point pt22(frame_roi.cols / 2 + delta - x_offset, frame_roi.rows);
@@ -193,6 +192,10 @@ namespace simple_find
 }
 
 
+/**
+ * Canny + findContours
+ * @param PATH
+ */
 void simple_find_lines(const std::string& PATH)
 {
     VideoCapture capture(PATH);
@@ -245,10 +248,56 @@ void simple_find_lines(const std::string& PATH)
 }
 
 
+void test_curvature_calculations_on_video(const std::string& PATH)
+{
+    VideoCapture capture(PATH);
+    if (!capture.isOpened())
+    {
+        std::cerr << "Error" << std::endl;
+        return;
+    }
+
+    Mat frame;
+    while (true)
+    {
+        capture >> frame;
+
+        Mat frame_roi = get_horizontal_roi(frame);
+
+        Mat frame_birdview = build_bird_view(frame_roi);
+
+        Mat frame_birdview_vertical_roi = get_vertical_roi(frame_birdview);
+
+        Mat frame_canny;
+        Canny(frame_birdview_vertical_roi, frame_canny, 280, 360);
+
+        std::vector< std::vector<Point> > contours;
+        findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE);
+
+        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
+        for (int i = 0; i < contours.size(); ++i)
+        {
+            drawContours(frame_contours, contours, i, Scalar(255, 255, 255));
+        }
+
+        imshow("frame_birdview_vertical_roi", frame_birdview_vertical_roi);
+        imshow("frame_contours", frame_contours);
+
+        int k = waitKey(24);
+        pause(k);
+        if (k == 27)
+        {
+            break;
+        }
+    }
+}
+
+
 int main()
 {
     const std::string PATH1 = "../videos/video.mp4";
     const std::string PATH2 = "../videos/video2.mp4";
+    const std::string PATH3 = "../videos/video3.mp4";
 
     /**
      * Различие в PATH
@@ -260,7 +309,6 @@ int main()
      * 6) В функции build_bird_view переменная x_offset
      */
 
-    //find_lines_birdview(PATH2);
-    simple_find_lines(PATH2);
+    test_curvature_calculations_on_video(PATH3);
     return 0;
 }
