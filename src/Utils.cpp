@@ -59,3 +59,28 @@ std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vec
     }
     return vecCurvature;
 }
+
+
+/**
+ * Removing contours that have a small number of points
+ * @param contours
+ * @param min_contours_size
+ * @return number of deleted contours
+ */
+int Utils::remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size)
+{
+    std::vector< std::vector<cv::Point> > new_contours;
+
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        if (contours[i].size() >= min_contours_size)
+        {
+            new_contours.emplace_back(contours[i]);
+        }
+    }
+
+    int number_of_deleted_contours = contours.size() - new_contours.size();
+    contours = new_contours;
+
+    return number_of_deleted_contours;
+}

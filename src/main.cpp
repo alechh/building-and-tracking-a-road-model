@@ -18,8 +18,8 @@ using namespace cv;
 Mat get_horizontal_roi(const Mat& src)
 {
     Mat dst;
-    int delta = 0; // for PATH1 100, for PATH2 0 -- чтобы обрезать капот на первом видео
-    int y_coordinate = 585; // for PATH 430, for PATH2 500
+    int delta = 0; // for PATH1 100, for PATH2 0, for PATH3 0 -- чтобы обрезать капот на первом видео
+    int y_coordinate = 780; // for PATH 430, for PATH2 500, for PATH3 585, for PATH4 (resize 0.4) 600
     Rect roi(0, y_coordinate, src.cols, src.rows - y_coordinate - delta);
     dst = src(roi);
 
@@ -30,8 +30,8 @@ Mat get_horizontal_roi(const Mat& src)
 Mat get_vertical_roi(const Mat& src)
 {
     Mat dst;
-    int delta = 40; // 50 for PATH1, 70 (50?) for PATH2
-    int x_offset = 10; // 30 for PATH1, 0 (20?) for PATH2
+    int delta = 120; // 50 for PATH1, 70 (50?) for PATH2, 40 for PATH3, 45 for PATH4 (resize 0.4)
+    int x_offset = 30; // 30 for PATH1, 0 (20?) for PATH2, 10 for PATH3, 20 for PATH4 (resize 0.4)
     int x_coordinate = src.cols / 2 - x_offset;
     Rect roi(x_coordinate - delta, 0, 2 * delta, src.rows);
     dst = src(roi);
@@ -54,9 +54,9 @@ Mat build_bird_view(const Mat& frame_roi)
     Point pt3(0, 0);
     Point pt4(frame_roi.cols, 0);
 
-    int delta = 58; // 40 for PATH1 , 50 for PATH2
+    int delta = 90; // 40 for PATH1 , 50 for PATH2, 58 for PATH3, 40 for PATH4 (resize 0.4)
 
-    int x_offset = 7; // 50 for PATH1, 0 for PATH2
+    int x_offset = 20; // 50 for PATH1, 0 for PATH2, 7 for PATH3, 20 for PATH4 (resize 0.4)
 
     Point pt11(frame_roi.cols / 2 - delta - x_offset, frame_roi.rows);
     Point pt22(frame_roi.cols / 2 + delta - x_offset, frame_roi.rows);
@@ -112,7 +112,7 @@ Mat find_white_color(const Mat& src)
     cvtColor(src, src_hsv, COLOR_RGB2HSV);
     split(src_hsv, splitedHsv);
 
-    int sensivity = 90; // 120
+    int sensivity = 100; // 120
 
     int S_WHITE_MIN = 0;
     int V_WHITE_MIN = 255 - sensivity;
@@ -278,7 +278,9 @@ double mean_curvature(const std::vector<double>& curvature)
 
 
 
-void test_curvature_calculations_on_video(const std::string& PATH)
+
+
+void test_curvature_calculations_on_video(const std::string& PATH, double resize = 1)
 {
     VideoCapture capture(PATH);
     if (!capture.isOpened())
@@ -292,17 +294,30 @@ void test_curvature_calculations_on_video(const std::string& PATH)
     {
         capture >> frame;
 
+        cv::resize(frame, frame, cv::Size(), resize, resize);
+
+        //imshow("frame", frame);
+
         Mat frame_roi = get_horizontal_roi(frame);
 
         Mat frame_birdview = build_bird_view(frame_roi);
 
+        //imshow("bird", frame_birdview);
+
         Mat frame_birdview_vertical_roi = get_vertical_roi(frame_birdview);
 
+        Mat frame_birdview_vertical_white_hsv = find_white_color(frame_birdview_vertical_roi);
+
+        //imshow("white", frame_birdview_vertical_white_hsv);
+
         Mat frame_canny;
-        Canny(frame_birdview_vertical_roi, frame_canny, 280, 360);
+        Canny(frame_birdview_vertical_white_hsv, frame_canny, 280, 360); // 280 360
 
         std::vector< std::vector<Point> > contours;
-        findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE);
+        findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_TC89_KCOS);
+
+        const int min_contour_size = 1000;
+        remove_small_contours(contours, min_contour_size);
 
         Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
         for (int i = 0; i < contours.size(); ++i)
@@ -312,41 +327,40 @@ void test_curvature_calculations_on_video(const std::string& PATH)
 
         std::vector< std::vector<double> > contoursCurvature(contours.size());
 
-        for (int i = 0; i < contours.size(); ++i)
+        for (int i = 0; i < contoursCurvature.size(); ++i)
         {
             contoursCurvature[i] = Utils::calculate_curvature(contours[i]);
         }
 
-        int resize = 5;
-        cv::resize(frame_contours, frame_contours, cv::Size(), resize, resize);
+        //cv::resize(frame_contours, frame_contours, cv::Size(), resize, resize);
 
-        for (int i = 0; i < contoursCurvature.size(); ++i)
-        {
-            double curr_curvature_mean = mean_curvature(contoursCurvature[i]);
+//        for (int i = 0; i < contoursCurvature.size(); ++i)
+//        {
+//            double curr_curvature_mean = mean_curvature(contoursCurvature[i]);
+//
+//            std::string text = std::to_string(curr_curvature_mean);
+//            int fontFace = FONT_HERSHEY_PLAIN;
+//            double fontScale = 1;
+//            int thickness = 1;
+//            int baseline=0;
+//            Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
+//            baseline += thickness;
+//
+//            int offset = 30;
+//            Point textOrg(contours[i].begin()->x * resize - offset,contours[i].begin()->y * resize - offset);  // Position of the text
+//            putText(frame_contours, text, textOrg, fontFace, fontScale,
+//                    Scalar(0, 255, 0), thickness, FILLED);
+//            std::cout << curr_curvature_mean << std::endl;
+//        }
 
-            std::string text = std::to_string(curr_curvature_mean);
-            int fontFace = FONT_HERSHEY_PLAIN;
-            double fontScale = 1;
-            int thickness = 1;
-            int baseline=0;
-            Size textSize = getTextSize(text, fontFace, fontScale, thickness, &baseline);
-            baseline += thickness;
-
-            int offset = 30;
-            Point textOrg(contours[i].begin()->x * resize - offset,contours[i].begin()->y * resize - offset);  // Position of the text
-            putText(frame_contours, text, textOrg, fontFace, fontScale,
-                    Scalar(0, 255, 0), thickness, FILLED);
-            std::cout << curr_curvature_mean << std::endl;
-        }
-
-
-
-
-        imshow("source", frame);
+        //imshow("source", frame);
+        //ximshow("canny", frame_canny);
         //imshow("frame_birdview_vertical_roi", frame_birdview_vertical_roi);
+
+        //cv::resize(frame_contours, frame_contours, cv::Size(), 1.0 / resize, 1.0 / resize);
         imshow("frame_contours", frame_contours);
 
-        int k = waitKey(0);
+        int k = waitKey(24);
         pause(k);
         if (k == 27)
         {
@@ -361,6 +375,7 @@ int main()
     const std::string PATH1 = "../videos/video.mp4";
     const std::string PATH2 = "../videos/video2.mp4";
     const std::string PATH3 = "../videos/video3.mp4";
+    const std::string PATH4 = "../videos/video4_short.mp4";
 
     /**
      * Различие в PATH
@@ -372,6 +387,7 @@ int main()
      * 6) В функции build_bird_view переменная x_offset
      */
 
-    test_curvature_calculations_on_video(PATH3);
+    test_curvature_calculations_on_video(PATH4, 0.5);  // 0.4;
+
     return 0;
 }

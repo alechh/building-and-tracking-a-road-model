@@ -12,6 +12,8 @@
 class Utils {
 public:
     static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step = 1);
+
+    static int remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size);
 };
 
 
