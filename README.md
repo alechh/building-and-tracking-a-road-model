@@ -15,7 +15,7 @@ cmake ..
 make
 ```
 
-## Rub main
+## Run main
 ```bash
  ./building-and-tracking-a-road-model
 ```
