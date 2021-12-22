@@ -25,7 +25,11 @@ Mat get_horizontal_roi(const Mat& src)
     return dst;
 }
 
-
+/**
+ * Get ROI of the Image
+ * @param src -- Mat image
+ * @return Mat dst -- Rect(x_coordinate - delta, 0, 2 * delta, src.rows)
+ */
 Mat get_vertical_roi(const Mat& src)
 {
     Mat dst;
@@ -44,7 +48,11 @@ Point get_vanishing_point()
     return {595, 422};  // for PATH1
 }
 
-
+/**
+ * Getting a bird view from a video frame
+ * @param frame -- input frame
+ * @return
+ */
 Mat build_bird_view(const Mat& frame)
 {
     Mat frame_roi = get_horizontal_roi(frame);
@@ -104,7 +112,11 @@ void pause(int k)
     }
 }
 
-
+/**
+ * Search for white color on frame
+ * @param src -- input Image
+ * @return
+ */
 Mat find_white_color(const Mat& src)
 {
     Mat src_hsv = Mat(src.cols, src.rows, 8, 3);
@@ -140,7 +152,10 @@ Mat find_white_color(const Mat& src)
     return src_hsv;
 }
 
-
+/**
+ * Seacrh for white lines via bird view and Canny filter
+ * @param PATH -- path to the video file
+ */
 void find_lines_birdview(const std::string& PATH)
 {
     VideoCapture capture(PATH);
@@ -183,6 +198,15 @@ void find_lines_birdview(const std::string& PATH)
 
 namespace simple_find
 {
+    /**
+     * Getting the frame's region of interest
+     * @param src -- input image
+     * @param x -- x coordinate of the upper left corner
+     * @param y -- y coordinate of the upper left corner
+     * @param width -- width of the roi
+     * @param height -- height of the roi
+     * @return
+     */
     Mat get_roi(const Mat &src, int x, int y, int width, int height)
     {
         Mat dst;
@@ -192,7 +216,10 @@ namespace simple_find
     }
 }
 
-
+/**
+ *  Simple line search via Canny filter and findContours()
+ * @param PATH -- path to the video file
+ */
 void simple_find_lines(const std::string& PATH)
 {
     VideoCapture capture(PATH);
@@ -250,15 +277,6 @@ int main()
     const std::string PATH1 = "../videos/video.mp4";
     const std::string PATH2 = "../videos/video2.mp4";
 
-    /**
-     * Различие в PATH
-     * 1) В фукнции get_horizontal_roi переменная y_coordinate
-     * 2) В функции get_horizontal_roi переменная delta
-     * 3) В функции get_bird_view переменная delta
-     * 4) В функции get_vertical_roi переменная delta
-     * 5) В функции get_vertical_roi переменная x_offset
-     * 6) В функции build_bird_view переменная x_offset
-     */
 
     //find_lines_birdview(PATH2);
     simple_find_lines(PATH2);
