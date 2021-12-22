@@ -4,6 +4,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
+#include <algorithm>
 
 using namespace cv;
 
@@ -13,7 +14,7 @@ using namespace cv;
  * @param src -- Mat image
  * @return Mat dst -- Rect(0, y_coordinate, IMAGE_WIDTH, IMAGE_HEIGHT - y_coordinate)
  */
-Mat get_roi(const Mat& src)
+Mat get_horizontal_roi(const Mat& src)
 {
     Mat dst;
     int delta = 0; // for PATH1 100, for PATH2 0 -- чтобы обрезать капот на первом видео
@@ -25,25 +26,40 @@ Mat get_roi(const Mat& src)
 }
 
 
-Point get_vanishing_point()
+Mat get_vertical_roi(const Mat& src)
 {
-    return Point(595, 422);  // for PATH1
+    Mat dst;
+    int delta = 50; // 50 for PATH1, 70 (50?) for PATH2
+    int x_offset = 20; // 30 for PATH1, 0 (20?) for PATH2
+    int x_coordinate = src.cols / 2 - x_offset;
+    Rect roi(x_coordinate - delta, 0, 2 * delta, src.rows);
+    dst = src(roi);
+
+    return dst;
 }
 
 
-Mat get_bird_view(const Mat& frame)
+Point get_vanishing_point()
 {
-    Mat frame_roi = get_roi(frame);
+    return {595, 422};  // for PATH1
+}
+
+
+Mat build_bird_view(const Mat& frame)
+{
+    Mat frame_roi = get_horizontal_roi(frame);
 
     Point pt1(0, frame_roi.rows);
     Point pt2(frame_roi.cols, frame_roi.rows);
     Point pt3(0, 0);
     Point pt4(frame_roi.cols, 0);
 
-    int delta = 50; // 71 for PATH1, 50 for PATH2
+    int delta = 50; // 40 for PATH1 , 50 for PATH2
 
-    Point pt11(frame_roi.cols / 2 - delta, frame_roi.rows);
-    Point pt22(frame_roi.cols / 2 + delta, frame_roi.rows);
+    int x_offset = 0; // 50 for PATH1, 0 for PATH2
+
+    Point pt11(frame_roi.cols / 2 - delta - x_offset, frame_roi.rows);
+    Point pt22(frame_roi.cols / 2 + delta - x_offset, frame_roi.rows);
     Point pt33(0, 0);
     Point pt44(frame_roi.cols, 0);
 
@@ -68,8 +84,64 @@ Mat get_bird_view(const Mat& frame)
     return warped_image;
 }
 
+/**
+ * Pausing video by pressing "k" button
+ * @param k
+ */
+void pause(int k)
+{
+    if (k == 107)
+    {
+        while (true)
+        {
+            int l = waitKey(0);
+            if (l == 107)
+            {
+                return;
+            }
+        }
 
-void find_lines(const std::string& PATH)
+    }
+}
+
+
+Mat find_white_color(const Mat& src)
+{
+    Mat src_hsv = Mat(src.cols, src.rows, 8, 3);
+    std::vector<Mat> splitedHsv = std::vector<Mat>();
+    cvtColor(src, src_hsv, COLOR_RGB2HSV);
+    split(src_hsv, splitedHsv);
+
+    int sensivity = 90; // 120
+
+    int S_WHITE_MIN = 0;
+    int V_WHITE_MIN = 255 - sensivity;
+
+    int S_WHITE_MAX = sensivity;
+    int V_WHITE_MAX = 255;
+
+
+    for (int y = 0; y < src_hsv.cols; y++)
+    {
+        for (int x = 0; x < src_hsv.rows; x++)
+        {
+            // получаем HSV-компоненты пикселя
+            int S = static_cast<int>(splitedHsv[1].at<uchar>(x, y));        // Интенсивность
+            int V = static_cast<int>(splitedHsv[2].at<uchar>(x, y));        // Яркость
+
+            if (!(S_WHITE_MIN <= S && S <= S_WHITE_MAX && V_WHITE_MIN <= V && V <= V_WHITE_MAX))
+            {
+                src_hsv.at<Vec3b>(x, y)[0] = 0;
+                src_hsv.at<Vec3b>(x, y)[1] = 0;
+                src_hsv.at<Vec3b>(x, y)[2] = 0;
+            }
+        }
+    }
+    return src_hsv;
+}
+
+
+void find_lines_birdview(const std::string& PATH)
 {
     VideoCapture capture(PATH);
     if (!capture.isOpened())
@@ -84,17 +156,23 @@ void find_lines(const std::string& PATH)
     {
         capture >> frame;
 
-        Mat frame_birdview = get_bird_view(frame);
+        Mat frame_birdview = build_bird_view(frame);
+
+        Mat vertical_roi_birdview = get_vertical_roi(frame_birdview);
+
+        Mat white_hsv = find_white_color(vertical_roi_birdview);
 
         Mat frame_canny;
-        Canny(frame_birdview, frame_canny, 130, 200);
+        Canny(white_hsv, frame_canny, 170, 200);
 
-        imshow("source", frame);
-        imshow("birdview", frame_birdview);
-        //imshow("canny", frame_canny);
-
+        //imshow("source", frame);
+        //imshow("birdview", frame_birdview);
+        imshow("vertical_roi_birdview", vertical_roi_birdview);
+        imshow("canny", frame_canny);
 
         int k = waitKey(24);
+        pause(k);
+
         if (k == 27)
         {
             break;
@@ -103,7 +181,19 @@ void find_lines(const std::string& PATH)
 }
 
 
-void play_video(const std::string& PATH)
+namespace simple_find
+{
+    Mat get_roi(const Mat &src, int x, int y, int width, int height)
+    {
+        Mat dst;
+        Rect roi(x, y, width, height);
+        dst = src(roi);
+        return dst;
+    }
+}
+
+
+void simple_find_lines(const std::string& PATH)
 {
     VideoCapture capture(PATH);
     if (!capture.isOpened())
@@ -118,124 +208,35 @@ void play_video(const std::string& PATH)
     {
         capture >> frame;
 
-        imshow("frame", frame);
+        int y = 2 * frame.rows / 3 + 30;
+        Mat frame_roi = simple_find::get_roi(frame, 0, y, frame.cols, frame.rows - y);
 
-        int k = waitKey(24);
-        if (k == 107)
-        {
-            while (true)
-            {
-                int l = waitKey(0);
-                if (l == 107)
-                {
-                    break;
-                }
-            }
-
-        }
-        if (k == 27)
-        {
-            break;
-        }
-    }
-}
-
-std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step)
-{
-    std::vector<double> vecCurvature(vecContourPoints.size());
-
-    if (vecContourPoints.size() < step)
-    {
-        return vecCurvature;
-    }
-
-    auto frontToBack = vecContourPoints.front() - vecContourPoints.back();
-    bool isClosed = ((int)std::max(std::abs(frontToBack.x), std::abs(frontToBack.y))) <= 1;
-
-    cv::Point2f pplus, pminus;
-    cv::Point2f f1stDerivative, f2ndDerivative;
-    for (int i = 0; i < vecContourPoints.size(); i++)
-    {
-        const cv::Point2f& pos = vecContourPoints[i];
-
-        int maxStep = step;
-        if (!isClosed)
-        {
-            maxStep = std::min(std::min(step, i), (int)vecContourPoints.size() - 1 - i);
-            if (maxStep == 0)
-            {
-                vecCurvature[i] = std::numeric_limits<double>::infinity();
-                continue;
-            }
-        }
-
-        int iminus = i - maxStep;
-        int iplus = i + maxStep;
-        pminus = vecContourPoints[iminus < 0 ? iminus + vecContourPoints.size() : iminus];
-        pplus = vecContourPoints[iplus > vecContourPoints.size() ? iplus - vecContourPoints.size() : iplus];
-
-        f1stDerivative.x = (pplus.x - pminus.x) / float(iplus - iminus);
-        f1stDerivative.y = (pplus.y - pminus.y) / float(iplus - iminus);
-        f2ndDerivative.x = (pplus.x - 2 * pos.x + pminus.x) / float(float(iplus - iminus) / 2 * float(iplus - iminus) / 2);
-        f2ndDerivative.y = (pplus.y - 2 * pos.y + pminus.y) / float(float(iplus - iminus) / 2 * float(iplus - iminus) / 2);
-
-        double curvature2D;
-        double divisor = f1stDerivative.x * f1stDerivative.x + f1stDerivative.y * f1stDerivative.y;
-        if (std::abs(divisor) > 10e-15)  // 10e-8
-        {
-            curvature2D =  std::abs(f2ndDerivative.y * f1stDerivative.x - f2ndDerivative.x * f1stDerivative.y) /
-                           pow(divisor, 3.0 / 2.0 )  ;
-        }
-        else
-        {
-            curvature2D = std::numeric_limits<double>::infinity();
-        }
-
-        vecCurvature[i] = curvature2D;
-    }
-    return vecCurvature;
-}
-
-
-void draw_contours_using_curvature(Mat &dst, const std::vector<Point>& contour, const std::vector<double>& curvature)
-{
-    for (int i = 0; i < contour.size(); i++)
-    {
-        circle(dst, contour[i], 2, Scalar(0, 0, int(curvature[i]) % 255));
-    }
-}
-
-
-void test_calculation_of_curvature(const std::string& PATH)
-{
-    VideoCapture capture(PATH);
-    if (!capture.isOpened())
-    {
-        std::cerr << "Error" << std::endl;
-        return;
-    }
-
-    Mat frame, frame_canny;
-    while (true)
-    {
-        capture >> frame;
-
-        Canny(frame, frame_canny, 130, 200);
+        Mat frame_canny;
+        Canny(frame_roi, frame_canny, 100, 200);
 
         std::vector< std::vector<Point> > contours;
         findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE);
 
-        Mat frame_contours(frame.rows, frame.cols, frame.type(), Scalar(255, 255, 255));
+        // сортируем вектор векторов по их размеру
+        std::sort(contours.begin(),contours.end(),
+                  [](const std::vector<Point> &v1, const std::vector<Point> &v2)
+                  {
+                    return v1.size() > v2.size();
+                  });
 
-        for (int i = 0; i < contours.size(); i++)
+        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
+
+        for (int i = 0; i < 2; ++i)
         {
-            std::vector<double> cucc_curvature = calculate_curvature(contours[i], 1);
-            draw_contours_using_curvature(frame_contours, contours[i], cucc_curvature);
+            drawContours(frame_contours, contours, i, Scalar(255, 255, 255));
         }
 
-        imshow("frame_contours", frame_contours);
+        //imshow("canny", frame_canny);
+        imshow("contours", frame_contours);
 
         int k = waitKey(24);
+        pause(k);
+
         if (k == 27)
         {
             break;
@@ -251,14 +252,15 @@ int main()
 
     /**
      * Различие в PATH
-     * 1) В фукнции get_roi переменная y_coordinate
-     * 2) В функции get_roi переменная delta
+     * 1) В фукнции get_horizontal_roi переменная y_coordinate
+     * 2) В функции get_horizontal_roi переменная delta
      * 3) В функции get_bird_view переменная delta
+     * 4) В функции get_vertical_roi переменная delta
+     * 5) В функции get_vertical_roi переменная x_offset
+     * 6) В функции build_bird_view переменная x_offset
      */
 
-    //find_lines(PATH2);
-    //play_video(PATH1);
-    //calculation_of_curvature(PATH2);
-
+    //find_lines_birdview(PATH2);
+    simple_find_lines(PATH2);
     return 0;
 }
