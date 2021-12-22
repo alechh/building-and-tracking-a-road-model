@@ -2,19 +2,25 @@
 
 [![Build Status](https://app.travis-ci.com/alechh/building-and-tracking-a-road-model.svg?token=nkfHMH8bU4FvD1venBAz&branch=master)](https://app.travis-ci.com/alechh/building-and-tracking-a-road-model)
 
-## Компиляция
+Repository for solving the problem of building a road model online and then tracking it
+
+## Requirements
+  *  CMake (>= 3.20)
+  *  OpenCV (>= 4.4.0)
+
+## Build
 ```bash 
 mkdir build && cd build
 cmake ..
 make
 ```
 
-## Запуск main
+## Rub main
 ```bash
  ./building-and-tracking-a-road-model
 ```
 
-## Запуск юнит-тестов
+## Run unit-tests
 ```bash
 cd Tests
 ./tests
