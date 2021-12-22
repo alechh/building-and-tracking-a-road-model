@@ -1,6 +1,6 @@
 # building-and-tracking-a-road-model
 
-[![Build Status](https://app.travis-ci.com/alechh/algorithms-and-data-structures.svg?token=nkfHMH8bU4FvD1venBAz&branch=master)](https://app.travis-ci.com/alechh/algorithms-and-data-structures)
+[![Build Status](https://app.travis-ci.com/alechh/building-and-tracking-a-road-model.svg?token=nkfHMH8bU4FvD1venBAz&branch=master)](https://app.travis-ci.com/alechh/building-and-tracking-a-road-model)
 
 ## Компиляция
 ```bash 
