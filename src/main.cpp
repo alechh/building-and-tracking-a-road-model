@@ -277,9 +277,6 @@ double mean_curvature(const std::vector<double>& curvature)
 }
 
 
-
-
-
 void test_curvature_calculations_on_video(const std::string& PATH, double resize = 1)
 {
     VideoCapture capture(PATH);
@@ -288,6 +285,8 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
         std::cerr << "Error" << std::endl;
         return;
     }
+
+     VideoWriter outputVideo;
 
     Mat frame;
     while (true)
@@ -316,8 +315,8 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
         std::vector< std::vector<Point> > contours;
         findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_TC89_KCOS);
 
-        const int min_contour_size = 1000;
-        remove_small_contours(contours, min_contour_size);
+        const int min_contour_size = 30;
+        Utils::remove_small_contours(contours, min_contour_size);
 
         Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
         for (int i = 0; i < contours.size(); ++i)
@@ -359,6 +358,17 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
 
         //cv::resize(frame_contours, frame_contours, cv::Size(), 1.0 / resize, 1.0 / resize);
         imshow("frame_contours", frame_contours);
+
+
+        if (!outputVideo.isOpened())
+        {
+            Size S = Size(frame_contours.cols, frame_contours.rows);
+            int ex = static_cast<int>(capture.get(CAP_PROP_FOURCC));
+            outputVideo.open("../result.mp4", ex, 10, S);
+        }
+
+        outputVideo.write(frame_contours);
+        //save_video(capture, frame_birdview_vertical_roi);
 
         int k = waitKey(24);
         pause(k);
