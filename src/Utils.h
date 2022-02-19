@@ -10,12 +10,11 @@
 #include <opencv2/core/types.hpp>
 
 class Utils {
-private:
-    static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step = 1);
-
 public:
 
     static int remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size);
+
+    static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step = 1);
 
     static double mean_curvature(const std::vector<double>& curvature);
 

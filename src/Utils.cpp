@@ -135,7 +135,7 @@ void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, c
 {
     if (number_of_contours > contours.size())
     {
-        std::cout << "number_of_contours must be less than contours.size()" << std::endl;
+        std::cerr << "number_of_contours must be less than contours.size()" << std::endl;
         return;
     }
 

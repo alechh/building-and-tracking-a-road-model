@@ -10,17 +10,28 @@ using namespace cv;
 
 
 /**
- * Get ROI of the Image
- * @param src -- Mat image
- * @return Mat dst -- Rect(0, y_coordinate, IMAGE_WIDTH, IMAGE_HEIGHT - y_coordinate)
+ *
+ * @param src
+ * @param distance_in_pixels -- heigth of the roi. 0 means height of the roi = src.rows
+ * @return
  */
-Mat get_horizontal_roi(const Mat& src)
+Mat get_horizontal_roi(const Mat &src, int distance_in_pixels)
 {
-    Mat dst;
-    int delta = 0; // for PATH1 100, for PATH2 0, for PATH3 0 -- чтобы обрезать капот на первом видео
-    int y_coordinate = 300; // for PATH 430, for PATH2 500, for PATH3 585, for PATH4 (resize 0.4) 600, for PATH5 300
-    Rect roi(0, y_coordinate, src.cols, src.rows - y_coordinate - delta);
-    dst = src(roi);
+    if (distance_in_pixels > src.rows)
+    {
+        std::cerr << "distance_in_pixelc must be less than src.rows" << std::endl;
+        return src;
+    }
+
+    // to get the whole frame at a value of 0
+    if (distance_in_pixels == 0)
+    {
+        distance_in_pixels = src.rows;
+    }
+
+    Rect roi(0, src.rows - distance_in_pixels, src.cols, distance_in_pixels);
+
+    Mat dst = src(roi);
 
     return dst;
 }
@@ -156,6 +167,43 @@ Mat find_white_color(const Mat& src)
 }
 
 
+void experiment_with_curvature_calculation(Mat &birdview)
+{
+    // Обрезка кадра по дистанции
+    const int distance_in_pixels = 500; // дистанция в пикселях для эксперимента по вычислению кривизны на разных расстояниях от машины
+    Mat frame_birdview_roi_distance = get_horizontal_roi(birdview, distance_in_pixels);
+
+    // Вычисление кривизны
+    Mat frame_birdview_vertical_white_hsv = find_white_color(frame_birdview_roi_distance);
+
+    Mat frame_canny;
+    Canny(frame_birdview_vertical_white_hsv, frame_canny, 280, 360); // 280 360
+
+    std::vector< std::vector<Point> > contours;
+    findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
+
+    const int min_contour_size = 30;
+    Utils::remove_small_contours(contours, min_contour_size);
+
+    Utils::sort_vector_of_vectors_of_points(contours);
+
+    Mat frame_contours(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
+    Utils::draw_contours(contours, frame_contours, 1);
+
+    imshow("test", frame_contours);
+
+    std::vector< std::vector<double> > contoursCurvature(contours.size());
+    Utils::calculate_contours_curvature(contoursCurvature, contours);
+
+    for (int i = 0; i < contoursCurvature[0].size(); ++i)
+    {
+        std::cout << contoursCurvature[0][i] << std::endl;
+    }
+
+    int l = waitKey(0);
+}
+
+
 void test_curvature_calculations_on_video(const std::string& PATH, double resize = 1)
 {
     VideoCapture capture(PATH);
@@ -181,28 +229,29 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
 
         Mat frame_birdview_roi = get_vertical_roi(frame_birdview);
 
-        Mat frame_birdview_vertical_white_hsv = find_white_color(frame_birdview_roi);
+        // Эскперимент
+        experiment_with_curvature_calculation(frame_birdview_roi);
 
-        Mat frame_canny;
-        Canny(frame_birdview_vertical_white_hsv, frame_canny, 280, 360); // 280 360
+        //-----------
 
-        std::vector< std::vector<Point> > contours;
-        findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
-
-        const int min_contour_size = 30;
-        Utils::remove_small_contours(contours, min_contour_size);
-
-        Utils::sort_vector_of_vectors_of_points(contours);
-
-        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
-        Utils::draw_contours(contours, frame_contours, 1);
-
-        std::vector< std::vector<double> > contoursCurvature(contours.size());
-        Utils::calculate_contours_curvature(contoursCurvature, contours);
-
-        imshow("sourse", frame);
-
-        imshow("frame_contours", frame_contours);
+//        Mat frame_birdview_vertical_white_hsv = find_white_color(frame_birdview_roi);
+//
+//        Mat frame_canny;
+//        Canny(frame_birdview_vertical_white_hsv, frame_canny, 280, 360); // 280 360
+//
+//        std::vector< std::vector<Point> > contours;
+//        findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
+//
+//        const int min_contour_size = 30;
+//        Utils::remove_small_contours(contours, min_contour_size);
+//
+//        Utils::sort_vector_of_vectors_of_points(contours);
+//
+//        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
+//        Utils::draw_contours(contours, frame_contours, 1);
+//
+//        std::vector< std::vector<double> > contoursCurvature(contours.size());
+//        Utils::calculate_contours_curvature(contoursCurvature, contours);
 
         int k = waitKey(24);
         pause(k);
@@ -232,7 +281,7 @@ int main()
      * 5) В функции get_vertical_roi переменная x_offset
      * 6) В функции build_bird_view переменная x_offset
      */
-    
+
     test_curvature_calculations_on_video(PATH6, 0.5);
 
     return 0;
