@@ -3,6 +3,8 @@
 //
 
 #include "Utils.h"
+#include <vector>
+#include <opencv2/opencv.hpp>
 
 std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step)
 {
@@ -83,4 +85,73 @@ int Utils::remove_small_contours(std::vector< std::vector<cv::Point> > & contour
     contours = new_contours;
 
     return number_of_deleted_contours;
+}
+
+
+/**
+ * Arithmetic mean of curvature std::vector<double>
+ * @param curvature
+ * @return
+ */
+double Utils::mean_curvature(const std::vector<double>& curvature)
+{
+    double res = 0;
+    int count = 0;
+
+    for (auto i : curvature)
+    {
+        if (i != 0 and i != std::numeric_limits<double>::infinity())
+        {
+            res += i;
+            ++count;
+        }
+    }
+
+    if (count != 0)
+    {
+        res /= count;
+    }
+
+    return res;
+}
+
+void Utils::sort_vector_of_vectors_of_points(std::vector<std::vector<cv::Point>>& contours)
+{
+    // сортируем вектор векторов по их размеру
+    std::sort(contours.begin(),contours.end(),
+              [](const std::vector<cv::Point> &v1, const std::vector<cv::Point> &v2)
+              {
+                  return v1.size() > v2.size();
+              });
+}
+
+/**
+ * Drawing contours on an image
+ * @param contours
+ * @param input_frame
+ * @param number_of_contours -- number of contours to draw
+ */
+void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, cv::Mat &input_frame, int number_of_contours)
+{
+    if (number_of_contours > contours.size())
+    {
+        std::cout << "number_of_contours must be less than contours.size()" << std::endl;
+        return;
+    }
+
+    std::size_t boundary = (number_of_contours == 0) ? contours.size() : number_of_contours;
+
+    for (std::size_t i = 0; i < boundary; ++i)
+    {
+        cv::drawContours(input_frame, contours, i, cv::Scalar(255, 255, 255));
+    }
+}
+
+
+void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours)
+{
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        contoursCurvature[i] = Utils::calculate_curvature(contours[i]);
+    }
 }
