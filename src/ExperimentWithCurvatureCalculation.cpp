@@ -86,3 +86,18 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     return roadModel;
 }
+
+void ExperimentWithCurvatureCalculation::drawRoadModel(cv::Mat &src, const RoadModel &roadModel)
+{
+    /**
+     * Отрисовка модели дороги (пока только ПРАВОЙ её части).
+     */
+     std::shared_ptr<ModelElement> currModelElement(roadModel.rightHead);
+
+     while(currModelElement.get())
+     {
+         (*currModelElement).drawModelElement(src);
+         currModelElement = currModelElement->next;
+     }
+}
+
