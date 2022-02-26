@@ -8,29 +8,39 @@ ModelElement::ModelElement() : next(nullptr) {}
 
 ModelElement::~ModelElement()
 {
-    delete this->next;
+    // удалять не нужно, так как используются умные указатели
+    //delete this->next;
 }
 
-void ModelElement::setNextElement(ModelElement *nextElement)
+void ModelElement::setNextElement(const ModelElement &nextElement)
 {
-    this->next = nextElement;
+    this->next = std::make_unique<ModelElement>(nextElement);
 }
 
 ModelElement *ModelElement::getNext() const
 {
-    return this->next;
+    return this->next.get();
+}
+
+ModelElement::ModelElement(const ModelElement &elem): next(nullptr)
+{
+    /**
+     * Подразумевается, что копировать объекты не придется, поэтому поле next всегда заполняется nullptr.
+     * Этот копирующий конструктор нужен, чтобы работала функция ModelElement::setNextElement
+     * (а именно, чтобы создалавлся unique_ptr).
+     */
 }
 
 LineSegment::LineSegment(cv::Point begin, cv::Point end) : ModelElement(), begin(begin), end(end) {}
 
-LineSegment::LineSegment(cv::Point begin, cv::Point end, ModelElement *nextElement) : ModelElement(), begin(begin), end(end)
+LineSegment::LineSegment(cv::Point begin, cv::Point end, ModelElement nextElement) : ModelElement(), begin(begin), end(end)
 {
     setNextElement(nextElement);
 }
 
 CircularArc::CircularArc(cv::Point center, double radius): center(center), radius(radius) {}
 
-CircularArc::CircularArc(cv::Point center, double radius, ModelElement *nextElement): center(center), radius(radius)
+CircularArc::CircularArc(cv::Point center, double radius, ModelElement nextElement): center(center), radius(radius)
 {
     setNextElement(nextElement);
 }
@@ -43,11 +53,12 @@ void RoadModel::addElementToRight(cv::Point begin, cv::Point end)
 {
     if (this->rightHead)
     {
-        this->rightHead->setNextElement(new LineSegment(std::move(begin), std::move(end)));
+        this->rightHead->setNextElement(LineSegment(std::move(begin), std::move(end)));
     }
     else
     {
-        this->rightHead = new LineSegment(std::move(begin), std::move(end));
+        this->rightHead = std::make_unique<LineSegment>(std::move(begin), std::move(end));
+        //this->rightHead = new LineSegment(std::move(begin), std::move(end));
     }
 }
 
@@ -55,11 +66,12 @@ void RoadModel::addElementToRight(cv::Point center, double radius)
 {
     if (this->rightHead)
     {
-        this->rightHead->setNextElement(new CircularArc(std::move(center), radius));
+        this->rightHead->setNextElement(CircularArc(std::move(center), radius));
     }
     else
     {
-        this->rightHead = new CircularArc(std::move(center), radius);
+        this->rightHead = std::make_unique<CircularArc>(std::move(center), radius);
+        //this->rightHead = new CircularArc(std::move(center), radius);
     }
 }
 
@@ -67,11 +79,12 @@ void RoadModel::addElementToLeft(cv::Point begin, cv::Point end)
 {
     if (this->leftHead)
     {
-        this->leftHead->setNextElement(new LineSegment(std::move(begin), std::move(end)));
+        this->leftHead->setNextElement(LineSegment(std::move(begin), std::move(end)));
     }
     else
     {
-        this->leftHead = new LineSegment(std::move(begin), std::move(end));
+        this->leftHead = std::make_unique<LineSegment>(std::move(begin), std::move(end));
+        //this->leftHead = new LineSegment(std::move(begin), std::move(end));
     }
 }
 
@@ -79,11 +92,12 @@ void RoadModel::addElementToLeft(cv::Point center, double radius)
 {
     if (this->leftHead)
     {
-        this->leftHead->setNextElement(new CircularArc(std::move(center), radius));
+        this->leftHead->setNextElement(CircularArc(std::move(center), radius));
     }
     else
     {
-        this->leftHead = new CircularArc(std::move(center), radius);
+        this->leftHead = std::make_unique<CircularArc>(std::move(center), radius);
+        //this->leftHead = new CircularArc(std::move(center), radius);
     }
 }
 
