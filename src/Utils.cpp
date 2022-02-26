@@ -93,7 +93,7 @@ int Utils::remove_small_contours(std::vector< std::vector<cv::Point> > & contour
  * @param curvature
  * @return
  */
-double Utils::mean_curvature(const std::vector<double>& curvature)
+double Utils::mean_curvature(const std::vector<double> &curvature)
 {
     double res = 0;
     int count = 0;
@@ -135,7 +135,7 @@ void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, c
 {
     if (number_of_contours > contours.size())
     {
-        std::cerr << "number_of_contours must be less than contours.size()" << std::endl;
+        std::cerr << "Utils::draw_contours: number_of_contours must be less than contours.size()" << std::endl;
         return;
     }
 
