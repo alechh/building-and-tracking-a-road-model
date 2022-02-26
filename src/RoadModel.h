@@ -10,16 +10,15 @@
 
 class ModelElement
 {
-private:
-    std::unique_ptr<ModelElement> next;
+public:
+    std::shared_ptr<ModelElement> next;
     //ModelElement *next;
 
-public:
     ModelElement();
-    ~ModelElement();
+    virtual ~ModelElement();
     ModelElement(const ModelElement &elem);
     void setNextElement(const ModelElement &nextElement);
-    ModelElement* getNext() const;
+    virtual void drawModelElement(cv::Mat &src) const;
 };
 
 class LineSegment: public ModelElement
@@ -29,6 +28,7 @@ private:
 public:
     LineSegment(cv::Point begin, cv::Point end);
     LineSegment(cv::Point begin, cv::Point end, ModelElement nextElement);
+    void drawModelElement(cv::Mat &src) const override;
 };
 
 class CircularArc: public  ModelElement
@@ -39,6 +39,7 @@ private:
 public:
     CircularArc(cv::Point center, double radius);
     CircularArc(cv::Point center, double radius, ModelElement nextElement);
+    void drawModelElement(cv::Mat &src) const override;
 };
 
 
@@ -47,7 +48,7 @@ class RoadModel{
      * Пока предполагается, что строим модель для своей полосы движения
      */
 public:
-    std::unique_ptr<ModelElement> leftHead, rightHead;
+    std::shared_ptr<ModelElement> leftHead, rightHead;
     //ModelElement *leftHead, *rightHead;
 
     RoadModel();

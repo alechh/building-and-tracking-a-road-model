@@ -3,6 +3,7 @@
 //
 
 #include "RoadModel.h"
+#include <opencv2/imgproc.hpp>
 
 ModelElement::ModelElement() : next(nullptr) {}
 
@@ -14,12 +15,7 @@ ModelElement::~ModelElement()
 
 void ModelElement::setNextElement(const ModelElement &nextElement)
 {
-    this->next = std::make_unique<ModelElement>(nextElement);
-}
-
-ModelElement *ModelElement::getNext() const
-{
-    return this->next.get();
+    this->next = std::make_shared<ModelElement>(nextElement);
 }
 
 ModelElement::ModelElement(const ModelElement &elem): next(nullptr)
@@ -27,9 +23,11 @@ ModelElement::ModelElement(const ModelElement &elem): next(nullptr)
     /**
      * Подразумевается, что копировать объекты не придется, поэтому поле next всегда заполняется nullptr.
      * Этот копирующий конструктор нужен, чтобы работала функция ModelElement::setNextElement
-     * (а именно, чтобы создалавлся unique_ptr).
+     * (а именно, чтобы создалавлся shared_ptr).
      */
 }
+
+void ModelElement::drawModelElement(cv::Mat &src) const {}
 
 LineSegment::LineSegment(cv::Point begin, cv::Point end) : ModelElement(), begin(begin), end(end) {}
 
@@ -38,11 +36,21 @@ LineSegment::LineSegment(cv::Point begin, cv::Point end, ModelElement nextElemen
     setNextElement(nextElement);
 }
 
+void LineSegment::drawModelElement(cv::Mat &src) const
+{
+    cv::line(src, this->begin, this->end, cv::Scalar(0, 0, 255), 2);
+}
+
 CircularArc::CircularArc(cv::Point center, double radius): center(center), radius(radius) {}
 
 CircularArc::CircularArc(cv::Point center, double radius, ModelElement nextElement): center(center), radius(radius)
 {
     setNextElement(nextElement);
+}
+
+void CircularArc::drawModelElement(cv::Mat &src) const
+{
+    cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, 0, 360 / 2, cv::Scalar(255, 0, 0), 2);
 }
 
 RoadModel::RoadModel(): leftHead(nullptr), rightHead(nullptr) {}
@@ -57,7 +65,7 @@ void RoadModel::addElementToRight(cv::Point begin, cv::Point end)
     }
     else
     {
-        this->rightHead = std::make_unique<LineSegment>(std::move(begin), std::move(end));
+        this->rightHead = std::make_shared<LineSegment>(std::move(begin), std::move(end));
         //this->rightHead = new LineSegment(std::move(begin), std::move(end));
     }
 }
@@ -70,7 +78,7 @@ void RoadModel::addElementToRight(cv::Point center, double radius)
     }
     else
     {
-        this->rightHead = std::make_unique<CircularArc>(std::move(center), radius);
+        this->rightHead = std::make_shared<CircularArc>(std::move(center), radius);
         //this->rightHead = new CircularArc(std::move(center), radius);
     }
 }
@@ -83,7 +91,7 @@ void RoadModel::addElementToLeft(cv::Point begin, cv::Point end)
     }
     else
     {
-        this->leftHead = std::make_unique<LineSegment>(std::move(begin), std::move(end));
+        this->leftHead = std::make_shared<LineSegment>(std::move(begin), std::move(end));
         //this->leftHead = new LineSegment(std::move(begin), std::move(end));
     }
 }
@@ -96,7 +104,7 @@ void RoadModel::addElementToLeft(cv::Point center, double radius)
     }
     else
     {
-        this->leftHead = std::make_unique<CircularArc>(std::move(center), radius);
+        this->leftHead = std::make_shared<CircularArc>(std::move(center), radius);
         //this->leftHead = new CircularArc(std::move(center), radius);
     }
 }
