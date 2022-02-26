@@ -69,7 +69,10 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
             if (lineSegmentEnd == cv::Point(-1, -1))
             {
                 // если до этого не шел прямой отрезок
-                roadModel.addElementToRight(contour[i], contourCurvature[i]);
+                if (contourCurvature[i] != std::numeric_limits<double>::infinity())
+                {
+                    roadModel.addElementToRight(contour[i], contourCurvature[i]);
+                }
             }
             else
             {
@@ -79,7 +82,10 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                 lineSegmentBegin = cv::Point(-1, -1);
                 lineSegmentEnd = cv::Point(-1, -1);
 
-                roadModel.addElementToRight(contour[i], contourCurvature[i]);
+                if (contourCurvature[i] != std::numeric_limits<double>::infinity())
+                {
+                    roadModel.addElementToRight(contour[i], contourCurvature[i]);
+                }
             }
         }
     }
