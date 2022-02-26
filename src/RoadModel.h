@@ -40,10 +40,13 @@ public:
 
 
 class RoadModel{
+    /**
+     * Пока предполагается, что строим модель для своей полосы движения
+     */
 public:
-    ModelElement *head;
+    ModelElement *leftHead, *rightHead;
     RoadModel();
-    RoadModel(ModelElement *head);
+    RoadModel(ModelElement *leftHead, ModelElement *rightHead);
 };
 
 

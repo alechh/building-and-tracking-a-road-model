@@ -35,6 +35,6 @@ CircularArc::CircularArc(cv::Point center, double radius, ModelElement *nextElem
     setNextElement(nextElement);
 }
 
-RoadModel::RoadModel(): head(nullptr) {}
+RoadModel::RoadModel(): leftHead(nullptr), rightHead(nullptr) {}
 
-RoadModel::RoadModel(ModelElement *head): head(head) {}
+RoadModel::RoadModel(ModelElement *leftHead, ModelElement *rightHead): leftHead(leftHead), rightHead(rightHead) {}
