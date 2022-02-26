@@ -7,10 +7,12 @@
 
 
 #include <opencv2/core/mat.hpp>
+#include "RoadModel.h"
 
 class ExperimentWithCurvatureCalculation {
 public:
     static void drawArcsOnContour(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
+    static RoadModel buildRoadModelBasedOnTheSingleContour(const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
 
 private:
     static void drawArc(cv::Mat &src, double radius, cv::Point center, const cv::Scalar &color);

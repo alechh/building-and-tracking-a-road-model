@@ -4,6 +4,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "ExperimentWithCurvatureCalculation.h"
+#include "RoadModel.h"
 
 
 void ExperimentWithCurvatureCalculation::drawArc(cv::Mat &src, double radius, cv::Point center, const cv::Scalar &color = cv::Scalar(0, 0, 255))
@@ -36,4 +37,52 @@ void ExperimentWithCurvatureCalculation::drawArcsOnContour(cv::Mat &src, const s
             }
         }
     }
+}
+
+RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
+{
+    /**
+     * Построение модели дороги (а точнее нашей полосы движения) по одному контуру.
+     * Пока строим ПРАВУЮ часть модели
+     */
+    RoadModel roadModel;
+
+    cv::Point lineSegmentBegin = cv::Point(-1, -1);
+    cv::Point lineSegmentEnd = cv::Point(-1, -1);
+
+    double curvatureThreshold = 0.5; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
+    for (int i = 0; i < contour.size(); ++i)
+    {
+        if (std::abs(contourCurvature[i]) < curvatureThreshold)
+        {
+            // Это часть прямой
+            if (lineSegmentBegin == cv::Point(-1, -1))
+            {
+                // если это начало прямого отрезка
+                lineSegmentBegin = contour[i];
+            }
+            lineSegmentEnd = contour[i];
+        }
+        else
+        {
+            // Это дуга окружности
+            if (lineSegmentEnd == cv::Point(-1, -1))
+            {
+                // если до этого не шел прямой отрезок
+                roadModel.addElementToRight(contour[i], contourCurvature[i]);
+            }
+            else
+            {
+                // если закончился прямой отрезок и встилась часть контура, которой соответствует дуга окружности
+                roadModel.addElementToRight(lineSegmentBegin, lineSegmentEnd);
+
+                lineSegmentBegin = cv::Point(-1, -1);
+                lineSegmentEnd = cv::Point(-1, -1);
+
+                roadModel.addElementToRight(contour[i], contourCurvature[i]);
+            }
+        }
+    }
+
+    return roadModel;
 }
