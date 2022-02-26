@@ -47,6 +47,10 @@ public:
     ModelElement *leftHead, *rightHead;
     RoadModel();
     RoadModel(ModelElement *leftHead, ModelElement *rightHead);
+    void addElementToRight(cv::Point begin, cv::Point end);
+    void addElementToRight(cv::Point center, double radius);
+    void addElementToLeft(cv::Point begin, cv::Point end);
+    void addElementToLeft(cv::Point center, double radius);
 };
 
 
