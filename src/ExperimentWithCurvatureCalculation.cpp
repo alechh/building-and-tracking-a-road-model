@@ -98,11 +98,15 @@ void ExperimentWithCurvatureCalculation::drawRoadModel(cv::Mat &src, const RoadM
     /**
      * Отрисовка модели дороги (пока только ПРАВОЙ её части).
      */
+
+    /**
+     * Вопрос: почему этот метод находится не в классе RoadModel ???
+     */
      std::shared_ptr<ModelElement> currModelElement(roadModel.rightHead);
 
-     while(currModelElement.get())
+     while(currModelElement)
      {
-         (*currModelElement).drawModelElement(src);
+         currModelElement->drawModelElement(src);
          currModelElement = currModelElement->next;
      }
 }
