@@ -7,12 +7,6 @@
 
 ModelElement::ModelElement() : next(nullptr) {}
 
-ModelElement::~ModelElement()
-{
-    // удалять не нужно, так как используются умные указатели
-    //delete this->next;
-}
-
 void ModelElement::setNextElement(const ModelElement &nextElement)
 {
     this->next = std::make_shared<ModelElement>(nextElement);

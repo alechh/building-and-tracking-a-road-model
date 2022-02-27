@@ -18,7 +18,7 @@ public:
     //ModelElement *next;
 
     ModelElement();
-    virtual ~ModelElement();
+    virtual ~ModelElement() = default;
     //ModelElement(const ModelElement &elem);
     void setNextElement(const ModelElement &nextElement);
     void setNextElement(const LineSegment &nextElement);
