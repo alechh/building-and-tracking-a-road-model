@@ -47,6 +47,9 @@ class RoadModel{
     /**
      * Пока предполагается, что строим модель для своей полосы движения
      */
+private:
+    int modelLeftElementCounter;
+    int modelRightElementCounter;
 public:
     std::shared_ptr<ModelElement> leftHead, rightHead;
     //ModelElement *leftHead, *rightHead;
@@ -57,6 +60,8 @@ public:
     void addElementToRight(cv::Point center, double radius);
     void addElementToLeft(cv::Point begin, cv::Point end);
     void addElementToLeft(cv::Point center, double radius);
+    int getMedelLeftElementCounter() const;
+    int getMedelRightElementCounter() const;
 };
 
 

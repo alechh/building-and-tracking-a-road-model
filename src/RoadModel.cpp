@@ -53,19 +53,32 @@ void CircularArc::drawModelElement(cv::Mat &src) const
     cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, 0, 360 / 2, cv::Scalar(255, 0, 0), 2);
 }
 
-RoadModel::RoadModel(): leftHead(nullptr), rightHead(nullptr) {}
+RoadModel::RoadModel(): leftHead(nullptr), rightHead(nullptr), modelLeftElementCounter(0), modelRightElementCounter(0) {}
 
-RoadModel::RoadModel(ModelElement *leftHead, ModelElement *rightHead): leftHead(leftHead), rightHead(rightHead) {}
+RoadModel::RoadModel(ModelElement *leftHead, ModelElement *rightHead): leftHead(leftHead), rightHead(rightHead)
+{
+    if (this->leftHead)
+    {
+        modelLeftElementCounter = 1;
+    }
+
+    if (this->rightHead)
+    {
+        modelRightElementCounter = 1;
+    }
+}
 
 void RoadModel::addElementToRight(cv::Point begin, cv::Point end)
 {
     if (this->rightHead)
     {
         this->rightHead->setNextElement(LineSegment(std::move(begin), std::move(end)));
+        this->modelRightElementCounter++;
     }
     else
     {
         this->rightHead = std::make_shared<LineSegment>(std::move(begin), std::move(end));
+        this->modelRightElementCounter++;
         //this->rightHead = new LineSegment(std::move(begin), std::move(end));
     }
 }
@@ -75,10 +88,12 @@ void RoadModel::addElementToRight(cv::Point center, double radius)
     if (this->rightHead)
     {
         this->rightHead->setNextElement(CircularArc(std::move(center), radius));
+        this->modelRightElementCounter++;
     }
     else
     {
         this->rightHead = std::make_shared<CircularArc>(std::move(center), radius);
+        this->modelRightElementCounter++;
         //this->rightHead = new CircularArc(std::move(center), radius);
     }
 }
@@ -88,10 +103,12 @@ void RoadModel::addElementToLeft(cv::Point begin, cv::Point end)
     if (this->leftHead)
     {
         this->leftHead->setNextElement(LineSegment(std::move(begin), std::move(end)));
+        this->modelLeftElementCounter++;
     }
     else
     {
         this->leftHead = std::make_shared<LineSegment>(std::move(begin), std::move(end));
+        this->modelLeftElementCounter++;
         //this->leftHead = new LineSegment(std::move(begin), std::move(end));
     }
 }
@@ -101,12 +118,24 @@ void RoadModel::addElementToLeft(cv::Point center, double radius)
     if (this->leftHead)
     {
         this->leftHead->setNextElement(CircularArc(std::move(center), radius));
+        this->modelLeftElementCounter++;
     }
     else
     {
         this->leftHead = std::make_shared<CircularArc>(std::move(center), radius);
+        this->modelLeftElementCounter++;
         //this->leftHead = new CircularArc(std::move(center), radius);
     }
+}
+
+int RoadModel::getMedelLeftElementCounter() const
+{
+    return this->modelLeftElementCounter;
+}
+
+int RoadModel::getMedelRightElementCounter() const
+{
+    return this->modelRightElementCounter;
 }
 
 
