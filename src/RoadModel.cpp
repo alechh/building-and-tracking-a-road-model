@@ -72,7 +72,12 @@ void RoadModel::addElementToRight(cv::Point begin, cv::Point end)
 {
     if (this->rightHead)
     {
-        this->rightHead->setNextElement(LineSegment(std::move(begin), std::move(end)));
+        std::shared_ptr<ModelElement> curr(rightHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->setNextElement(LineSegment(std::move(begin), std::move(end)));
         this->modelRightElementCounter++;
     }
     else
@@ -87,7 +92,12 @@ void RoadModel::addElementToRight(cv::Point center, double radius)
 {
     if (this->rightHead)
     {
-        this->rightHead->setNextElement(CircularArc(std::move(center), radius));
+        std::shared_ptr<ModelElement> curr(rightHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->setNextElement(CircularArc(std::move(center), radius));
         this->modelRightElementCounter++;
     }
     else
@@ -102,7 +112,12 @@ void RoadModel::addElementToLeft(cv::Point begin, cv::Point end)
 {
     if (this->leftHead)
     {
-        this->leftHead->setNextElement(LineSegment(std::move(begin), std::move(end)));
+        std::shared_ptr<ModelElement> curr(leftHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->setNextElement(LineSegment(std::move(begin), std::move(end)));
         this->modelLeftElementCounter++;
     }
     else
@@ -117,7 +132,12 @@ void RoadModel::addElementToLeft(cv::Point center, double radius)
 {
     if (this->leftHead)
     {
-        this->leftHead->setNextElement(CircularArc(std::move(center), radius));
+        std::shared_ptr<ModelElement> curr(leftHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->setNextElement(CircularArc(std::move(center), radius));
         this->modelLeftElementCounter++;
     }
     else
@@ -128,14 +148,27 @@ void RoadModel::addElementToLeft(cv::Point center, double radius)
     }
 }
 
-int RoadModel::getMedelLeftElementCounter() const
+int RoadModel::getModelLeftElementCounter() const
 {
     return this->modelLeftElementCounter;
 }
 
-int RoadModel::getMedelRightElementCounter() const
+int RoadModel::getModelRightElementCounter() const
 {
     return this->modelRightElementCounter;
+}
+
+int RoadModel::countModelRightElements() const
+{
+    int modelRightElementsCounter = 0;
+    std::shared_ptr<ModelElement> curr(this->rightHead);
+    while(curr)
+    {
+        modelRightElementsCounter++;
+        curr = curr->next;
+    }
+
+    return modelRightElementsCounter;
 }
 
 

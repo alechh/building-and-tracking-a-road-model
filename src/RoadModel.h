@@ -60,8 +60,9 @@ public:
     void addElementToRight(cv::Point center, double radius);
     void addElementToLeft(cv::Point begin, cv::Point end);
     void addElementToLeft(cv::Point center, double radius);
-    int getMedelLeftElementCounter() const;
-    int getMedelRightElementCounter() const;
+    int getModelLeftElementCounter() const;
+    int getModelRightElementCounter() const;
+    int countModelRightElements() const;
 };
 
 
