@@ -18,16 +18,26 @@ void ModelElement::setNextElement(const ModelElement &nextElement)
     this->next = std::make_shared<ModelElement>(nextElement);
 }
 
-ModelElement::ModelElement(const ModelElement &elem): next(nullptr)
-{
-    /**
-     * Подразумевается, что копировать объекты не придется, поэтому поле next всегда заполняется nullptr.
-     * Этот копирующий конструктор нужен, чтобы работала функция ModelElement::setNextElement
-     * (а именно, чтобы создалавлся shared_ptr).
-     */
-}
+//ModelElement::ModelElement(const ModelElement &elem): next(nullptr)
+//{
+//    /**
+//     * Подразумевается, что копировать объекты не придется, поэтому поле next всегда заполняется nullptr.
+//     * Этот копирующий конструктор нужен, чтобы работала функция ModelElement::setNextElement
+//     * (а именно, чтобы создалавлся shared_ptr).
+//     */
+//}
 
 void ModelElement::drawModelElement(cv::Mat &src) const {}
+
+void ModelElement::setNextElement(const LineSegment &nextElement)
+{
+    this->next = std::make_shared<LineSegment>(nextElement);
+}
+
+void ModelElement::setNextElement(const CircularArc &nextElement)
+{
+    this->next = std::make_shared<CircularArc>(nextElement);
+}
 
 LineSegment::LineSegment(cv::Point begin, cv::Point end) : ModelElement(), begin(begin), end(end) {}
 

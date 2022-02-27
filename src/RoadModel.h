@@ -8,6 +8,9 @@
 
 #include <opencv2/core/types.hpp>
 
+class LineSegment;
+class CircularArc;
+
 class ModelElement
 {
 public:
@@ -16,8 +19,10 @@ public:
 
     ModelElement();
     virtual ~ModelElement();
-    ModelElement(const ModelElement &elem);
+    //ModelElement(const ModelElement &elem);
     void setNextElement(const ModelElement &nextElement);
+    void setNextElement(const LineSegment &nextElement);
+    void setNextElement(const CircularArc &nextElement);
     virtual void drawModelElement(cv::Mat &src) const;
 };
 
