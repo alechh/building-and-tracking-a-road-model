@@ -193,7 +193,9 @@ void experiment_with_curvature_calculation(Mat &birdview)
 
     Mat frameRoadModel(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
     std::vector< std::vector<double> > contoursCurvature(contours.size());
-    Utils::calculate_contours_curvature(contoursCurvature, contours);
+
+    int step = 1;
+    Utils::calculate_contours_curvature(contoursCurvature, contours, step);
 
     RoadModel roadModel = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvature[0]);
     ExperimentWithCurvatureCalculation::drawRoadModel(frame_birdview_roi_distance, roadModel);
@@ -426,6 +428,15 @@ void checkContoursOnVideo(const std::string &PATH, const double resize = 1)
 }
 
 
+void buildRoadModelUsingImage(const std::string &PATH)
+{
+    Mat frame;
+    frame = imread(PATH);
+    experiment_with_curvature_calculation(frame);
+    int k = waitKey(0);
+}
+
+
 int main()
 {
     const std::string PATH1 = "../videos/video.mp4";
@@ -434,6 +445,8 @@ int main()
     const std::string PATH4 = "../videos/video4.mp4";  // resize = 0.4
     const std::string PATH5 = "../videos/video5.mp4";
     const std::string PATH6 = "../videos/video6.mp4"; // resize = 0.5
+
+    const std::string IMAGE_PATH = "../images/test_image.png";
 
     /**
      * Различие в PATH
@@ -445,7 +458,8 @@ int main()
      * 6) В функции build_bird_view переменная x_offset
      */
 
-    test_curvature_calculations_on_video(PATH6, 0.5);
+    //test_curvature_calculations_on_video(PATH6, 0.5);
     //checkContoursOnVideo(PATH4, 0.5);
+    buildRoadModelUsingImage(IMAGE_PATH);
     return 0;
 }
