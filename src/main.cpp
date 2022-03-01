@@ -188,16 +188,21 @@ void experiment_with_curvature_calculation(Mat &birdview)
 
     Utils::sort_vector_of_vectors_of_points(contours);
 
-    Mat frame_contours(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
-    Utils::draw_contours(contours, frame_contours, 1);
+    Mat frameContours(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
+    Utils::draw_contours(contours, frameContours, 1);
 
-
+    Mat frameRoadModel(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
     std::vector< std::vector<double> > contoursCurvature(contours.size());
     Utils::calculate_contours_curvature(contoursCurvature, contours);
 
-    ExperimentWithCurvatureCalculation::drawArcsOnContour(frame_birdview_roi_distance, contours[0], contoursCurvature[0]);
+    RoadModel roadModel = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvature[0]);
+    ExperimentWithCurvatureCalculation::drawRoadModel(frame_birdview_roi_distance, roadModel);
 
-    imshow("roi", frame_birdview_roi_distance);
+    imshow("frameContour", frameContours);
+    imshow("roadModel", frame_birdview_roi_distance);
+
+    //ExperimentWithCurvatureCalculation::drawArcsOnContour(frame_birdview_roi_distance, contours[0], contoursCurvature[0]);
+
 }
 
 
@@ -255,7 +260,7 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
 //        std::vector< std::vector<double> > contoursCurvature(contours.size());
 //        Utils::calculate_contours_curvature(contoursCurvature, contours);
 
-        int k = waitKey(25);
+        int k = waitKey(24);
         pause(k);
         if (k == 27)
         {
@@ -390,11 +395,13 @@ void checkContoursOnVideo(const std::string &PATH, const double resize = 1)
 
         Mat frame_birdview_vertical_white_hsv = testCheckContours::find_white_color(frame_birdview_roi);
 
-        imshow("birdview", frame_birdview_roi);
-        imshow("birdview_white", frame_birdview_vertical_white_hsv);
-
         Mat frame_canny;
         Canny(frame_birdview_vertical_white_hsv, frame_canny, 280, 360); // 280 360
+
+        imshow("birdview", frame_birdview_roi);
+        imshow("birdview_white", frame_birdview_vertical_white_hsv);
+        imshow("canny", frame_canny);
+
 
         std::vector< std::vector<Point> > contours;
         findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
@@ -438,7 +445,7 @@ int main()
      * 6) В функции build_bird_view переменная x_offset
      */
 
-    //test_curvature_calculations_on_video(PATH6, 0.5);
-    checkContoursOnVideo(PATH4, 0.5);
+    test_curvature_calculations_on_video(PATH6, 0.5);
+    //checkContoursOnVideo(PATH4, 0.5);
     return 0;
 }
