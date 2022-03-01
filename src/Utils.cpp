@@ -6,7 +6,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step)
+std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step = 1)
 {
     std::vector<double> vecCurvature(vecContourPoints.size());
 
@@ -148,10 +148,10 @@ void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, c
 }
 
 
-void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours)
+void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step = 1)
 {
     for (int i = 0; i < contours.size(); ++i)
     {
-        contoursCurvature[i] = Utils::calculate_curvature(contours[i]);
+        contoursCurvature[i] = Utils::calculate_curvature(contours[i], step);
     }
 }
