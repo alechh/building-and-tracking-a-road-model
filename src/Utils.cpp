@@ -155,3 +155,41 @@ void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &conto
         contoursCurvature[i] = Utils::calculate_curvature(contours[i], step);
     }
 }
+
+std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &contour)
+{
+    std::vector<double> contourCurvature(contour.size());
+
+    contourCurvature[0] = 0;
+    contourCurvature[contourCurvature.size() - 1] = 0;
+
+    for (int i = 1; i < contour.size() - 2; ++i)
+    {
+
+        cv::Point prev, curr, next;
+        prev = contour[i - 1];
+        curr = contour[i];
+        next = contour[i + 1];
+
+        // если точки лежат на одной прямой
+        if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y))
+        {
+            contourCurvature[i] = 0;
+            continue;
+        }
+
+        double a, b, c; // стороны треугольника
+        a = sqrt(pow(prev.x - curr.x, 2) + pow(prev.y - curr.y, 2));
+        b = sqrt(pow(curr.x - next.x, 2) + pow(curr.y - next.y, 2));
+        c = sqrt(pow(next.x - prev.x, 2) + pow(next.y - prev.y, 2));
+
+        double p = (a + b + c) / 2;
+        double S = sqrt(p * (p - a) * (p - b) * (p - c)); // площадь треугольника по формуле Геррона
+
+        double R = (a * b * c) / (4 * S); // радиус описанной окружности
+
+        contourCurvature[i] = 1.0 / R;
+    }
+
+    return contourCurvature;
+}

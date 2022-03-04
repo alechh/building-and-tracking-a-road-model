@@ -23,6 +23,8 @@ public:
     static void draw_contours(const std::vector<std::vector<cv::Point>>& contours, cv::Mat& input_frame, int number_of_contours);
 
     static void calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
+
+    static std::vector<double> calculate_curvature_2(const std::vector<cv::Point> &contour);
 };
 
 
