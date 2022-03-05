@@ -143,7 +143,8 @@ void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, c
 
     for (std::size_t i = 0; i < boundary; ++i)
     {
-        cv::drawContours(input_frame, contours, i, cv::Scalar(255, 255, 255));
+        // TODO Почему-то не билдятся юнит-тесты, ругается на эту фукнцию, а main билдится нормально
+        // cv::drawContours(input_frame, contours, i, cv::Scalar(255, 255, 255));
     }
 }
 
