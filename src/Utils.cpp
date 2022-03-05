@@ -3,8 +3,10 @@
 //
 
 #include "Utils.h"
+#include <vector>
+#include <opencv2/opencv.hpp>
 
-std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step)
+std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step = 1)
 {
     std::vector<double> vecCurvature(vecContourPoints.size());
 
@@ -58,4 +60,144 @@ std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vec
         vecCurvature[i] = curvature2D;
     }
     return vecCurvature;
+}
+
+
+/**
+ * Removing contours that have a small number of points
+ * @param contours
+ * @param min_contours_size
+ * @return number of deleted contours
+ */
+int Utils::remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size)
+{
+    std::vector< std::vector<cv::Point> > new_contours;
+
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        if (contours[i].size() >= min_contours_size)
+        {
+            new_contours.emplace_back(contours[i]);
+        }
+    }
+
+    int number_of_deleted_contours = contours.size() - new_contours.size();
+    contours = new_contours;
+
+    return number_of_deleted_contours;
+}
+
+
+/**
+ * Arithmetic mean of curvature std::vector<double>
+ * @param curvature
+ * @return
+ */
+double Utils::mean_curvature(const std::vector<double> &curvature)
+{
+    double res = 0;
+    int count = 0;
+
+    for (auto i : curvature)
+    {
+        if (i != 0 and i != std::numeric_limits<double>::infinity())
+        {
+            res += i;
+            ++count;
+        }
+    }
+
+    if (count != 0)
+    {
+        res /= count;
+    }
+
+    return res;
+}
+
+void Utils::sort_vector_of_vectors_of_points(std::vector<std::vector<cv::Point>>& contours)
+{
+    // сортируем вектор векторов по их размеру
+    std::sort(contours.begin(),contours.end(),
+              [](const std::vector<cv::Point> &v1, const std::vector<cv::Point> &v2)
+              {
+                  return v1.size() > v2.size();
+              });
+}
+
+/**
+ * Drawing contours on an image
+ * @param contours
+ * @param input_frame
+ * @param number_of_contours -- number of contours to draw
+ */
+void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, cv::Mat &input_frame, int number_of_contours)
+{
+    if (number_of_contours > contours.size())
+    {
+        std::cerr << "Utils::draw_contours: number_of_contours must be less than contours.size()" << std::endl;
+        return;
+    }
+
+    std::size_t boundary = (number_of_contours == 0) ? contours.size() : number_of_contours;
+
+    for (std::size_t i = 0; i < boundary; ++i)
+    {
+        // TODO Почему-то не билдятся юнит-тесты, ругается на эту фукнцию, а main билдится нормально
+        // cv::drawContours(input_frame, contours, i, cv::Scalar(255, 255, 255));
+    }
+}
+
+
+void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step = 1)
+{
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        contoursCurvature[i] = Utils::calculate_curvature(contours[i], step);
+    }
+}
+
+std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &contour)
+{
+    std::vector<double> contourCurvature(contour.size());
+
+    contourCurvature[0] = 0;
+    contourCurvature[contourCurvature.size() - 1] = 0;
+
+    for (int i = 1; i < contour.size() - 2; ++i)
+    {
+
+        cv::Point prev, curr, next;
+        prev = contour[i - 1];
+        curr = contour[i];
+        next = contour[i + 1];
+
+        // если точки лежат на одной прямой
+        if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y))
+        {
+            contourCurvature[i] = 0;
+            continue;
+        }
+
+        // если точки совпадают
+        if (prev == curr || curr == next || next == prev)
+        {
+            contourCurvature[i] = 0;
+            continue;
+        }
+
+        double a, b, c; // стороны треугольника
+        a = sqrt(pow(prev.x - curr.x, 2) + pow(prev.y - curr.y, 2));
+        b = sqrt(pow(curr.x - next.x, 2) + pow(curr.y - next.y, 2));
+        c = sqrt(pow(next.x - prev.x, 2) + pow(next.y - prev.y, 2));
+
+        double p = (a + b + c) / 2;
+        double S = sqrt(p * (p - a) * (p - b) * (p - c)); // площадь треугольника по формуле Геррона
+
+        double R = (a * b * c) / (4 * S); // радиус описанной окружности
+
+        contourCurvature[i] = 1.0 / R; // кривизна = 1 / R
+    }
+
+    return contourCurvature;
 }
