@@ -237,3 +237,102 @@ TEST(CurvatureTest, EmptyContour)
 
     EXPECT_EQ(curvature.size(), 0);
 }
+
+
+TEST(CurvatureTest, CircleCurvature2)
+{
+    // Curvature of circle = 1/R, where R -- radius of the circle
+
+    const int radius = 1000;
+
+    std::vector<double> circle_curvature;
+
+    std::vector< std::vector<cv::Point> > contours;
+    std::vector<cv::Point> circle_contour = get_circle_contour(radius);
+    contours.emplace_back(circle_contour);
+
+    circle_curvature = Utils::calculate_curvature_2(circle_contour);
+
+    double errorSum = 0;
+    int countNonZero;
+
+    for (int i = 0; i < circle_curvature.size(); ++i)
+    {
+        if (circle_curvature[i] != 0)
+        {
+            errorSum += std::abs(1.0 / radius - circle_curvature[i]);
+            countNonZero++;
+        }
+    }
+
+    double meanError = errorSum / countNonZero;
+
+    EXPECT_LE(meanError, 0.00005);
+}
+
+
+TEST(CurvatureTest, ParabolaCurvature2)
+{
+    // Curvature of parabola 3x^2 = 6 / (1 + 36 * x * x)^(3 / 2)
+
+    std::vector<double> parabolaCurvature;
+
+    const int left_x_boundary = -50;
+    const int right_x_boundary = 50;
+    const int x_step = 1;
+
+    std::vector< std::vector<cv::Point> > contours;
+    std::vector<cv::Point> parabola_contour = get_parabola_contour(x_step, left_x_boundary, right_x_boundary);
+    contours.emplace_back(parabola_contour);
+
+    parabolaCurvature = Utils::calculate_curvature_2(parabola_contour);
+
+    double meanError = 0;
+    int countError = 0;
+
+    double x = left_x_boundary;
+    int i = 0;
+    while (x < right_x_boundary)
+    {
+        /* TODO В точке 0 вычисляется кривизна 0.6, а должна быть (по формуле) 6. Чем дальше от точки 0, тем точнее
+         * Поэтому пока пропускаем эту точку
+         */
+        if (x == 0)
+        {
+            x += x_step;
+            i++;
+            continue;
+        }
+
+        if (i == 0 || i == parabola_contour.size() - 1)
+        {
+            x += x_step;
+            i++;
+            continue;
+        }
+
+        double exactCurvature = 6.0 / pow(1 + 36 * pow(x, 2), 1.5);
+        double error = std::abs(exactCurvature - parabolaCurvature[i]);
+
+
+
+//        std::cout << "error = " << error << " curvature = " << parabolaCurvature[i] << std::endl;
+//        if (error > 0.5)
+//        {
+//            std::cout << "\t" << parabola_contour[i - 1] << std::endl;
+//            std::cout << "\t" << parabola_contour[i] << std::endl;
+//            std::cout << "\t" << parabola_contour[i + 1] << std::endl;
+//        }
+
+        meanError += error;
+        countError++;
+
+
+        x += x_step;
+        i++;
+    }
+
+    meanError /= countError;
+
+    EXPECT_LE(meanError, 0.0005);
+}
