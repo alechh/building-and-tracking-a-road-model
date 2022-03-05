@@ -188,19 +188,20 @@ void experiment_with_curvature_calculation(Mat &birdview)
 
     Utils::sort_vector_of_vectors_of_points(contours);
 
-    Mat frameContours(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
-    Utils::draw_contours(contours, frameContours, 1);
+//    Mat frameContours(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
+//    Utils::draw_contours(contours, frameContours, 1);
 
     Mat frameRoadModel(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
     std::vector< std::vector<double> > contoursCurvature(contours.size());
 
+    // TODO нужно либо грамотно удалить каждый второй вектор, либо добавить параметр "шаг" во вторую функцию вычисления кривизны
     int step = 1;
-    Utils::calculate_contours_curvature(contoursCurvature, contours, step);
+    //Utils::calculate_contours_curvature(contoursCurvature, contours, step);
+    contoursCurvature[0] = Utils::calculate_curvature_2(contours[0]);
 
     RoadModel roadModel = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvature[0]);
     ExperimentWithCurvatureCalculation::drawRoadModel(frame_birdview_roi_distance, roadModel);
 
-    imshow("frameContour", frameContours);
     imshow("roadModel", frame_birdview_roi_distance);
 
     //ExperimentWithCurvatureCalculation::drawArcsOnContour(frame_birdview_roi_distance, contours[0], contoursCurvature[0]);
@@ -366,7 +367,6 @@ void checkContoursOnVideo(const std::string &PATH, const double resize = 1)
     /**
      * Это функция для тестирования выделения контура, где есть повороты. Только на этом видео много теней, вот если бы
      * их как-то отфильтровать, то было бы круто
-     * Вид сверху и roi я уже сделал.
      */
     VideoCapture capture(PATH);
     if (!capture.isOpened())
@@ -413,8 +413,8 @@ void checkContoursOnVideo(const std::string &PATH, const double resize = 1)
 
         Utils::sort_vector_of_vectors_of_points(contours);
 
-        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
-        Utils::draw_contours(contours, frame_contours, 1);
+//        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
+//        Utils::draw_contours(contours, frame_contours, 1);
 
         //imshow("contours", frame_contours);
 
