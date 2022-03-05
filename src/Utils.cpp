@@ -178,6 +178,13 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
             continue;
         }
 
+        // если точки совпадают
+        if (prev == curr || curr == next || next == prev)
+        {
+            contourCurvature[i] = 0;
+            continue;
+        }
+
         double a, b, c; // стороны треугольника
         a = sqrt(pow(prev.x - curr.x, 2) + pow(prev.y - curr.y, 2));
         b = sqrt(pow(curr.x - next.x, 2) + pow(curr.y - next.y, 2));
@@ -188,7 +195,7 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
 
         double R = (a * b * c) / (4 * S); // радиус описанной окружности
 
-        contourCurvature[i] = 1.0 / R;
+        contourCurvature[i] = 1.0 / R; // кривизна = 1 / R
     }
 
     return contourCurvature;
