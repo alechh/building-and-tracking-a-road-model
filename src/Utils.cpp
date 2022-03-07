@@ -161,9 +161,6 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
 {
     std::vector<double> contourCurvature(contour.size());
 
-    contourCurvature[0] = 0;
-    contourCurvature[contourCurvature.size() - 1] = 0;
-
     for (int i = 1; i < contour.size() - 2;)
     {
 
