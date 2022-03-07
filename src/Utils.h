@@ -24,7 +24,7 @@ public:
 
     static void calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
 
-    static std::vector<double> calculate_curvature_2(const std::vector<cv::Point> &contour);
+    static std::vector<double> calculate_curvature_2(const std::vector<cv::Point> &contour, int step);
 };
 
 

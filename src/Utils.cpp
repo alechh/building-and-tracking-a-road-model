@@ -157,14 +157,14 @@ void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &conto
     }
 }
 
-std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &contour)
+std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &contour, int step)
 {
     std::vector<double> contourCurvature(contour.size());
 
     contourCurvature[0] = 0;
     contourCurvature[contourCurvature.size() - 1] = 0;
 
-    for (int i = 1; i < contour.size() - 2; ++i)
+    for (int i = 1; i < contour.size() - 2;)
     {
 
         cv::Point prev, curr, next;
@@ -176,6 +176,13 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
         if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y))
         {
             contourCurvature[i] = 0;
+
+            i++;
+            if (i > contour.size() - 2)
+            {
+                break;
+            }
+
             continue;
         }
 
@@ -183,6 +190,13 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
         if (prev == curr || curr == next || next == prev)
         {
             contourCurvature[i] = 0;
+
+            i++;
+            if (i > contour.size() - 2)
+            {
+                break;
+            }
+
             continue;
         }
 
@@ -197,6 +211,25 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
         double R = (a * b * c) / (4 * S); // радиус описанной окружности
 
         contourCurvature[i] = 1.0 / R; // кривизна = 1 / R
+
+        // Если шаг != 1, то заполняем кривизну в точках, которые мы пропустим
+        for (int k = i + 1; k < i + step; ++k)
+        {
+            if (k == contour.size())
+            {
+                break;
+            }
+            contourCurvature[k] = 1.0 / R;
+        }
+
+        i += step;
+
+        // Если шаг != 1, то нужна проверка, что мы не вылетели за пределы массива
+        // Причем последний элемент, на котором мы должны остановится, это contour[contour.size() - 2]
+        if (i > contour.size() - 2)
+        {
+            break;
+        }
     }
 
     return contourCurvature;
