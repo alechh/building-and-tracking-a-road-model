@@ -197,10 +197,10 @@ void experiment_with_curvature_calculation(Mat &birdview)
     // TODO нужно либо грамотно удалить каждый второй вектор, либо добавить параметр "шаг" во вторую функцию вычисления кривизны
     int step = 1;
     //Utils::calculate_contours_curvature(contoursCurvature, contours, step);
-    contoursCurvature[0] = Utils::calculate_curvature_2(contours[0]);
+    contoursCurvature[0] = Utils::calculate_curvature_2(contours[0], step);
 
     RoadModel roadModel = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvature[0]);
-    ExperimentWithCurvatureCalculation::drawRoadModel(frame_birdview_roi_distance, roadModel);
+    roadModel.drawModel(frame_birdview_roi_distance);
 
     imshow("roadModel", frame_birdview_roi_distance);
 
