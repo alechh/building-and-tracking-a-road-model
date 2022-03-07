@@ -24,6 +24,7 @@ public:
     void setNextElement(const LineSegment &nextElement);
     void setNextElement(const CircularArc &nextElement);
     virtual void drawModelElement(cv::Mat &src) const;
+    virtual void printInformation() const;
 };
 
 class LineSegment: public ModelElement
@@ -34,6 +35,7 @@ public:
     LineSegment(cv::Point begin, cv::Point end);
     LineSegment(cv::Point begin, cv::Point end, ModelElement nextElement);
     void drawModelElement(cv::Mat &src) const override;
+    void printInformation() const override;
 };
 
 class CircularArc: public  ModelElement
@@ -45,6 +47,7 @@ public:
     CircularArc(cv::Point center, double radius);
     CircularArc(cv::Point center, double radius, ModelElement nextElement);
     void drawModelElement(cv::Mat &src) const override;
+    void printInformation() const override;
 };
 
 
@@ -73,6 +76,7 @@ public:
     int getModelRightElementCounter() const;
     int countModelRightElements() const;
     void drawModel(cv::Mat &dst) const;
+    void printInformationOfTheRightSide() const;
 
 };
 
