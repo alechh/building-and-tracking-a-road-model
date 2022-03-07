@@ -55,6 +55,10 @@ class RoadModel{
 private:
     int modelLeftElementCounter;
     int modelRightElementCounter;
+
+    void drawLeftSide(cv::Mat &dst) const;
+    void drawRightSide(cv::Mat &dst) const;
+
 public:
     std::shared_ptr<ModelElement> leftHead, rightHead;
     //ModelElement *leftHead, *rightHead;
@@ -68,6 +72,8 @@ public:
     int getModelLeftElementCounter() const;
     int getModelRightElementCounter() const;
     int countModelRightElements() const;
+    void drawModel(cv::Mat &dst) const;
+
 };
 
 

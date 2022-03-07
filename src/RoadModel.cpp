@@ -175,4 +175,40 @@ int RoadModel::countModelRightElements() const
     return modelRightElementsCounter;
 }
 
+void RoadModel::drawModel(cv::Mat &dst) const
+{
+    if (this->leftHead)
+    {
+        drawLeftSide(dst);
+    }
+
+    if (this->rightHead)
+    {
+        drawRightSide(dst);
+    }
+}
+
+void RoadModel::drawRightSide(cv::Mat &dst) const
+{
+    std::shared_ptr<ModelElement> currModelElement(this->rightHead);
+
+    while(currModelElement)
+    {
+        currModelElement->drawModelElement(dst);
+        currModelElement = currModelElement->next;
+    }
+}
+
+void RoadModel::drawLeftSide(cv::Mat &dst) const
+{
+    std::shared_ptr<ModelElement> currModelElement(this->leftHead);
+
+    while(currModelElement)
+    {
+        currModelElement->drawModelElement(dst);
+        currModelElement = currModelElement->next;
+    }
+}
+
+
 
