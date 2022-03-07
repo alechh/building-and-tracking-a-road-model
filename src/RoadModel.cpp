@@ -4,6 +4,7 @@
 
 #include "RoadModel.h"
 #include <opencv2/imgproc.hpp>
+#include <iostream>
 
 ModelElement::ModelElement() : next(nullptr) {}
 
@@ -33,6 +34,8 @@ void ModelElement::setNextElement(const CircularArc &nextElement)
     this->next = std::make_shared<CircularArc>(nextElement);
 }
 
+void ModelElement::printInformation() const {}
+
 LineSegment::LineSegment(cv::Point begin, cv::Point end) : ModelElement(), begin(begin), end(end) {}
 
 LineSegment::LineSegment(cv::Point begin, cv::Point end, ModelElement nextElement) : ModelElement(), begin(begin), end(end)
@@ -42,7 +45,12 @@ LineSegment::LineSegment(cv::Point begin, cv::Point end, ModelElement nextElemen
 
 void LineSegment::drawModelElement(cv::Mat &src) const
 {
-    cv::line(src, this->begin, this->end, cv::Scalar(0, 0, 255), 2);
+    cv::line(src, this->begin, this->end, cv::Scalar(0, 0, 255), 1);
+}
+
+void LineSegment::printInformation() const
+{
+    std::cout << "lineSegment: \n\tbegin: " << this->begin << "\n\tend:" << this->end << std::endl;
 }
 
 CircularArc::CircularArc(cv::Point center, double radius): center(center), radius(radius) {}
@@ -54,7 +62,12 @@ CircularArc::CircularArc(cv::Point center, double radius, ModelElement nextEleme
 
 void CircularArc::drawModelElement(cv::Mat &src) const
 {
-    cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, 0, 360 / 2, cv::Scalar(255, 0, 0), 2);
+    cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, 0, 360, cv::Scalar(255, 0, 0), 2);
+}
+
+void CircularArc::printInformation() const
+{
+    std::cout << "circularArc:\n\tcenter" << this->center << "\n\tradius:" << this->radius << std::endl;
 }
 
 RoadModel::RoadModel(): leftHead(nullptr), rightHead(nullptr), modelLeftElementCounter(0), modelRightElementCounter(0) {}
@@ -174,5 +187,55 @@ int RoadModel::countModelRightElements() const
 
     return modelRightElementsCounter;
 }
+
+void RoadModel::drawModel(cv::Mat &dst) const
+{
+    if (this->leftHead)
+    {
+        drawLeftSide(dst);
+    }
+
+    if (this->rightHead)
+    {
+        drawRightSide(dst);
+    }
+}
+
+void RoadModel::drawRightSide(cv::Mat &dst) const
+{
+    std::shared_ptr<ModelElement> currModelElement(this->rightHead);
+
+    while(currModelElement)
+    {
+        currModelElement->drawModelElement(dst);
+        currModelElement = currModelElement->next;
+    }
+}
+
+void RoadModel::drawLeftSide(cv::Mat &dst) const
+{
+    std::shared_ptr<ModelElement> currModelElement(this->leftHead);
+
+    while(currModelElement)
+    {
+        currModelElement->drawModelElement(dst);
+        currModelElement = currModelElement->next;
+    }
+}
+
+void RoadModel::printInformationOfTheRightSide() const
+{
+    if (this->rightHead)
+    {
+        std::shared_ptr<ModelElement> currModelElement(this->rightHead);
+
+        while(currModelElement)
+        {
+            currModelElement->printInformation();
+            currModelElement = currModelElement->next;
+        }
+    }
+}
+
 
 

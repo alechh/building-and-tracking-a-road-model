@@ -39,6 +39,13 @@ void ExperimentWithCurvatureCalculation::drawArcsOnContour(cv::Mat &src, const s
     }
 }
 
+
+cv::Point getCenterOfTheArc(const cv::Point &begin, const cv::Point &end)
+{
+    return (begin + end) / 2;
+}
+
+
 RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
 {
     /**
@@ -47,67 +54,87 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
      */
     RoadModel roadModel;
 
-    cv::Point lineSegmentBegin = cv::Point(-1, -1);
-    cv::Point lineSegmentEnd = cv::Point(-1, -1);
+    cv::Point currElementBegin = contour[0];
+    cv::Point currElementEnd = contour[0];
+
+    int currLineSegmentNumber = 0;
+    int currArcSegmentNumber = 0;
 
     double curvatureThreshold = 0.5; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
+
+    double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
+    const double delta = 0; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
+
     for (int i = 0; i < contour.size(); ++i)
     {
-        if (std::abs(contourCurvature[i]) < curvatureThreshold)
+        if (std::abs(contourCurvature[i]) < curvatureThreshold) // если это часть прямой
         {
-            // Это часть прямой
-            if (lineSegmentBegin == cv::Point(-1, -1))
+            if (currArcSegmentNumber > 0) // если до прямой этого была дуга
             {
-                // если это начало прямого отрезка
-                lineSegmentBegin = contour[i];
+                cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd);
+                roadModel.addElementToRight(center, 1.0 / prevCurvature);
+
+                std::cout << currArcSegmentNumber << std::endl;
+
+                currArcSegmentNumber = 0;
             }
-            lineSegmentEnd = contour[i];
+
+            currLineSegmentNumber++;
+            currElementEnd = contour[i];
         }
-        else
+        else // если это дуга окружности
         {
-            // Это дуга окружности
-            if (lineSegmentEnd == cv::Point(-1, -1))
+            if (currLineSegmentNumber > 0) // если до дуги шел участок прямой
             {
-                // если до этого не шел прямой отрезок
-                if (contourCurvature[i] != std::numeric_limits<double>::infinity())
-                {
-                    roadModel.addElementToRight(contour[i], contourCurvature[i]);
-                }
+                roadModel.addElementToRight(currElementBegin, currElementEnd);
+
+                currLineSegmentNumber = 0;
+
+                currElementBegin = contour[i];
+                currElementEnd = contour[i];
+                prevCurvature = contourCurvature[i];
+                continue;
             }
-            else
+
+            if (contourCurvature[i] != std::numeric_limits<double>::infinity())
             {
-                // если закончился прямой отрезок и встилась часть контура, которой соответствует дуга окружности
-                roadModel.addElementToRight(lineSegmentBegin, lineSegmentEnd);
+                currArcSegmentNumber++;
 
-                lineSegmentBegin = cv::Point(-1, -1);
-                lineSegmentEnd = cv::Point(-1, -1);
-
-                if (contourCurvature[i] != std::numeric_limits<double>::infinity())
+                if (std::abs(contourCurvature[i] - prevCurvature) <= delta) // если продолжается текущий участок
                 {
-                    roadModel.addElementToRight(contour[i], contourCurvature[i]);
+                    currElementEnd = contour[i];
+                }
+                else // если встретился новый участок уровня кривизны
+                {
+                    cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd); // пока очень неточно вычисляем центр
+                    // мб центр считать динамически сдвигать
+
+                    roadModel.addElementToRight(center, 1.0 / prevCurvature);
+
+                    std::cout << currArcSegmentNumber << std::endl;
+
+                    currArcSegmentNumber = 0;
+
+                    currElementBegin = contour[i];
+                    currElementEnd = contour[i];
+                    prevCurvature = contourCurvature[i];
                 }
             }
         }
     }
 
+    if (currArcSegmentNumber > 0)
+    {
+        cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd);
+        roadModel.addElementToRight(center, 1.0 / prevCurvature);
+
+        std::cout << currArcSegmentNumber << std::endl;
+    }
+
+    if (currLineSegmentNumber > 0)
+    {
+        roadModel.addElementToRight(currElementBegin, currElementEnd);
+    }
+
     return roadModel;
 }
-
-void ExperimentWithCurvatureCalculation::drawRoadModel(cv::Mat &src, const RoadModel &roadModel)
-{
-    /**
-     * Отрисовка модели дороги (пока только ПРАВОЙ её части).
-     */
-
-    /**
-     * Вопрос: почему этот метод находится не в классе RoadModel ???
-     */
-     std::shared_ptr<ModelElement> currModelElement(roadModel.rightHead);
-
-     while(currModelElement)
-     {
-         currModelElement->drawModelElement(src);
-         currModelElement = currModelElement->next;
-     }
-}
-

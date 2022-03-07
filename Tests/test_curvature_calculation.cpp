@@ -8,7 +8,7 @@ std::vector<cv::Point> get_circle_contour(const int& R)
 {
     std::vector<cv::Point> contour;
     double t = 0;
-    double epsilon = 10e-4;
+    double epsilon = 10e-2;
     while (t < 2 * CV_PI)
     {
         contour.emplace_back(500 + R * cos(t),300 + R * sin(t));
@@ -101,7 +101,7 @@ TEST(CurvatureTest, CircleCurvature)
     EXPECT_EQ(count_zero, 0);
     EXPECT_EQ(count_inf, 0);
     EXPECT_LE(max_error, 2.19706e-08);
-    EXPECT_LE(min_error, 3.6e-14);
+    EXPECT_LE(min_error, 2.0e-9);
 }
 
 
@@ -251,10 +251,11 @@ TEST(CurvatureTest, CircleCurvature2)
     std::vector<cv::Point> circle_contour = get_circle_contour(radius);
     contours.emplace_back(circle_contour);
 
-    circle_curvature = Utils::calculate_curvature_2(circle_contour);
+    const int step = 1;
+    circle_curvature = Utils::calculate_curvature_2(circle_contour, step);
 
     double errorSum = 0;
-    int countNonZero;
+    int countNonZero = 0;
 
     for (int i = 0; i < circle_curvature.size(); ++i)
     {
@@ -285,7 +286,8 @@ TEST(CurvatureTest, ParabolaCurvature2)
     std::vector<cv::Point> parabola_contour = get_parabola_contour(x_step, left_x_boundary, right_x_boundary);
     contours.emplace_back(parabola_contour);
 
-    parabolaCurvature = Utils::calculate_curvature_2(parabola_contour);
+    const int step = 1;
+    parabolaCurvature = Utils::calculate_curvature_2(parabola_contour, step);
 
     double meanError = 0;
     int countError = 0;
@@ -314,8 +316,6 @@ TEST(CurvatureTest, ParabolaCurvature2)
         double exactCurvature = 6.0 / pow(1 + 36 * pow(x, 2), 1.5);
         double error = std::abs(exactCurvature - parabolaCurvature[i]);
 
-
-
 //        std::cout << "error = " << error << " curvature = " << parabolaCurvature[i] << std::endl;
 //        if (error > 0.5)
 //        {
@@ -326,7 +326,6 @@ TEST(CurvatureTest, ParabolaCurvature2)
 
         meanError += error;
         countError++;
-
 
         x += x_step;
         i++;
