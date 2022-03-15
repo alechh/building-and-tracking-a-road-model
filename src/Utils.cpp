@@ -6,6 +6,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
+
 std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step = 1)
 {
     std::vector<double> vecCurvature(vecContourPoints.size());
@@ -231,3 +232,81 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
 
     return contourCurvature;
 }
+
+
+cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pplus, const cv::Point2f &pminus, int iplus, int iminus)
+{
+    cv::Point2f firstDerivative;
+
+    firstDerivative.x = (pplus.x - pminus.x) / static_cast<float>(iplus - iminus);
+    firstDerivative.y = (pplus.y - pminus.y) / static_cast<float>(iplus - iminus);
+
+    return firstDerivative;
+}
+
+
+/**
+ * Get coefficients of the tangent equation
+ * @param touchPoint -- the point of contact of a straight line
+ * @param firstDerivative -- first derivative of the curve at the point of tangency in two directions
+ * @return -- vector of the coefficinets A * y + B * x + C = 0.
+ * coefficients[0] -- A
+ * coefficients[1] -- B
+ * coefficients[2] -- C
+ */
+std::vector<double> Utils::getCoefficientsOfTheTangent(const cv::Point &touchPoint, const cv::Point2f &firstDerivative)
+{
+    // y - y0 = f'(x0) * (x - x0)
+
+    std::vector<double> coefficients(3);
+    coefficients[0] = 1;
+    coefficients[1] = -firstDerivative.x;
+    coefficients[2] = firstDerivative.x * touchPoint.x - touchPoint.y;
+
+    return coefficients;
+}
+
+
+/**
+ * Get points pPlus, pMinus and its indices in segment.
+ * These points and indices are used to calculate the derivative at the point that is between pPlus and pMinus.
+ * @param segment -- vector of the points of the segment
+ * @param pPlus -- next point from the center
+ * @param pMinus -- previous point to the center
+ * @param pPlusIndex -- index of the pPlus point
+ * @param pMinusIndex -- index of the pMinus point
+ */
+void Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex, int &pMinusIndex, cv::Point &centerPoint)
+{
+    int indexOfTheCenter = segment.size() / 2;
+
+    centerPoint = segment[indexOfTheCenter];
+
+    pMinusIndex = indexOfTheCenter - 1;
+    pPlusIndex = indexOfTheCenter + 1;
+
+    pMinus = segment[pMinusIndex];
+    pPlus = segment[pPlusIndex];
+
+    // Нужно, чтобы точки были различными (зачем?)
+    bool hasPMinusChanged = false;
+    while (pMinus != pPlus)
+    {
+        if (!hasPMinusChanged)
+        {
+            pMinusIndex--;
+            pMinus = segment[pMinusIndex];
+
+            hasPMinusChanged = true;
+        }
+        else
+        {
+            pPlusIndex++;
+            pPlus = segment[pPlusIndex];
+
+            hasPMinusChanged = false;
+        }
+    }
+}
+
+

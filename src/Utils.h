@@ -25,6 +25,12 @@ public:
     static void calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
 
     static std::vector<double> calculate_curvature_2(const std::vector<cv::Point> &contour, int step);
+
+    static cv::Point2f getFirstDerivative(const cv::Point2f &pplus, const cv::Point2f &pminus, int iplus, int iminus);
+
+    static void getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex, int &pMinusIndex, cv::Point &centerPoint);
+
+    static std::vector<double> getCoefficientsOfTheTangent(const cv::Point &touchPoint, const cv::Point2f &firstDerivative);
 };
 
 
