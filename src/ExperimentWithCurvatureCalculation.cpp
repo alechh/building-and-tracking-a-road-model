@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "ExperimentWithCurvatureCalculation.h"
 #include "RoadModel.h"
+#include "Utils.h"
 
 
 void ExperimentWithCurvatureCalculation::drawArc(cv::Mat &src, double radius, cv::Point center, const cv::Scalar &color = cv::Scalar(0, 0, 255))
@@ -40,9 +41,31 @@ void ExperimentWithCurvatureCalculation::drawArcsOnContour(cv::Mat &src, const s
 }
 
 
-cv::Point getCenterOfTheArc(const cv::Point &begin, const cv::Point &end)
+cv::Point getCenterOfTheArc(const cv::Point &begin, const cv::Point &end, const std::vector<cv::Point> &segment)
 {
-    return (begin + end) / 2;
+    cv::Point center;
+
+    if (segment.size() < 3)
+    {
+        std::cerr << "cv::Point getCenterOfTheArc -- segment.size() < 3" << std::endl;
+        return center;
+    }
+
+    int pMinusIndex, pPlusIndex;
+    cv::Point pMinus, pPlus, centerPoint;
+    Utils::getPPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint);
+
+    cv::Point2f firstDerivative = Utils::getFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex);
+
+    std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
+
+    // A * y + B * x + C = 0
+    std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
+
+
+
+    //return (begin + end) / 2;
+    return center;
 }
 
 
@@ -59,8 +82,9 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     int currLineSegmentNumber = 0;
     int currArcSegmentNumber = 0;
+    std::vector<cv::Point> arcSegment;
 
-    double curvatureThreshold = 0.5; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
+    double curvatureThreshold = 0.01; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
     const double delta = 0; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
@@ -71,12 +95,14 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
         {
             if (currArcSegmentNumber > 0) // если до прямой этого была дуга
             {
-                cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd);
+                cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd, arcSegment);
                 roadModel.addElementToRight(center, 1.0 / prevCurvature);
 
-                std::cout << currArcSegmentNumber << std::endl;
+                arcSegment.clear();
 
                 currArcSegmentNumber = 0;
+
+                currElementBegin = contour[i];
             }
 
             currLineSegmentNumber++;
@@ -103,21 +129,24 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                 if (std::abs(contourCurvature[i] - prevCurvature) <= delta) // если продолжается текущий участок
                 {
                     currElementEnd = contour[i];
+
+                    arcSegment.emplace_back(contour[i]);
                 }
                 else // если встретился новый участок уровня кривизны
                 {
-                    cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd); // пока очень неточно вычисляем центр
-                    // мб центр считать динамически сдвигать
+                    cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd, arcSegment);
 
                     roadModel.addElementToRight(center, 1.0 / prevCurvature);
 
-                    std::cout << currArcSegmentNumber << std::endl;
-
                     currArcSegmentNumber = 0;
+
+                    arcSegment.clear();
 
                     currElementBegin = contour[i];
                     currElementEnd = contour[i];
                     prevCurvature = contourCurvature[i];
+
+                    arcSegment.emplace_back(contour[i]);
                 }
             }
         }
@@ -125,13 +154,10 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     if (currArcSegmentNumber > 0)
     {
-        cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd);
+        cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd, arcSegment);
         roadModel.addElementToRight(center, 1.0 / prevCurvature);
-
-        std::cout << currArcSegmentNumber << std::endl;
     }
-
-    if (currLineSegmentNumber > 0)
+    else if (currLineSegmentNumber > 0)
     {
         roadModel.addElementToRight(currElementBegin, currElementEnd);
     }
