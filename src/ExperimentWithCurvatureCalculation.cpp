@@ -41,7 +41,7 @@ void ExperimentWithCurvatureCalculation::drawArcsOnContour(cv::Mat &src, const s
 }
 
 
-cv::Point getCenterOfTheArc(const cv::Point &begin, const cv::Point &end, const std::vector<cv::Point> &segment)
+cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 {
     cv::Point center;
 
@@ -95,8 +95,9 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
         {
             if (currArcSegmentNumber > 0) // если до прямой этого была дуга
             {
-                cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd, arcSegment);
-                roadModel.addElementToRight(center, 1.0 / prevCurvature);
+                double radiusOfTheCircle = 1.0 / prevCurvature;
+                cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
+                roadModel.addElementToRight(center, radiusOfTheCircle);
 
                 arcSegment.clear();
 
@@ -134,9 +135,10 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                 }
                 else // если встретился новый участок уровня кривизны
                 {
-                    cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd, arcSegment);
+                    double radiusOfTheCircle = 1.0 / prevCurvature;
+                    cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
 
-                    roadModel.addElementToRight(center, 1.0 / prevCurvature);
+                    roadModel.addElementToRight(center, radiusOfTheCircle);
 
                     currArcSegmentNumber = 0;
 
@@ -154,8 +156,9 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     if (currArcSegmentNumber > 0)
     {
-        cv::Point center = getCenterOfTheArc(currElementBegin, currElementEnd, arcSegment);
-        roadModel.addElementToRight(center, 1.0 / prevCurvature);
+        double radiusOfTheCircle = 1.0 / prevCurvature;
+        cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
+        roadModel.addElementToRight(center, radiusOfTheCircle);
     }
     else if (currLineSegmentNumber > 0)
     {
