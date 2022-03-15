@@ -343,3 +343,19 @@ std::vector<double> Utils::getCoefficientsOfThePerpendicularLine(const std::vect
 }
 
 
+/**
+ * Solution of the equation (x - x0)^2 + (-B/A * x - C/A - y0)^2 = R^2
+ * https://www.wolframalpha.com/input?i=%28x-x0%29%5E2+%2B+%28-B%2FA*x-C%2FA-y0%29%5E2+%3D+R%5E2
+ * @return -- typle of the solutions x1, x2
+ */
+std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(double A, double B, double C, double R, const cv::Point &point)
+{
+    double x1, x2;
+
+    x1 = (sqrt(A*A*R*R - A*A*point.y*point.y - 2*A*B*point.x*point.y - 2*A*C*point.y + B*B*R*R - B*B*point.x*point.x - 2*B*C*point.x - C*C) / A - (B*C)/(A*A) - (B*point.y)/A + point.x) / ((B*B) / (A*A) + 1);
+    x2 = (-sqrt(A*A*R*R - A*A*point.y*point.y - 2*A*B*point.x*point.y - 2*A*C*point.y + B*B*R*R - B*B*point.x*point.x - 2*B*C*point.x - C*C) / A - (B*C)/(A*A) - (B*point.y)/A + point.x) / ((B*B) / (A*A) + 1);
+
+    return std::make_tuple(x1, x2);
+}
+
+
