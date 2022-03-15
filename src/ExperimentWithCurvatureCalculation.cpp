@@ -62,6 +62,12 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
     // A * y + B * x + C = 0
     std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
 
+    double A, B, C;
+    A = coefficientsOfThePerpendicularLine[0];
+    B = coefficientsOfThePerpendicularLine[1];
+    C = coefficientsOfThePerpendicularLine[2];
+
+    std::tuple<cv::Point, cv::Point> candidatesForCenter = Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(A, B, C, R, centerPoint);
 
 
     //return (begin + end) / 2;
