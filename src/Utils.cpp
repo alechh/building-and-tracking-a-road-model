@@ -292,21 +292,54 @@ void Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &
     bool hasPMinusChanged = false;
     while (pMinus != pPlus)
     {
+        if (pMinusIndex == 0 && pPlusIndex == segment.size() - 1)
+        {
+            break;
+        }
+
         if (!hasPMinusChanged)
         {
-            pMinusIndex--;
-            pMinus = segment[pMinusIndex];
+            if (pMinusIndex != 0)
+            {
+                pMinusIndex--;
+                pMinus = segment[pMinusIndex];
+            }
 
             hasPMinusChanged = true;
         }
         else
         {
-            pPlusIndex++;
-            pPlus = segment[pPlusIndex];
+            if (pPlusIndex != segment.size() - 1)
+            {
+                pPlusIndex++;
+                pPlus = segment[pPlusIndex];
+            }
 
             hasPMinusChanged = false;
         }
     }
+}
+
+/**
+ *
+ * @param coefficientsOfTheLine -- vector of the coefficinets A * y + B * x + C = 0.
+ *  coefficientsOfTheLine[0] -- A
+ *  coefficientsOfTheLine[1] -- B
+ *  coefficientsOfTheLine[2] -- C
+ * @return -- vector of the coefficinets of the perpendicular line A' * y + B' * x + C' = 0.
+ *  oefficients[0] -- A'
+ *  oefficients[1] -- B'
+ *  oefficients[2] -- C'
+ */
+std::vector<double> Utils::getCoefficientsOfThePerpendicularLine(const std::vector<double> &coefficientsOfTheLine, const cv::Point &touchPoint)
+{
+    std::vector<double> coefficientsOfThePerpendicularLine(3);
+
+    coefficientsOfThePerpendicularLine[0] = coefficientsOfTheLine[1];
+    coefficientsOfThePerpendicularLine[1] = -coefficientsOfTheLine[0];
+    coefficientsOfThePerpendicularLine[2] = coefficientsOfTheLine[0] * touchPoint.x - coefficientsOfTheLine[1] * touchPoint.y;
+
+    return coefficientsOfThePerpendicularLine;
 }
 
 
