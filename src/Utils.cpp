@@ -358,4 +358,32 @@ std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(double A, do
     return std::make_tuple(x1, x2);
 }
 
+/**
+ * When solving a system of equations , y was expressed in terms of x as follows
+ *  y = -B/A * x - C/A
+ * @return
+ */
+int calculatingYThroughX(double x, double A, double B, double C)
+{
+    return -B * x / A - C / A;
+}
+
+
+std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R, const cv::Point &point)
+{
+    cv::Point firstSolution, secondSolution;
+
+    std::tuple<double, double> xSolutions = Utils::solutionOfTheSystemWithRespectToX(A, B, C, R, point);
+
+    firstSolution.x = std::get<0>(xSolutions);
+    firstSolution.y = calculatingYThroughX(firstSolution.x, A, B, C);
+
+    secondSolution.x = std::get<1>(xSolutions);
+    secondSolution.y = calculatingYThroughX(secondSolution.x, A, B, C);
+
+    std::tuple<cv::Point, cv::Point> resultPoints = std::make_tuple(firstSolution, secondSolution);
+
+    return resultPoints;
+}
+
 
