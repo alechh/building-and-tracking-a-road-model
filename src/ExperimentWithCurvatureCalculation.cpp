@@ -77,6 +77,39 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 }
 
 
+/**
+ * Adding an arc segment to the road model.
+ * If a segment has less than three points, then it will be added to the model as a segment
+ * @param arcSegment -- vector of the points of the arc segment
+ * @param roadModel -- model of the road
+ * @param prevCurvature -- curvature of the segment
+ */
+void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double prevCurvature)
+{
+    if (arcSegment.size() < 3) // если у дуги <3 точек, то отрисуем её как отрезок
+    {
+        if (arcSegment.empty())
+        {
+            std::cerr << "arcSegment is empty" << std::endl;
+        }
+        else if (arcSegment.size() == 1)
+        {
+            roadModel.addElementToRight(arcSegment[0], arcSegment[0]);
+        }
+        else if (arcSegment.size() == 2)
+        {
+            roadModel.addElementToRight(arcSegment[0], arcSegment[1]);
+        }
+    }
+    else
+    {
+        double radiusOfTheCircle = 1.0 / prevCurvature;
+        cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
+        roadModel.addElementToRight(center, radiusOfTheCircle);
+    }
+}
+
+
 RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
 {
     /**
@@ -103,9 +136,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
         {
             if (currArcSegmentNumber > 0) // если до прямой этого была дуга
             {
-                double radiusOfTheCircle = 1.0 / prevCurvature;
-                cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
-                roadModel.addElementToRight(center, radiusOfTheCircle);
+                addArcToTheModel(arcSegment, roadModel, prevCurvature);
 
                 arcSegment.clear();
 
@@ -133,20 +164,17 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
             if (contourCurvature[i] != std::numeric_limits<double>::infinity())
             {
-                currArcSegmentNumber++;
-
                 if (std::abs(contourCurvature[i] - prevCurvature) <= delta) // если продолжается текущий участок
                 {
                     currElementEnd = contour[i];
 
                     arcSegment.emplace_back(contour[i]);
+
+                    currArcSegmentNumber++;
                 }
                 else // если встретился новый участок уровня кривизны
                 {
-                    double radiusOfTheCircle = 1.0 / prevCurvature;
-                    cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
-
-                    roadModel.addElementToRight(center, radiusOfTheCircle);
+                    addArcToTheModel(arcSegment, roadModel, prevCurvature);
 
                     currArcSegmentNumber = 0;
 
@@ -164,9 +192,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     if (currArcSegmentNumber > 0)
     {
-        double radiusOfTheCircle = 1.0 / prevCurvature;
-        cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
-        roadModel.addElementToRight(center, radiusOfTheCircle);
+        addArcToTheModel(arcSegment, roadModel, prevCurvature);
     }
     else if (currLineSegmentNumber > 0)
     {
