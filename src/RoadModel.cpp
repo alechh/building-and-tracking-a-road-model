@@ -62,6 +62,7 @@ CircularArc::CircularArc(cv::Point center, double radius, ModelElement nextEleme
 
 void CircularArc::drawModelElement(cv::Mat &src) const
 {
+    cv::circle(src, this->center, 1, cv::Scalar(0, 0, 255));
     cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, 0, 360, cv::Scalar(255, 0, 0), 2);
 }
 
