@@ -47,7 +47,7 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 
     if (segment.size() < 3)
     {
-        std::cerr << "cv::Point getCenterOfTheArc -- segment.size() < 3" << std::endl;
+        std::cerr << "cv::Point getCenterOfTheArc -- segment.size() < 3 (=" << segment.size() << ")" << std::endl;
         return center;
     }
 
@@ -57,9 +57,10 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 
     cv::Point2f firstDerivative = Utils::getFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex);
 
+    // A * x + B * y + C = 0
     std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
 
-    // A * y + B * x + C = 0
+    // A * x + B * y + C = 0
     std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
 
     double A, B, C;
@@ -69,6 +70,7 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 
     std::tuple<cv::Point, cv::Point> candidatesForCenter = Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(A, B, C, R, centerPoint);
 
+    center = Utils::chooseAmongTwoCandidatesForCenter(segment, candidatesForCenter);
 
     //return (begin + end) / 2;
     return center;
