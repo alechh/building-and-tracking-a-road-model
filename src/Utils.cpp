@@ -234,12 +234,12 @@ std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &c
 }
 
 
-cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pplus, const cv::Point2f &pminus, int iplus, int iminus)
+cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus)
 {
     cv::Point2f firstDerivative;
 
-    firstDerivative.x = (pplus.x - pminus.x) / static_cast<float>(iplus - iminus);
-    firstDerivative.y = (pplus.y - pminus.y) / static_cast<float>(iplus - iminus);
+    firstDerivative.x = (pPlus.x - pMinus.x) / static_cast<float>(iPlus - iMinus);
+    firstDerivative.y = (pPlus.y - pMinus.y) / static_cast<float>(iPlus - iMinus);
 
     return firstDerivative;
 }
@@ -249,7 +249,7 @@ cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pplus, const cv::Point2
  * Get coefficients of the tangent equation
  * @param touchPoint -- the point of contact of a straight line
  * @param firstDerivative -- first derivative of the curve at the point of tangency in two directions
- * @return -- vector of the coefficinets A * y + B * x + C = 0.
+ * @return -- vector of the coefficinets A * x + B * y + C = 0.
  * coefficients[0] -- A
  * coefficients[1] -- B
  * coefficients[2] -- C
@@ -257,11 +257,12 @@ cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pplus, const cv::Point2
 std::vector<double> Utils::getCoefficientsOfTheTangent(const cv::Point &touchPoint, const cv::Point2f &firstDerivative)
 {
     // y - y0 = f'(x0) * (x - x0)
+    // f'(x0) * x - 1 * y + y0 - f'(x0) * x0 = 0
 
     std::vector<double> coefficients(3);
-    coefficients[0] = 1;
-    coefficients[1] = -firstDerivative.x;
-    coefficients[2] = firstDerivative.x * touchPoint.x - touchPoint.y;
+    coefficients[0] = firstDerivative.x;
+    coefficients[1] = -1;
+    coefficients[2] = touchPoint.y - firstDerivative.x * touchPoint.x;
 
     return coefficients;
 }
@@ -322,22 +323,23 @@ void Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &
 
 /**
  *
- * @param coefficientsOfTheLine -- vector of the coefficinets A * y + B * x + C = 0.
+ * @param coefficientsOfTheLine -- vector of the coefficinets A * x + B * y + C = 0.
  *  coefficientsOfTheLine[0] -- A
  *  coefficientsOfTheLine[1] -- B
  *  coefficientsOfTheLine[2] -- C
- * @return -- vector of the coefficinets of the perpendicular line A' * y + B' * x + C' = 0.
+ * @return -- vector of the coefficinets of the perpendicular line A' * x + B' * y + C' = 0.
  *  oefficients[0] -- A'
  *  oefficients[1] -- B'
  *  oefficients[2] -- C'
  */
 std::vector<double> Utils::getCoefficientsOfThePerpendicularLine(const std::vector<double> &coefficientsOfTheLine, const cv::Point &touchPoint)
 {
+    // -B * x + A * y + (B * x0 - A * y0)
     std::vector<double> coefficientsOfThePerpendicularLine(3);
 
-    coefficientsOfThePerpendicularLine[0] = coefficientsOfTheLine[1];
-    coefficientsOfThePerpendicularLine[1] = -coefficientsOfTheLine[0];
-    coefficientsOfThePerpendicularLine[2] = coefficientsOfTheLine[0] * touchPoint.x - coefficientsOfTheLine[1] * touchPoint.y;
+    coefficientsOfThePerpendicularLine[0] = -coefficientsOfTheLine[1];
+    coefficientsOfThePerpendicularLine[1] = coefficientsOfTheLine[0];
+    coefficientsOfThePerpendicularLine[2] = coefficientsOfTheLine[1] * touchPoint.x - coefficientsOfTheLine[0] * touchPoint.y;
 
     return coefficientsOfThePerpendicularLine;
 }
@@ -352,20 +354,20 @@ std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(double A, do
 {
     double x1, x2;
 
-    x1 = (sqrt(A*A*R*R - A*A*point.y*point.y - 2*A*B*point.x*point.y - 2*A*C*point.y + B*B*R*R - B*B*point.x*point.x - 2*B*C*point.x - C*C) / A - (B*C)/(A*A) - (B*point.y)/A + point.x) / ((B*B) / (A*A) + 1);
-    x2 = (-sqrt(A*A*R*R - A*A*point.y*point.y - 2*A*B*point.x*point.y - 2*A*C*point.y + B*B*R*R - B*B*point.x*point.x - 2*B*C*point.x - C*C) / A - (B*C)/(A*A) - (B*point.y)/A + point.x) / ((B*B) / (A*A) + 1);
+    x1 = (sqrt(B*B*R*R - B*B*point.y*point.y - 2*A*B*point.x*point.y - 2*B*C*point.y + A*A*R*R - A*A*point.x*point.x - 2*A*C*point.x - C*C) / B - (A*C)/(B*B) - (A*point.y)/B + point.x) / ((A*A) / (B*B) + 1);
+    x2 = (-sqrt(B*B*R*R - B*B*point.y*point.y - 2*A*B*point.x*point.y - 2*B*C*point.y + A*A*R*R - A*A*point.x*point.x - 2*A*C*point.x - C*C) / B - (A*C)/(B*B) - (A*point.y)/B + point.x) / ((A*A) / (B*B) + 1);
 
     return std::make_tuple(x1, x2);
 }
 
 /**
  * When solving a system of equations , y was expressed in terms of x as follows
- *  y = -B/A * x - C/A
+ *  y = -A/B * x - C/A
  * @return
  */
 int calculatingYThroughX(double x, double A, double B, double C)
 {
-    return -B * x / A - C / A;
+    return -A / B * x - C / B;
 }
 
 
@@ -387,3 +389,20 @@ std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertain
 }
 
 
+int distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
+{
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+}
+
+
+cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter)
+{
+    if (distanceBetweenPoints(segment[0], std::get<0>(candidatesForCenter)) < distanceBetweenPoints(segment[0], std::get<1>(candidatesForCenter)))
+    {
+        return std::get<0>(candidatesForCenter);
+    }
+    else
+    {
+        return std::get<1>(candidatesForCenter);
+    }
+}

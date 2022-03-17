@@ -26,7 +26,7 @@ public:
 
     static std::vector<double> calculate_curvature_2(const std::vector<cv::Point> &contour, int step);
 
-    static cv::Point2f getFirstDerivative(const cv::Point2f &pplus, const cv::Point2f &pminus, int iplus, int iminus);
+    static cv::Point2f getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus);
 
     static void getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex, int &pMinusIndex, cv::Point &centerPoint);
 
@@ -37,6 +37,8 @@ public:
     static std::tuple<double, double> solutionOfTheSystemWithRespectToX(double A, double B, double C, double R, const cv::Point &point);
 
     static std::tuple<cv::Point, cv::Point> calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R, const cv::Point &point);
+
+    static cv::Point chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter);
 };
 
 
