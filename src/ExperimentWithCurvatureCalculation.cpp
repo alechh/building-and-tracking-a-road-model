@@ -88,11 +88,7 @@ void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadM
 {
     if (arcSegment.size() < 3) // если у дуги <3 точек, то отрисуем её как отрезок
     {
-        if (arcSegment.empty())
-        {
-            std::cerr << "arcSegment is empty" << std::endl;
-        }
-        else if (arcSegment.size() == 1)
+        if (arcSegment.size() == 1)
         {
             roadModel.addElementToRight(arcSegment[0], arcSegment[0]);
         }
