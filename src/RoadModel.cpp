@@ -53,9 +53,11 @@ void LineSegment::printInformation() const
     std::cout << "lineSegment: \n\tbegin: " << this->begin << "\n\tend:" << this->end << std::endl;
 }
 
-CircularArc::CircularArc(cv::Point center, double radius): center(center), radius(radius) {}
+CircularArc::CircularArc(cv::Point center, double radius, double startAndle, double endAngle)
+        : center(center), radius(radius), startAngle(startAndle), endAngle(endAngle) {}
 
-CircularArc::CircularArc(cv::Point center, double radius, ModelElement nextElement): center(center), radius(radius)
+CircularArc::CircularArc(cv::Point center, double radius, double startAngle, double endAngle, ModelElement nextElement)
+        : center(center), radius(radius), startAngle(startAngle), endAngle(endAngle)
 {
     setNextElement(nextElement);
 }
@@ -63,7 +65,7 @@ CircularArc::CircularArc(cv::Point center, double radius, ModelElement nextEleme
 void CircularArc::drawModelElement(cv::Mat &src) const
 {
     cv::circle(src, this->center, 1, cv::Scalar(0, 0, 255));
-    cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, 0, 360, cv::Scalar(255, 0, 0), 2);
+    cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 180 / CV_PI, this->startAngle, this->endAngle, cv::Scalar(255, 0, 0), 2);
 }
 
 void CircularArc::printInformation() const
@@ -106,7 +108,7 @@ void RoadModel::addElementToRight(cv::Point begin, cv::Point end)
     }
 }
 
-void RoadModel::addElementToRight(cv::Point center, double radius)
+void RoadModel::addElementToRight(cv::Point center, double radius, double startAngle, double endAngle)
 {
     if (this->rightHead)
     {
@@ -115,12 +117,12 @@ void RoadModel::addElementToRight(cv::Point center, double radius)
         {
             curr = curr->next;
         }
-        curr->setNextElement(CircularArc(std::move(center), radius));
+        curr->setNextElement(CircularArc(std::move(center), radius, 0, 0));
         this->modelRightElementCounter++;
     }
     else
     {
-        this->rightHead = std::make_shared<CircularArc>(std::move(center), radius);
+        this->rightHead = std::make_shared<CircularArc>(std::move(center), radius, startAngle, endAngle);
         this->modelRightElementCounter++;
         //this->rightHead = new CircularArc(std::move(center), radius);
     }
@@ -146,7 +148,7 @@ void RoadModel::addElementToLeft(cv::Point begin, cv::Point end)
     }
 }
 
-void RoadModel::addElementToLeft(cv::Point center, double radius)
+void RoadModel::addElementToLeft(cv::Point center, double radius, double startAngle, double endAngle)
 {
     if (this->leftHead)
     {
@@ -155,12 +157,12 @@ void RoadModel::addElementToLeft(cv::Point center, double radius)
         {
             curr = curr->next;
         }
-        curr->setNextElement(CircularArc(std::move(center), radius));
+        curr->setNextElement(CircularArc(std::move(center), radius, 0, 0));
         this->modelLeftElementCounter++;
     }
     else
     {
-        this->leftHead = std::make_shared<CircularArc>(std::move(center), radius);
+        this->leftHead = std::make_shared<CircularArc>(std::move(center), radius, startAngle, endAngle);
         this->modelLeftElementCounter++;
         //this->leftHead = new CircularArc(std::move(center), radius);
     }

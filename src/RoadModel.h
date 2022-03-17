@@ -43,9 +43,10 @@ class CircularArc: public  ModelElement
 private:
     cv::Point center;
     double radius;
+    double startAngle, endAngle;
 public:
-    CircularArc(cv::Point center, double radius);
-    CircularArc(cv::Point center, double radius, ModelElement nextElement);
+    CircularArc(cv::Point center, double radius, double startAndle, double endAngle);
+    CircularArc(cv::Point center, double radius, double startAngle, double endAngle, ModelElement nextElement);
     void drawModelElement(cv::Mat &src) const override;
     void printInformation() const override;
 };
@@ -69,9 +70,9 @@ public:
     RoadModel();
     RoadModel(ModelElement *leftHead, ModelElement *rightHead);
     void addElementToRight(cv::Point begin, cv::Point end);
-    void addElementToRight(cv::Point center, double radius);
+    void addElementToRight(cv::Point center, double radius, double startAngle, double endAngle);
     void addElementToLeft(cv::Point begin, cv::Point end);
-    void addElementToLeft(cv::Point center, double radius);
+    void addElementToLeft(cv::Point center, double radius, double startAngle, double endAngle);
     int getModelLeftElementCounter() const;
     int getModelRightElementCounter() const;
     int countModelRightElements() const;
