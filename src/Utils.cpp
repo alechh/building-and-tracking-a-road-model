@@ -441,12 +441,29 @@ double Utils::getAngleOfTheArc(double &startAngle, double &endAngle, const std::
 }
 
 
+double Utils::calculateAngleShift(const cv::Point &A, const cv::Point &C)
+{
+    cv::Point T(A.x, C.y);
+    double distAC = Utils::distanceBetweenPoints(A, C);
+    double distAT = Utils::distanceBetweenPoints(A, T);
+
+    if (distAT < distAC)
+    {
+        return 0;
+    }
+
+    double angleC = asin(distAT / distAC) * 180 / CV_PI;
+
+    return angleC;
+}
+
+
 double Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
 {
     double angleC = Utils::getAngleOfTheArc(startAngle, endAngle, segment, center, radiusOfTheCircle);
 
-    startAngle = 0;
+    startAngle = 180;
 
-    endAngle = angleC;
+    endAngle = 180 + angleC;
 
 }
