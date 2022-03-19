@@ -411,8 +411,8 @@ cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> 
 cv::Point Utils::getMidpoint(const cv::Point &a, const cv::Point &b)
 {
     cv::Point midPoint;
-    midPoint.x = a.x + (b.x + a.x) / 2;
-    midPoint.y = a.y + (b.y + a.y) / 2;
+    midPoint.x = (b.x + a.x) / 2;
+    midPoint.y = (b.y + a.y) / 2;
 
     return midPoint;
 }
@@ -423,6 +423,12 @@ double Utils::getAngleOfTheArc(double &startAngle, double &endAngle, const std::
     cv::Point M = Utils::getMidpoint(segment[0], segment[segment.size() - 1]);
 
     double distMCenter = Utils::distanceBetweenPoints(M, center);
+
+    if (distMCenter > radiusOfTheCircle)
+    {
+        // the hypotenuse should be larger than the catheter
+        return 0;
+    }
 
     double angleB = asin(distMCenter / radiusOfTheCircle);
 
@@ -436,5 +442,8 @@ double Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &e
 {
     double angleC = Utils::getAngleOfTheArc(startAngle, endAngle, segment, center, radiusOfTheCircle);
 
+    startAngle = 0;
+
+    endAngle = angleC;
 
 }
