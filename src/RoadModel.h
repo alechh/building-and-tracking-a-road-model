@@ -33,7 +33,7 @@ private:
     cv::Point begin, end;
 public:
     LineSegment(cv::Point begin, cv::Point end);
-    LineSegment(cv::Point begin, cv::Point end, ModelElement nextElement);
+    LineSegment(cv::Point begin, cv::Point end, const ModelElement &nextElement);
     void drawModelElement(cv::Mat &src) const override;
     void printInformation() const override;
 };
@@ -45,8 +45,8 @@ private:
     double radius;
     double startAngle, endAngle;
 public:
-    CircularArc(cv::Point center, double radius, double startAndle, double endAngle);
-    CircularArc(cv::Point center, double radius, double startAngle, double endAngle, ModelElement nextElement);
+    CircularArc(cv::Point center, double radius, double startAngle, double endAngle);
+    CircularArc(cv::Point center, double radius, double startAngle, double endAngle, const ModelElement &nextElement);
     void drawModelElement(cv::Mat &src) const override;
     void printInformation() const override;
 };
