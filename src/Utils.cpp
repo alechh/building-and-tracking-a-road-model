@@ -462,8 +462,9 @@ double Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &e
 {
     double angleC = Utils::getAngleOfTheArc(startAngle, endAngle, segment, center, radiusOfTheCircle);
 
-    startAngle = 180;
+    double shiftAngle = Utils::calculateAngleShift(segment[0], center);
 
-    endAngle = 180 + angleC;
+    startAngle = 180 + shiftAngle;
 
+    endAngle = startAngle + angleC;
 }
