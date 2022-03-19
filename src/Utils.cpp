@@ -447,7 +447,7 @@ double Utils::calculateAngleShift(const cv::Point &A, const cv::Point &C)
     double distAC = Utils::distanceBetweenPoints(A, C);
     double distAT = Utils::distanceBetweenPoints(A, T);
 
-    if (distAT < distAC)
+    if (distAT > distAC)
     {
         return 0;
     }
