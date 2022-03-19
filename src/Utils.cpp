@@ -389,7 +389,7 @@ std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertain
 }
 
 
-int distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
+int Utils::distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
 {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
@@ -397,7 +397,7 @@ int distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
 
 cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter)
 {
-    if (distanceBetweenPoints(segment[0], std::get<0>(candidatesForCenter)) < distanceBetweenPoints(segment[0], std::get<1>(candidatesForCenter)))
+    if (Utils::distanceBetweenPoints(segment[0], std::get<0>(candidatesForCenter)) < Utils::distanceBetweenPoints(segment[0], std::get<1>(candidatesForCenter)))
     {
         return std::get<0>(candidatesForCenter);
     }
@@ -405,4 +405,36 @@ cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> 
     {
         return std::get<1>(candidatesForCenter);
     }
+}
+
+
+cv::Point Utils::getMidpoint(const cv::Point &a, const cv::Point &b)
+{
+    cv::Point midPoint;
+    midPoint.x = a.x + (b.x + a.x) / 2;
+    midPoint.y = a.y + (b.y + a.y) / 2;
+
+    return midPoint;
+}
+
+
+double Utils::getAngleOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+{
+    cv::Point M = Utils::getMidpoint(segment[0], segment[segment.size() - 1]);
+
+    double distMCenter = Utils::distanceBetweenPoints(M, center);
+
+    double angleB = asin(distMCenter / radiusOfTheCircle);
+
+    double angleC = 180 - 2 * angleB;
+
+    return angleC;
+}
+
+
+double Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+{
+    double angleC = Utils::getAngleOfTheArc(startAngle, endAngle, segment, center, radiusOfTheCircle);
+
+
 }

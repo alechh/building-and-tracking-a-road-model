@@ -11,7 +11,6 @@
 
 class Utils {
 public:
-
     static int remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size);
 
     static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step);
@@ -39,6 +38,15 @@ public:
     static std::tuple<cv::Point, cv::Point> calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R, const cv::Point &point);
 
     static cv::Point chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter);
+
+    static double calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
+
+private:
+    static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
+
+    static int distanceBetweenPoints(const cv::Point &a, const cv::Point &b);
+
+    static double getAngleOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
 };
 
 
