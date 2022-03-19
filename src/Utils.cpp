@@ -432,6 +432,9 @@ double Utils::getAngleOfTheArc(double &startAngle, double &endAngle, const std::
 
     double angleB = asin(distMCenter / radiusOfTheCircle);
 
+    //converting to the degree
+    angleB *= 180 / CV_PI;
+
     double angleC = 180 - 2 * angleB;
 
     return angleC;
