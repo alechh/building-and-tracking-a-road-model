@@ -100,7 +100,7 @@ TEST(CurvatureTest, CircleCurvature)
 
     EXPECT_EQ(count_zero, 0);
     EXPECT_EQ(count_inf, 0);
-    EXPECT_LE(max_error, 2.19706e-08);
+    EXPECT_LE(max_error, 2.0e-8);
     EXPECT_LE(min_error, 2.0e-9);
 }
 
@@ -296,7 +296,8 @@ TEST(CurvatureTest, ParabolaCurvature2)
     int i = 0;
     while (x < right_x_boundary)
     {
-        /* TODO В точке 0 вычисляется кривизна 0.6, а должна быть (по формуле) 6. Чем дальше от точки 0, тем точнее
+        /* TODO
+         * В точке 0 вычисляется кривизна 0.6, а должна быть (по формуле) 6. Чем дальше от точки 0, тем точнее
          * Поэтому пока пропускаем эту точку
          */
         if (x == 0)
@@ -315,14 +316,6 @@ TEST(CurvatureTest, ParabolaCurvature2)
 
         double exactCurvature = 6.0 / pow(1 + 36 * pow(x, 2), 1.5);
         double error = std::abs(exactCurvature - parabolaCurvature[i]);
-
-//        std::cout << "error = " << error << " curvature = " << parabolaCurvature[i] << std::endl;
-//        if (error > 0.5)
-//        {
-//            std::cout << "\t" << parabola_contour[i - 1] << std::endl;
-//            std::cout << "\t" << parabola_contour[i] << std::endl;
-//            std::cout << "\t" << parabola_contour[i + 1] << std::endl;
-//        }
 
         meanError += error;
         countError++;
