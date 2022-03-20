@@ -71,7 +71,6 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
     std::tuple<cv::Point, cv::Point> candidatesForCenter = Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(A, B, C, R, centerPoint);
 
     center = Utils::chooseAmongTwoCandidatesForCenter(segment, candidatesForCenter);
-
     //return (begin + end) / 2;
     return center;
 }
@@ -101,7 +100,12 @@ void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadM
     {
         double radiusOfTheCircle = 1.0 / prevCurvature;
         cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
-        roadModel.addElementToRight(center, radiusOfTheCircle);
+
+        double startAngle, endAngle;
+
+        Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+
+        roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle);
     }
 }
 
@@ -121,10 +125,10 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
     int currArcSegmentNumber = 0;
     std::vector<cv::Point> arcSegment;
 
-    double curvatureThreshold = 0.01; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
+    const double curvatureThreshold = 0.6; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
-    const double delta = 0; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
+    const double delta = 0.0005; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
 
     for (int i = 0; i < contour.size(); ++i)
     {
