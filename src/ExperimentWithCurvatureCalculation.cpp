@@ -201,3 +201,21 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     return roadModel;
 }
+
+void ExperimentWithCurvatureCalculation::showCurvatureOnImage(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
+{
+    for (int i = 0; i < contour.size(); ++i)
+    {
+        if (contourCurvature[i] == 0)
+        {
+            cv::circle(src, contour[i], 1, cv::Scalar(255, 0, 0));
+        }
+        else
+        {
+            cv::circle(src, contour[i], 1, cv::Scalar(0, 0, 255));
+        }
+    }
+}
+
+
+
