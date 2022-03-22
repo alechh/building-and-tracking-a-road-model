@@ -81,9 +81,9 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
  * If a segment has less than three points, then it will be added to the model as a segment
  * @param arcSegment -- vector of the points of the arc segment
  * @param roadModel -- model of the road
- * @param prevCurvature -- curvature of the segment
+ * @param curvature -- curvature of the segment
  */
-void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double prevCurvature)
+void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature)
 {
     if (arcSegment.size() < 3) // если у дуги <3 точек, то отрисуем её как отрезок
     {
@@ -98,12 +98,15 @@ void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadM
     }
     else
     {
-        double radiusOfTheCircle = 1.0 / prevCurvature;
+        double radiusOfTheCircle = 1.0 / curvature;
         cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
 
         double startAngle, endAngle;
 
         Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+
+        startAngle = 0;
+        endAngle = 360;
 
         roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle);
     }
@@ -123,24 +126,26 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     int currLineSegmentNumber = 0;
     int currArcSegmentNumber = 0;
+    double currMeanArcSegmentCurvature = 0;
     std::vector<cv::Point> arcSegment;
 
     const double curvatureThreshold = 0.6; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
-    const double delta = 0.0005; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
+    const double delta = 5; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
 
     for (int i = 0; i < contour.size(); ++i)
     {
-        if (std::abs(contourCurvature[i]) < curvatureThreshold) // если это часть прямой
+        if (std::abs(contourCurvature[i]) == 0) // если это часть прямой
         {
             if (currArcSegmentNumber > 0) // если до прямой этого была дуга
             {
-                addArcToTheModel(arcSegment, roadModel, prevCurvature);
+                addArcToTheModel(arcSegment, roadModel, currMeanArcSegmentCurvature / currArcSegmentNumber);
 
                 arcSegment.clear();
 
                 currArcSegmentNumber = 0;
+                currMeanArcSegmentCurvature = 0;
 
                 currElementBegin = contour[i];
             }
@@ -171,14 +176,16 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                     arcSegment.emplace_back(contour[i]);
 
                     currArcSegmentNumber++;
+                    currMeanArcSegmentCurvature += contourCurvature[i];
                 }
                 else // если встретился новый участок уровня кривизны
                 {
-                    addArcToTheModel(arcSegment, roadModel, prevCurvature);
-
-                    currArcSegmentNumber = 0;
+                    addArcToTheModel(arcSegment, roadModel, currMeanArcSegmentCurvature / currArcSegmentNumber);
 
                     arcSegment.clear();
+
+                    currArcSegmentNumber = 1;
+                    currMeanArcSegmentCurvature = contourCurvature[i];
 
                     currElementBegin = contour[i];
                     currElementEnd = contour[i];
@@ -192,7 +199,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     if (currArcSegmentNumber > 0)
     {
-        addArcToTheModel(arcSegment, roadModel, prevCurvature);
+        addArcToTheModel(arcSegment, roadModel, currMeanArcSegmentCurvature / currArcSegmentNumber);
     }
     else if (currLineSegmentNumber > 0)
     {
