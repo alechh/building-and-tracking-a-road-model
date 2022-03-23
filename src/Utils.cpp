@@ -179,7 +179,7 @@ void Utils::calculateContoursCurvature(std::vector<std::vector<double>> &contour
  * @param step
  * @return
  */
-std::vector<double> Utils::calculateСurvature2(const std::vector<cv::Point> &contour, int step)
+std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &contour, int step)
 {
     std::vector<double> contourCurvature(contour.size());
 

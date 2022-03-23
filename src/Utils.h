@@ -23,7 +23,7 @@ public:
 
     static void calculateContoursCurvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
 
-    static std::vector<double> calculateСurvature2(const std::vector<cv::Point> &contour, int step);
+    static std::vector<double> calculateCurvature2(const std::vector<cv::Point> &contour, int step);
 
     static cv::Point2f getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus);
 
