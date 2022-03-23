@@ -217,7 +217,16 @@ std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &con
         cv::Point prev, curr, next;
 
         curr = contour[i];
-        Utils::selectionOfPointsDependingOnTheStep(prev, next, contour, step, i);
+        if (step != 1)
+        {
+            Utils::selectionOfPointsDependingOnTheStep(prev, next, contour, step, i);
+        }
+        else
+        {
+            prev = contour[i - 1];
+            next = contour[i + 1];
+        }
+
 
         // если точки лежат на одной прямой
         if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y))
