@@ -44,7 +44,7 @@ public:
 private:
     static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
 
-    static int distanceBetweenPoints(const cv::Point &a, const cv::Point &b);
+    static double distanceBetweenPoints(const cv::Point &a, const cv::Point &b);
 
     static double getAngleOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
 

@@ -389,7 +389,7 @@ std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertain
 }
 
 
-int Utils::distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
+double Utils::distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
 {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
