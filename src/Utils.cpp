@@ -172,6 +172,35 @@ void Utils::calculateContoursCurvature(std::vector<std::vector<double>> &contour
 
 
 /**
+ * Selection of side points for the triangle depending on the step size.
+ * It is assumed that the points should be at a distance of step /2 from the current point of the contour
+ * @param prev
+ * @param next
+ * @param contour
+ * @param step -- size of the step
+ * @param currIndex -- index of the current point of the contour
+ */
+void Utils::selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex)
+{
+    const int neighborhoodOfTheStep = step / 2;
+
+    int tempIndexPrev = currIndex;
+    while (tempIndexPrev > 0 && std::abs(tempIndexPrev - currIndex) < neighborhoodOfTheStep)
+    {
+        tempIndexPrev--;
+    }
+
+    int tempIndexNext = currIndex;
+    while (tempIndexNext < contour.size() - 1 && std::abs(tempIndexNext - currIndex) < neighborhoodOfTheStep)
+    {
+        tempIndexNext++;
+    }
+
+    prev = contour[tempIndexPrev];
+    next = contour[tempIndexNext];
+}
+
+/**
  * The second way to calculate the curvature.
  * The adjacent 3 points of the contour are viewed as a triangle, and a circle describing this triangle is searched for.
  * The inverse of the radius of this circle is the curvature
@@ -179,17 +208,16 @@ void Utils::calculateContoursCurvature(std::vector<std::vector<double>> &contour
  * @param step
  * @return
  */
-std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &contour, int step)
+std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &contour, const int step)
 {
     std::vector<double> contourCurvature(contour.size());
 
-    for (int i = 1; i < contour.size() - 2;)
+    for (int i = 1; i < contour.size() - 2; ++i)
     {
-
         cv::Point prev, curr, next;
-        prev = contour[i - 1];
+
         curr = contour[i];
-        next = contour[i + 1];
+        Utils::selectionOfPointsDependingOnTheStep(prev, next, contour, step, i);
 
         // если точки лежат на одной прямой
         if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y))
@@ -230,27 +258,7 @@ std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &con
         double R = (a * b * c) / (4 * S); // радиус описанной окружности
 
         contourCurvature[i] = 1.0 / R; // кривизна = 1 / R
-
-        // Если шаг != 1, то заполняем кривизну в точках, которые мы пропустим
-        for (int k = i + 1; k < i + step; ++k)
-        {
-            if (k == contour.size())
-            {
-                break;
-            }
-            contourCurvature[k] = 1.0 / R;
-        }
-
-        i += step;
-
-        // Если шаг != 1, то нужна проверка, что мы не вылетели за пределы массива
-        // Причем последний элемент, на котором мы должны остановится, это contour[contour.size() - 2]
-        if (i > contour.size() - 2)
-        {
-            break;
-        }
     }
-
     return contourCurvature;
 }
 

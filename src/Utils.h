@@ -23,7 +23,7 @@ public:
 
     static void calculateContoursCurvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
 
-    static std::vector<double> calculateCurvature2(const std::vector<cv::Point> &contour, int step);
+    static std::vector<double> calculateCurvature2(const std::vector<cv::Point> &contour, const int step);
 
     static cv::Point2f getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus);
 
@@ -49,6 +49,9 @@ private:
     static double getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
 
     static double calculateAngleShift(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
+
+    static void selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex)
+
 };
 
 
