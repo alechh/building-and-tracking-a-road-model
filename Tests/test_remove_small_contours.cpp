@@ -25,7 +25,7 @@ TEST(RemoveSmallContours, CheckContoursSize)
     }
 
     const int min_contour_size = 30;
-    int number_of_deleted_contours = Utils::remove_small_contours(contours, min_contour_size);
+    int number_of_deleted_contours = Utils::removeSmallContours(contours, min_contour_size);
 
     EXPECT_EQ(initial_contour_size - number_of_deleted_contours, contours.size());
 
