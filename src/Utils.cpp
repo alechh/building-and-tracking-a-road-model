@@ -543,7 +543,7 @@ double Utils::calculateAngleShift(const cv::Point &firstPointOfTheSegment, const
  * @param radiusOfTheCircle
  * @return
  */
-double Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+void Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
 {
     double angleC = Utils::getAngleOfTheArc(segment, center, radiusOfTheCircle);
 

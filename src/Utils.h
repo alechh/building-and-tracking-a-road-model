@@ -39,7 +39,7 @@ public:
 
     static cv::Point chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter);
 
-    static double calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
+    static void calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
 
 private:
     static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
@@ -50,7 +50,7 @@ private:
 
     static double calculateAngleShift(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
 
-    static void selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex)
+    static void selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex);
 
 };
 
