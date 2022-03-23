@@ -80,7 +80,14 @@ void CircularArc::drawModelElementPoints(cv::Mat &src) const
 {
     for (const auto &point : this->pointsOfTheArc)
     {
-        cv::circle(src, point, 1, cv::Scalar(0, 0, 255));
+        if (point == this->pointsOfTheArc[0] || point == this->pointsOfTheArc[this->pointsOfTheArc.size() - 1])
+        {
+            cv::circle(src, point, 4, cv::Scalar(0, 255, 0));
+        }
+        else
+        {
+            cv::circle(src, point, 1, cv::Scalar(255, 0, 0));
+        }
     }
 }
 
@@ -262,7 +269,7 @@ void RoadModel::drawModelPoints(cv::Mat &dst) const
 {
     if (this->rightHead)
     {
-        drawRightSide(dst);
+        drawRightSidePoints(dst);
     }
 }
 
