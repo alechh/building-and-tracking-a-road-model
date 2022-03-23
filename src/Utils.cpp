@@ -7,7 +7,13 @@
 #include <opencv2/opencv.hpp>
 
 
-std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vecContourPoints, int step = 1)
+/**
+ * The first way to calculate the curvature (through numerical calculation of derivatives)
+ * @param vecContourPoints
+ * @param step
+ * @return
+ */
+std::vector<double> Utils::calculateCurvature(const std::vector<cv::Point> &vecContourPoints, int step = 1)
 {
     std::vector<double> vecCurvature(vecContourPoints.size());
 
@@ -67,25 +73,25 @@ std::vector<double> Utils::calculate_curvature(const std::vector<cv::Point> &vec
 /**
  * Removing contours that have a small number of points
  * @param contours
- * @param min_contours_size
+ * @param minContoursSize
  * @return number of deleted contours
  */
-int Utils::remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size)
+int Utils::removeSmallContours(std::vector< std::vector<cv::Point> > &contours, const int minContoursSize)
 {
-    std::vector< std::vector<cv::Point> > new_contours;
+    std::vector< std::vector<cv::Point> > newContours;
 
     for (int i = 0; i < contours.size(); ++i)
     {
-        if (contours[i].size() >= min_contours_size)
+        if (contours[i].size() >= minContoursSize)
         {
-            new_contours.emplace_back(contours[i]);
+            newContours.emplace_back(contours[i]);
         }
     }
 
-    int number_of_deleted_contours = contours.size() - new_contours.size();
-    contours = new_contours;
+    int numberOfDeletedContours = contours.size() - newContours.size();
+    contours = newContours;
 
-    return number_of_deleted_contours;
+    return numberOfDeletedContours;
 }
 
 
@@ -94,14 +100,14 @@ int Utils::remove_small_contours(std::vector< std::vector<cv::Point> > & contour
  * @param curvature
  * @return
  */
-double Utils::mean_curvature(const std::vector<double> &curvature)
+double Utils::meanCurvature(const std::vector<double> &curvature)
 {
     double res = 0;
     int count = 0;
 
     for (auto i : curvature)
     {
-        if (i != 0 and i != std::numeric_limits<double>::infinity())
+        if (i != std::numeric_limits<double>::infinity())
         {
             res += i;
             ++count;
@@ -116,7 +122,7 @@ double Utils::mean_curvature(const std::vector<double> &curvature)
     return res;
 }
 
-void Utils::sort_vector_of_vectors_of_points(std::vector<std::vector<cv::Point>>& contours)
+void Utils::sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>>& contours)
 {
     // сортируем вектор векторов по их размеру
     std::sort(contours.begin(),contours.end(),
@@ -150,15 +156,30 @@ void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, c
 }
 
 
-void Utils::calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step = 1)
+/**
+ * Calculating the curvature for the contour vector in the first way
+ * @param contoursCurvature
+ * @param contours
+ * @param step
+ */
+void Utils::calculateContoursCurvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step = 1)
 {
     for (int i = 0; i < contours.size(); ++i)
     {
-        contoursCurvature[i] = Utils::calculate_curvature(contours[i], step);
+        contoursCurvature[i] = Utils::calculateCurvature(contours[i], step);
     }
 }
 
-std::vector<double> Utils::calculate_curvature_2(const std::vector<cv::Point> &contour, int step)
+
+/**
+ * The second way to calculate the curvature.
+ * The adjacent 3 points of the contour are viewed as a triangle, and a circle describing this triangle is searched for.
+ * The inverse of the radius of this circle is the curvature
+ * @param contour
+ * @param step
+ * @return
+ */
+std::vector<double> Utils::calculateСurvature2(const std::vector<cv::Point> &contour, int step)
 {
     std::vector<double> contourCurvature(contour.size());
 
@@ -371,6 +392,16 @@ int calculatingYThroughX(double x, double A, double B, double C)
 }
 
 
+/**
+ * A function for calculating two points on a straight line located at a distance R from a given point.
+ * The line is given by the equation Ax + By + C = 0
+ * @param A
+ * @param B
+ * @param C
+ * @param R -- distance from the given point
+ * @param point -- the point from which the distance is calculated
+ * @return
+ */
 std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R, const cv::Point &point)
 {
     cv::Point firstSolution, secondSolution;
@@ -389,12 +420,26 @@ std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertain
 }
 
 
-double Utils::distanceBetweenPoints(const cv::Point &a, const cv::Point &b)
+/**
+ * Distance between two given points
+ * @param A
+ * @param B
+ * @return
+ */
+double Utils::distanceBetweenPoints(const cv::Point &A, const cv::Point &B)
 {
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+    return sqrt(pow(A.x - B.x, 2) + pow(A.y - B.y, 2));
 }
 
 
+/**
+ * Choosing from two points closest to the edge of the segment.
+ * We assume that the segment is slightly rounded, so we are interested in the point that is closer to the end of
+ * this segment. This point is the center of the circle describing this segment.
+ * @param segment
+ * @param candidatesForCenter
+ * @return
+ */
 cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter)
 {
     if (Utils::distanceBetweenPoints(segment[0], std::get<0>(candidatesForCenter)) < Utils::distanceBetweenPoints(segment[0], std::get<1>(candidatesForCenter)))
@@ -408,6 +453,12 @@ cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> 
 }
 
 
+/**
+ * A function that finds a point located in the middle between two given points
+ * @param a
+ * @param b
+ * @return
+ */
 cv::Point Utils::getMidpoint(const cv::Point &a, const cv::Point &b)
 {
     cv::Point midPoint;
@@ -418,7 +469,17 @@ cv::Point Utils::getMidpoint(const cv::Point &a, const cv::Point &b)
 }
 
 
-double Utils::getAngleOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+/**
+ * Calculating the angle C in triangle ABC, where
+ * A is the first point of the segment,
+ * B is the last point of the segment,
+ * C is the center of the circle that describes this segment
+ * @param segment -- vector of points of the current segment
+ * @param center -- center of the circle that describes the segment
+ * @param radiusOfTheCircle -- radius of the circle
+ * @return
+ */
+double Utils::getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
 {
     cv::Point M = Utils::getMidpoint(segment[0], segment[segment.size() - 1]);
 
@@ -441,26 +502,42 @@ double Utils::getAngleOfTheArc(double &startAngle, double &endAngle, const std::
 }
 
 
-double Utils::calculateAngleShift(const cv::Point &A, const cv::Point &C)
+/**
+ * Function for calculating the angle shift.
+ * This is necessary for the correct determination of the initial and final angle of the arc.
+ * @param firstPointOfTheSegment -- first point of the arc segment
+ * @param circleCenter -- center of the circle that describes the arc
+ * @return
+ */
+double Utils::calculateAngleShift(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter)
 {
-    cv::Point T(A.x, C.y);
-    double distAC = Utils::distanceBetweenPoints(A, C);
-    double distAT = Utils::distanceBetweenPoints(A, T);
+    cv::Point T(firstPointOfTheSegment.x, circleCenter.y); // проекция первой точки сегмента на горизонтальную прямую, проходящую через середину окружности
+    double distAC = Utils::distanceBetweenPoints(firstPointOfTheSegment, circleCenter);
+    double distAT = Utils::distanceBetweenPoints(firstPointOfTheSegment, T);
 
     if (distAT > distAC)
     {
         return 0;
     }
 
-    double angleC = asin(distAT / distAC) * 180 / CV_PI;
+    double angleC = asin(distAT / distAC) * 180 / CV_PI; // sin C = distAT / distAC (противолежащий катет / гипотенуза)
 
     return angleC;
 }
 
 
+/**
+ * A function for calculating the start and end angles for an arc that describes a segment.
+ * @param startAngle
+ * @param endAngle
+ * @param segment
+ * @param center
+ * @param radiusOfTheCircle
+ * @return
+ */
 double Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
 {
-    double angleC = Utils::getAngleOfTheArc(startAngle, endAngle, segment, center, radiusOfTheCircle);
+    double angleC = Utils::getAngleOfTheArc(segment, center, radiusOfTheCircle);
 
     double shiftAngle = Utils::calculateAngleShift(segment[0], center);
 

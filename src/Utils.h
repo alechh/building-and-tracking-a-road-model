@@ -11,19 +11,19 @@
 
 class Utils {
 public:
-    static int remove_small_contours(std::vector< std::vector<cv::Point> > & contours, const int min_contours_size);
+    static int removeSmallContours(std::vector< std::vector<cv::Point> > & contours, const int minContoursSize);
 
-    static std::vector<double> calculate_curvature(std::vector<cv::Point> const& vecContourPoints, int step);
+    static std::vector<double> calculateCurvature(std::vector<cv::Point> const& vecContourPoints, int step);
 
-    static double mean_curvature(const std::vector<double>& curvature);
+    static double meanCurvature(const std::vector<double>& curvature);
 
-    static void sort_vector_of_vectors_of_points(std::vector<std::vector<cv::Point>>& contours);
+    static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>>& contours);
 
     static void draw_contours(const std::vector<std::vector<cv::Point>>& contours, cv::Mat& input_frame, int number_of_contours);
 
-    static void calculate_contours_curvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
+    static void calculateContoursCurvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
 
-    static std::vector<double> calculate_curvature_2(const std::vector<cv::Point> &contour, int step);
+    static std::vector<double> calculateСurvature2(const std::vector<cv::Point> &contour, int step);
 
     static cv::Point2f getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus);
 
@@ -44,11 +44,11 @@ public:
 private:
     static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
 
-    static double distanceBetweenPoints(const cv::Point &a, const cv::Point &b);
+    static double distanceBetweenPoints(const cv::Point &A, const cv::Point &B);
 
-    static double getAngleOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
+    static double getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
 
-    static double calculateAngleShift(const cv::Point &A, const cv::Point &C);
+    static double calculateAngleShift(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
 };
 
 
