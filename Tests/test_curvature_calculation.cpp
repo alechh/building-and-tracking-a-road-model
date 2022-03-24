@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "Utils.cpp"
 
-std::vector<cv::Point> get_circle_contour(const int& R)
+std::vector<cv::Point> get_circle_contour(const int R)
 {
     std::vector<cv::Point> contour;
     double t = 0;
