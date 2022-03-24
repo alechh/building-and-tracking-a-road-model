@@ -85,6 +85,7 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
  */
 void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature)
 {
+    // TODO Мб не так делать, а приклеить её к отрезку??
     if (arcSegment.size() < 3) // если у дуги <3 точек, то отрисуем её как отрезок
     {
         if (arcSegment.size() == 1)
@@ -108,7 +109,7 @@ void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadM
         startAngle = 0;
         endAngle = 360;
 
-        roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle);
+        roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
     }
 }
 
@@ -126,45 +127,65 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     int currLineSegmentNumber = 0;
     int currArcSegmentNumber = 0;
-    double currMeanArcSegmentCurvature = 0;
+    double currSumOfArcSegmentCurvatures = 0;
     std::vector<cv::Point> arcSegment;
+    std::vector<cv::Point> lineSegment;
+
+    const int minLineSegmentSize = 5;
 
     const double curvatureThreshold = 0.6; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
-    const double delta = 5; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
+    const double delta = 0.5; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
 
     for (int i = 0; i < contour.size(); ++i)
     {
         if (std::abs(contourCurvature[i]) == 0) // если это часть прямой
         {
-            if (currArcSegmentNumber > 0) // если до прямой этого была дуга
+            if (currArcSegmentNumber > 0 && currLineSegmentNumber >= minLineSegmentSize) // если до прямой этого была дуга
             {
-                addArcToTheModel(arcSegment, roadModel, currMeanArcSegmentCurvature / currArcSegmentNumber);
+                addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
 
                 arcSegment.clear();
 
                 currArcSegmentNumber = 0;
-                currMeanArcSegmentCurvature = 0;
+                currSumOfArcSegmentCurvatures = 0;
 
                 currElementBegin = contour[i];
             }
 
+            if (currLineSegmentNumber == 0)
+            {
+                currElementBegin = contour[i];
+            }
+
             currLineSegmentNumber++;
+            lineSegment.emplace_back(contour[i]);
             currElementEnd = contour[i];
         }
         else // если это дуга окружности
         {
             if (currLineSegmentNumber > 0) // если до дуги шел участок прямой
             {
-                roadModel.addElementToRight(currElementBegin, currElementEnd);
+                if (currLineSegmentNumber <= minLineSegmentSize) // если в сегменте прямой "мало" точек, то добавим его к сегменту дуги
+                {
+                    for (const auto &point : lineSegment)
+                    {
+                        arcSegment.emplace_back(point);
+                    }
+                    lineSegment.clear();
+                }
+                else
+                {
+                    roadModel.addElementToRight(currElementBegin, currElementEnd);
 
-                currLineSegmentNumber = 0;
+                    currLineSegmentNumber = 0;
+                    lineSegment.clear();
 
-                currElementBegin = contour[i];
-                currElementEnd = contour[i];
-                prevCurvature = contourCurvature[i];
-                continue;
+                    currElementBegin = contour[i];
+                    currElementEnd = contour[i];
+                    //prevCurvature = contourCurvature[i];
+                }
             }
 
             if (contourCurvature[i] != std::numeric_limits<double>::infinity())
@@ -176,16 +197,16 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                     arcSegment.emplace_back(contour[i]);
 
                     currArcSegmentNumber++;
-                    currMeanArcSegmentCurvature += contourCurvature[i];
+                    currSumOfArcSegmentCurvatures += contourCurvature[i];
                 }
                 else // если встретился новый участок уровня кривизны
                 {
-                    addArcToTheModel(arcSegment, roadModel, currMeanArcSegmentCurvature / currArcSegmentNumber);
+                    addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
 
                     arcSegment.clear();
 
                     currArcSegmentNumber = 1;
-                    currMeanArcSegmentCurvature = contourCurvature[i];
+                    currSumOfArcSegmentCurvatures = contourCurvature[i];
 
                     currElementBegin = contour[i];
                     currElementEnd = contour[i];
@@ -199,7 +220,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
     if (currArcSegmentNumber > 0)
     {
-        addArcToTheModel(arcSegment, roadModel, currMeanArcSegmentCurvature / currArcSegmentNumber);
+        addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
     }
     else if (currLineSegmentNumber > 0)
     {
