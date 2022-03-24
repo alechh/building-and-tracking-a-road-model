@@ -150,8 +150,6 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
 
                 currArcSegmentNumber = 0;
                 currSumOfArcSegmentCurvatures = 0;
-
-                currElementBegin = contour[i];
             }
 
             if (currLineSegmentNumber == 0)
@@ -174,6 +172,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                         arcSegment.emplace_back(point);
                     }
                     lineSegment.clear();
+                    currLineSegmentNumber = 0;
                 }
                 else
                 {
