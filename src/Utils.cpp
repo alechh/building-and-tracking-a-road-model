@@ -328,8 +328,9 @@ void Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &
     pPlus = segment[pPlusIndex];
 
     // Нужно, чтобы точки были различными (зачем?)
+    // TODO если точки поменяются, нужно поменять и centerPoint
     bool hasPMinusChanged = false;
-    while (pMinus != pPlus)
+    while (pMinus.x == pPlus.x || pMinus.y == pPlus.y)
     {
         if (pMinusIndex == 0 && pPlusIndex == segment.size() - 1)
         {
