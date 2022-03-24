@@ -131,7 +131,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
     std::vector<cv::Point> arcSegment;
     std::vector<cv::Point> lineSegment;
 
-    const int minLineSegmentSize = 5;
+    const int minLineSegmentSize = 100;
 
     const double curvatureThreshold = 0.6; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
