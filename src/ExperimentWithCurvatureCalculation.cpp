@@ -41,6 +41,14 @@ void ExperimentWithCurvatureCalculation::drawArcsOnContour(cv::Mat &src, const s
 }
 
 
+/**
+ * A circle center search function that describes an arc segment.
+ * The idea is as follows: there is a tangent line to the arc segment, then its perpendicular line is searched.
+ * Then there is a point at a distance R from the point of contact — this point will be the center of the circle.
+ * @param segment -- points of the arc segment.
+ * @param R -- radius of the circle that describes the segment
+ * @return
+ */
 cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 {
     cv::Point center;
