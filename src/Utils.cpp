@@ -272,11 +272,12 @@ std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &con
 }
 
 
-cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus)
+cv::Point2f
+Utils::getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus, double h)
 {
     cv::Point2f firstDerivative;
 
-    firstDerivative.x = (pPlus.x - pMinus.x) / static_cast<float>(iPlus - iMinus);
+    firstDerivative.x = (pPlus.x - pMinus.x) / h;
     firstDerivative.y = (pPlus.y - pMinus.y) / static_cast<float>(iPlus - iMinus);
 
     return firstDerivative;
@@ -294,13 +295,13 @@ cv::Point2f Utils::getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2
  */
 std::vector<double> Utils::getCoefficientsOfTheTangent(const cv::Point &touchPoint, const cv::Point2f &firstDerivative)
 {
-    // y - y0 = f'(x0) * (x - x0)
+    // y - y0 = f'(x0) * (x - x0)   <=>
     // f'(x0) * x - 1 * y + y0 - f'(x0) * x0 = 0
 
     std::vector<double> coefficients(3);
     coefficients[0] = firstDerivative.x;
-    coefficients[1] = -1;
-    coefficients[2] = touchPoint.y - firstDerivative.x * touchPoint.x;
+    coefficients[1] = - 1;
+    coefficients[2] = -touchPoint.y - firstDerivative.x * touchPoint.x;
 
     return coefficients;
 }
@@ -315,7 +316,9 @@ std::vector<double> Utils::getCoefficientsOfTheTangent(const cv::Point &touchPoi
  * @param pPlusIndex -- index of the pPlus point
  * @param pMinusIndex -- index of the pMinus point
  */
-void Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex, int &pMinusIndex, cv::Point &centerPoint)
+void
+Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
+                         int &pMinusIndex, cv::Point &centerPoint, double &h)
 {
     int indexOfTheCenter = segment.size() / 2;
 
@@ -327,37 +330,31 @@ void Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &
     pMinus = segment[pMinusIndex];
     pPlus = segment[pPlusIndex];
 
-    // Нужно, чтобы точки были различными (зачем?)
+    // Нужно, чтобы точки были различными
     // TODO если точки поменяются, нужно поменять и centerPoint
     bool hasPMinusChanged = false;
-    while (pMinus.x == pPlus.x || pMinus.y == pPlus.y)
+    while (std::abs(pMinus.x - centerPoint.x) != std::abs(pPlus.x - centerPoint.x) || pMinus.x == pPlus.x)
     {
         if (pMinusIndex == 0 && pPlusIndex == segment.size() - 1)
         {
             break;
         }
 
-        if (!hasPMinusChanged)
-        {
-            if (pMinusIndex != 0)
-            {
-                pMinusIndex--;
-                pMinus = segment[pMinusIndex];
-            }
+        double distPMinusCenter = std::abs(pMinus.x - centerPoint.x);
+        double distPPlusCenter = std::abs(pPlus.x - centerPoint.x);
 
-            hasPMinusChanged = true;
+        if (distPMinusCenter < distPPlusCenter)
+        {
+            --pMinusIndex;
+            pMinus = segment[pMinusIndex];
         }
         else
         {
-            if (pPlusIndex != segment.size() - 1)
-            {
-                pPlusIndex++;
-                pPlus = segment[pPlusIndex];
-            }
-
-            hasPMinusChanged = false;
+            ++pPlusIndex;
+            pPlus = segment[pPlusIndex];
         }
     }
+    h = 2 * std::abs(pPlus.x - centerPoint.x);
 }
 
 /**

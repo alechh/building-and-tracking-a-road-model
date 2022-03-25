@@ -56,7 +56,7 @@ void drawArcSegmentAndTangent(cv::Mat &dst, const std::vector<cv::Point> &segmen
 
     cv::Point first, second;
     first.x = 0;
-    first.y = -C / B;
+    first.y = C / B;
 
     second.y = 0;
     second.x = -C / A;
@@ -85,18 +85,13 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 
     int pMinusIndex, pPlusIndex;
     cv::Point pMinus, pPlus, centerPoint;
-    Utils::getPPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint);
+    double h;
+    Utils::getPPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint, h);
 
-    cv::Point2f firstDerivative = Utils::getFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex);
+    cv::Point2f firstDerivative = Utils::getFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
 
     // A * x + B * y + C = 0
     std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
-
-    cv::Mat picture(500, 1000, 16, cv::Scalar(0, 0, 0));
-    drawArcSegmentAndTangent(picture, segment, coefficientsOfTheTangent);
-    cv::imshow("segmentAndTangent", picture);
-    int k = cv::waitKey(0);
-
 
     // A * x + B * y + C = 0
     std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
