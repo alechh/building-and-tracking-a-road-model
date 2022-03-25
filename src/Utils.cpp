@@ -382,7 +382,7 @@ std::vector<double> Utils::getCoefficientsOfThePerpendicularLine(const std::vect
 
 
 /**
- * Solution of the equation (x - x0)^2 + (-B/A * x - C/A - y0)^2 = R^2
+ * Solution of the equation (x - x0)^2 + (-A/B * x - C/B - y0)^2 = R^2
  * https://www.wolframalpha.com/input?i=%28x-x0%29%5E2+%2B+%28-B%2FA*x-C%2FA-y0%29%5E2+%3D+R%5E2
  * @return -- typle of the solutions x1, x2
  */
@@ -390,8 +390,12 @@ std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(double A, do
 {
     double x1, x2;
 
-    x1 = (sqrt(B*B*R*R - B*B*point.y*point.y - 2*A*B*point.x*point.y - 2*B*C*point.y + A*A*R*R - A*A*point.x*point.x - 2*A*C*point.x - C*C) / B - (A*C)/(B*B) - (A*point.y)/B + point.x) / ((A*A) / (B*B) + 1);
-    x2 = (-sqrt(B*B*R*R - B*B*point.y*point.y - 2*A*B*point.x*point.y - 2*B*C*point.y + A*A*R*R - A*A*point.x*point.x - 2*A*C*point.x - C*C) / B - (A*C)/(B*B) - (A*point.y)/B + point.x) / ((A*A) / (B*B) + 1);
+    double x0,y0;
+    x0 = point.x;
+    y0 = point.y;
+
+    x1 = (-sqrt(pow(2 * A * B * y0 + 2 * A * C - 2 * B * B * x0, 2) - 4 * (A * A + B * B) * (-B * B * R * R + B * B * x0 * x0 + B * B * y0 * y0 + 2 * B * C * y0 + C * C)) - 2 * A * B * y0 - 2 * A * C + 2 * B * B * x0) / (2 * (A * A + B * B));
+    x2 = (sqrt(pow(2 * A * B * y0 + 2 * A * C - 2 * B * B * x0, 2) - 4 * (A * A + B * B) * (-B * B * R * R + B * B * x0 * x0 + B * B * y0 * y0 + 2 * B * C * y0 + C * C)) - 2 * A * B * y0 - 2 * A * C + 2 * B * B * x0) / (2 * (A * A + B * B));
 
     return std::make_tuple(x1, x2);
 }
