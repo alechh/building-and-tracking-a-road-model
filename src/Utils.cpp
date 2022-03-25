@@ -383,19 +383,21 @@ std::vector<double> Utils::getCoefficientsOfThePerpendicularLine(const std::vect
 
 /**
  * Solution of the equation (x - x0)^2 + (-A/B * x - C/B - y0)^2 = R^2
- * https://www.wolframalpha.com/input?i=%28x-x0%29%5E2+%2B+%28-B%2FA*x-C%2FA-y0%29%5E2+%3D+R%5E2
+ * https://www.wolframalpha.com/input?i=sqrt%28%28x-x0%29%5E2+%2B+%28-A%2FB*x-C%2FB-y0%29%5E2%29+%3D+R
  * @return -- typle of the solutions x1, x2
  */
-std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(double A, double B, double C, double R, const cv::Point &point)
+std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(const double A, const double B, const double C, const double R, const cv::Point &point)
 {
     double x1, x2;
 
-    double x0,y0;
+    double x0, y0;
     x0 = point.x;
     y0 = point.y;
 
-    x1 = (-sqrt(pow(2 * A * B * y0 + 2 * A * C - 2 * B * B * x0, 2) - 4 * (A * A + B * B) * (-B * B * R * R + B * B * x0 * x0 + B * B * y0 * y0 + 2 * B * C * y0 + C * C)) - 2 * A * B * y0 - 2 * A * C + 2 * B * B * x0) / (2 * (A * A + B * B));
-    x2 = (sqrt(pow(2 * A * B * y0 + 2 * A * C - 2 * B * B * x0, 2) - 4 * (A * A + B * B) * (-B * B * R * R + B * B * x0 * x0 + B * B * y0 * y0 + 2 * B * C * y0 + C * C)) - 2 * A * B * y0 - 2 * A * C + 2 * B * B * x0) / (2 * (A * A + B * B));
+    double denominator = 2 * (A * A + B * B);
+
+    x1 = (-sqrt(pow(2 * A * B * y0 + 2 * A * C - 2 * B * B * x0, 2) - 4 * (A * A + B * B) * (-B * B * R * R + B * B * x0 * x0 + B * B * y0 * y0 + 2 * B * C * y0 + C * C)) - 2 * A * B * y0 - 2 * A * C + 2 * B * B * x0) / denominator;
+    x2 = (sqrt(pow(2 * A * B * y0 + 2 * A * C - 2 * B * B * x0, 2) - 4 * (A * A + B * B) * (-B * B * R * R + B * B * x0 * x0 + B * B * y0 * y0 + 2 * B * C * y0 + C * C)) - 2 * A * B * y0 - 2 * A * C + 2 * B * B * x0) / denominator;
 
     return std::make_tuple(x1, x2);
 }
@@ -407,7 +409,7 @@ std::tuple<double, double> Utils::solutionOfTheSystemWithRespectToX(double A, do
  */
 int calculatingYThroughX(double x, double A, double B, double C)
 {
-    return -A / B * x - C / B;
+    return (-A / B * x - C / B);
 }
 
 
@@ -421,7 +423,7 @@ int calculatingYThroughX(double x, double A, double B, double C)
  * @param point -- the point from which the distance is calculated
  * @return
  */
-std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R, const cv::Point &point)
+std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(const double A, const double B, const double C, const double R, const cv::Point &point)
 {
     cv::Point firstSolution, secondSolution;
 
@@ -434,6 +436,9 @@ std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertain
     secondSolution.y = calculatingYThroughX(secondSolution.x, A, B, C);
 
     std::tuple<cv::Point, cv::Point> resultPoints = std::make_tuple(firstSolution, secondSolution);
+
+    std::cout << distanceBetweenPoints(firstSolution, point) << std::endl;
+    std::cout << distanceBetweenPoints(secondSolution, point) << std::endl;
 
     return resultPoints;
 }
