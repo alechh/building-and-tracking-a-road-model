@@ -93,7 +93,7 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
     // A * x + B * y + C = 0
     std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
 
-    // A * x + B * y + C = 0
+    // A' * x + B' * y + C' = 0
     std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
 
     double A, B, C;

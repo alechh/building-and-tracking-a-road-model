@@ -300,7 +300,7 @@ std::vector<double> Utils::getCoefficientsOfTheTangent(const cv::Point &touchPoi
 
     std::vector<double> coefficients(3);
     coefficients[0] = firstDerivative.x;
-    coefficients[1] = - 1;
+    coefficients[1] = -1;
     coefficients[2] = -touchPoint.y - firstDerivative.x * touchPoint.x;
 
     return coefficients;
@@ -370,12 +370,12 @@ Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus
  */
 std::vector<double> Utils::getCoefficientsOfThePerpendicularLine(const std::vector<double> &coefficientsOfTheLine, const cv::Point &touchPoint)
 {
-    // -B * x + A * y + (B * x0 - A * y0)
+    // -B * x + A * y + (B * x0 - A * y0) -- a perpendicular line passing through a point (x0, y0)
     std::vector<double> coefficientsOfThePerpendicularLine(3);
 
-    coefficientsOfThePerpendicularLine[0] = -coefficientsOfTheLine[1];
-    coefficientsOfThePerpendicularLine[1] = coefficientsOfTheLine[0];
-    coefficientsOfThePerpendicularLine[2] = coefficientsOfTheLine[1] * touchPoint.x - coefficientsOfTheLine[0] * touchPoint.y;
+    coefficientsOfThePerpendicularLine[0] = coefficientsOfTheLine[1];
+    coefficientsOfThePerpendicularLine[1] = -coefficientsOfTheLine[0];
+    coefficientsOfThePerpendicularLine[2] = -coefficientsOfTheLine[1] * touchPoint.x - coefficientsOfTheLine[0] * touchPoint.y;
 
     return coefficientsOfThePerpendicularLine;
 }
