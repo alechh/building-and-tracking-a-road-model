@@ -41,6 +41,30 @@ void ExperimentWithCurvatureCalculation::drawArcsOnContour(cv::Mat &src, const s
 }
 
 
+void drawArcSegmentAndTangent(cv::Mat &dst, const std::vector<cv::Point> &segment, const std::vector<double> &coefficientsOfTheTangent)
+{
+    for (const auto &point : segment)
+    {
+        cv::circle(dst, point, 1, cv::Scalar(0, 0, 255));
+    }
+
+    // Ax + By + C = 0
+    double A, B, C;
+    A = coefficientsOfTheTangent[0];
+    B = coefficientsOfTheTangent[1];
+    C = coefficientsOfTheTangent[2];
+
+    cv::Point first, second;
+    first.x = 0;
+    first.y = -C / B;
+
+    second.y = 0;
+    second.x = -C / A;
+
+    cv::line(dst, first, second, cv::Scalar(255, 0, 0));
+}
+
+
 /**
  * A circle center search function that describes an arc segment.
  * The idea is as follows: there is a tangent line to the arc segment, then its perpendicular line is searched.
@@ -67,6 +91,12 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 
     // A * x + B * y + C = 0
     std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
+
+    cv::Mat picture(500, 1000, 16, cv::Scalar(0, 0, 0));
+    drawArcSegmentAndTangent(picture, segment, coefficientsOfTheTangent);
+    cv::imshow("segmentAndTangent", picture);
+    int k = cv::waitKey(0);
+
 
     // A * x + B * y + C = 0
     std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
