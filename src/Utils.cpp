@@ -437,9 +437,6 @@ std::tuple<cv::Point, cv::Point> Utils::calculatingPointsOfStraightLineAtCertain
 
     std::tuple<cv::Point, cv::Point> resultPoints = std::make_tuple(firstSolution, secondSolution);
 
-    std::cout << distanceBetweenPoints(firstSolution, point) << std::endl;
-    std::cout << distanceBetweenPoints(secondSolution, point) << std::endl;
-
     return resultPoints;
 }
 
