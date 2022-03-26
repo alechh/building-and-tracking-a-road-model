@@ -119,29 +119,14 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
  */
 void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature)
 {
-    // TODO Мб не так делать, а приклеить её к отрезку??
-    if (arcSegment.size() < 3) // если у дуги <3 точек, то отрисуем её как отрезок
-    {
-        if (arcSegment.size() == 1)
-        {
-            roadModel.addElementToRight(arcSegment[0], arcSegment[0]);
-        }
-        else if (arcSegment.size() == 2)
-        {
-            roadModel.addElementToRight(arcSegment[0], arcSegment[1]);
-        }
-    }
-    else
-    {
-        double radiusOfTheCircle = 1.0 / curvature;
-        cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
+    double radiusOfTheCircle = 1.0 / curvature;
+    cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
 
-        double startAngle, endAngle;
+    double startAngle, endAngle;
 
-        Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+    Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
 
-        roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
-    }
+    roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
 }
 
 
@@ -165,14 +150,14 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
     const int minLineSegmentSize = 50;
     const int minArcSegmentSize = 10;
 
-    const double curvatureThreshold = 0.6; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
+    const double curvatureThreshold = 0; // это порог кривизны (почему он такой, не знает никто). Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
     const double delta = 0.5; // это для дельта-окрестности кривизны (если prevCurvature - delta <= currCurvature < prevCurvature + delta, то currCurvature относится к текущему участку
 
     for (int i = 0; i < contour.size(); ++i)
     {
-        if (std::abs(contourCurvature[i]) == 0) // если это часть прямой
+        if (std::abs(contourCurvature[i]) <= curvatureThreshold) // если это часть прямой
         {
             if (currArcSegmentNumber > 0 && currLineSegmentNumber >= minLineSegmentSize) // если до прямой была дуга
             {
