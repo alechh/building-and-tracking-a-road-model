@@ -150,7 +150,7 @@ void Utils::draw_contours(const std::vector<std::vector<cv::Point>> &contours, c
 
     for (std::size_t i = 0; i < boundary; ++i)
     {
-        // TODO Почему-то не билдятся юнит-тесты, ругается на эту фукнцию, а main билдится нормально
+        // TODO Почему-то не билдятся юнит-тесты, ругается на эту функцию, а main билдится нормально
         // cv::drawContours(input_frame, contours, i, cv::Scalar(255, 255, 255));
     }
 }
@@ -530,7 +530,7 @@ double Utils::getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::
  * @param circleCenter -- center of the circle that describes the arc
  * @return
  */
-double Utils::calculateAngleShift(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter)
+double Utils::calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter)
 {
     cv::Point T(firstPointOfTheSegment.x, circleCenter.y); // проекция первой точки сегмента на горизонтальную прямую, проходящую через середину окружности
     double distAC = Utils::distanceBetweenPoints(firstPointOfTheSegment, circleCenter);
@@ -547,6 +547,21 @@ double Utils::calculateAngleShift(const cv::Point &firstPointOfTheSegment, const
 }
 
 
+double Utils::calculateAngleShiftLower(const cv::Point &lastPointOfTheSegment, const cv::Point &circleCenter, double radiusOfTheCircle)
+{
+    double shift;
+    cv::Point P(circleCenter.x + radiusOfTheCircle, circleCenter.y);
+
+    cv::Point middlePoint((lastPointOfTheSegment.x + P.x) / 2, (lastPointOfTheSegment.y + P.y) / 2);
+
+    double distCMiddlePoint = Utils::distanceBetweenPoints(circleCenter, middlePoint);
+
+    double angleLastPoint = asin(distCMiddlePoint / radiusOfTheCircle) * 180 / CV_PI;
+
+    return 180 - 2 * angleLastPoint;
+}
+
+
 /**
  * A function for calculating the start and end angles for an arc that describes a segment.
  * @param startAngle
@@ -560,9 +575,33 @@ void Utils::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &end
 {
     double angleC = Utils::getAngleOfTheArc(segment, center, radiusOfTheCircle);
 
-    double shiftAngle = Utils::calculateAngleShift(segment[0], center);
+    cv::Point middleSegmentPoint = segment[segment.size() / 2];
 
-    startAngle = 180 + shiftAngle;
+    if (middleSegmentPoint.y < center.y) // если сегмент находится в верхней части плоскости
+    {
+        double shiftAngle = Utils::calculateAngleShiftUpper(segment[0], center);
+
+        startAngle = 180 + shiftAngle;
+    }
+    else // если сегмент находится в нижней части плоскости
+    {
+        int indexOfLastArcSegment = segment.size() - 1;
+        cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
+//        const double epsilon = 0.05;
+//        while(std::abs(Utils::distanceBetweenPoints(lastSegmentPoint, center) - radiusOfTheCircle) > epsilon)
+//        {
+//            --indexOfLastArcSegment;
+//            lastSegmentPoint = segment[indexOfLastArcSegment];
+//        }
+
+        double distR = Utils::distanceBetweenPoints(lastSegmentPoint, center);
+
+        double shiftAngle = calculateAngleShiftLower(lastSegmentPoint, center, radiusOfTheCircle);
+
+        startAngle = shiftAngle;
+    }
 
     endAngle = startAngle + angleC;
 }
+
+
