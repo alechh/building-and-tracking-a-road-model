@@ -13,6 +13,7 @@ class contourBuilder {
 public:
     static std::vector<cv::Point> getSimpleRightContour();
     static std::vector<cv::Point> getSimpleUpperRightContour();
+    static void saveContourOnImage(const std::vector<cv::Point> &contour);
 };
 
 

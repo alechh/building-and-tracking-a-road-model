@@ -2,6 +2,9 @@
 // Created by alechh on 26.03.2022.
 //
 
+#include <opencv2/core/mat.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 #include "contourBuilder.h"
 #include "Utils.h"
 
@@ -77,4 +80,18 @@ std::vector<cv::Point> contourBuilder::getSimpleUpperRightContour()
     }
 
     return contour;
+}
+
+void contourBuilder::saveContourOnImage(const std::vector<cv::Point> &contour)
+{
+    const int ROWS = 500;
+    const int COLS = 1000;
+    const int TYPE = 16;
+
+    cv::Mat pictuteOfTheContour(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+    for (const auto &point : contour)
+    {
+        cv::circle(pictuteOfTheContour, point, 1, cv::Scalar(255, 0, 0));
+    }
+    cv::imwrite("../images/contour.jpg", pictuteOfTheContour);
 }
