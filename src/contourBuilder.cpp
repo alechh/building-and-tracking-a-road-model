@@ -159,7 +159,7 @@ std::vector<std::vector<cv::Point>> contourBuilder::getRightContours()
 
     std::vector<cv::Point> secondContour;
 
-    for (int yCoordinate = 1; yCoordinate < 50; ++yCoordinate) // 1 -- 200
+    for (int yCoordinate = 1; yCoordinate < 100; ++yCoordinate) // 1 -- 200
     {
         secondContour.emplace_back(cv::Point(479, yCoordinate));
     }
