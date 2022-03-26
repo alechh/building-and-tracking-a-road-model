@@ -138,6 +138,7 @@ void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadM
 
         double startAngle, endAngle;
 
+        //TODO НЕ РАБОТАЕТ
         Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
 
         startAngle = 0;
@@ -165,7 +166,8 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
     std::vector<cv::Point> arcSegment;
     std::vector<cv::Point> lineSegment;
 
-    const int minLineSegmentSize = 100;
+    const int minLineSegmentSize = 50;
+    const int minArcSegmentSize = 10;
 
     const double curvatureThreshold = 0.6; // это порог кривизны. Если кривизна ниже этого порога, то считаем эту часть контура прямой
 
@@ -176,9 +178,20 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
     {
         if (std::abs(contourCurvature[i]) == 0) // если это часть прямой
         {
-            if (currArcSegmentNumber > 0 && currLineSegmentNumber >= minLineSegmentSize) // если до прямой этого была дуга
+            if (currArcSegmentNumber > 0 && currLineSegmentNumber >= minLineSegmentSize) // если до прямой была дуга
             {
-                addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
+                if (arcSegment.size() < minArcSegmentSize)
+                {
+                    for (const auto &point : arcSegment)
+                    {
+                        lineSegment.emplace_back(point);
+                    }
+                    currLineSegmentNumber += arcSegment.size();
+                }
+                else
+                {
+                    addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
+                }
 
                 arcSegment.clear();
 
@@ -208,7 +221,7 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                     lineSegment.clear();
                     currLineSegmentNumber = 0;
                 }
-                else
+                else if (arcSegment.size() >= minArcSegmentSize)
                 {
                     roadModel.addElementToRight(currElementBegin, currElementEnd);
 
