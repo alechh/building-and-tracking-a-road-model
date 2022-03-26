@@ -138,11 +138,7 @@ void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadM
 
         double startAngle, endAngle;
 
-        //TODO НЕ РАБОТАЕТ
         Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
-
-        startAngle = 0;
-        endAngle = 360;
 
         roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
     }
