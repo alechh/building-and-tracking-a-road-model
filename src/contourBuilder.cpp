@@ -11,9 +11,8 @@
 
 /**
  * returns a contour that looks like the picture that is in the folder /contours/Simple_right_contour.jpg
- * Radius of the circle = 202.002
- * Curvature of the arc segment = 0.0049
- * Center of the circle = (681, 242)
+ * Curvature of the arc segment = 0.005 (1 / RADIUS_OF_THE_CIRCLE)
+ * Center of the circle = (650, 252)
  * @return
  */
 std::vector<cv::Point> contourBuilder::getSimpleRightContour()
@@ -54,9 +53,8 @@ std::vector<cv::Point> contourBuilder::getSimpleRightContour()
 
 /**
  * Returns a contour that looks like the picture that is in the folder /contours/Simple_upper_right_contour.jpg
- * Radius of the circle = 202.249
- * Curvature of the arc segment = 0.0049
- * Center of the circle = (681, 200)
+ * Curvature of the arc segment = 0.005 (1 / RADIUS_OF_THE_CIRCLE)
+ * Center of the circle = (650, 250)
  * @return
  */
 std::vector<cv::Point> contourBuilder::getSimpleUpperRightContour()
