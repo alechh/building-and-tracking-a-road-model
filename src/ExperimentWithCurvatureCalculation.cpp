@@ -90,6 +90,12 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 
     cv::Point2f firstDerivative = Utils::getFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
 
+    // TODO Возможно, есть более красивый и правильные признак того, что производную надо взять с минусом
+    if (pPlus.y > pMinus.y)
+    {
+        firstDerivative.x = -firstDerivative.x;
+    }
+
     // A * x + B * y + C = 0
     std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
 
