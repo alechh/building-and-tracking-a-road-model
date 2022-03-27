@@ -138,3 +138,42 @@ std::vector<std::vector<cv::Point>> contourBuilder::getRightContours(const int R
 
     return contours;
 }
+
+
+/**
+ * /**
+ * Returns a contour that looks like the picture that is in the folder /contours/Simple_Right_Contour_2.jpg
+ * @return
+ */
+std::vector<cv::Point> contourBuilder::getSimpleRightContour2(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE)
+{
+    const int ROWS = 500;
+    const int X_COORDINATE_OF_THE_LINE = 400;
+
+    std::vector<cv::Point> contour;
+
+    for (int yCoordinate = ROWS; yCoordinate > ROWS - VERTICAL_LINE_SIZE; --yCoordinate)
+    {
+        contour.emplace_back(cv::Point(X_COORDINATE_OF_THE_LINE, yCoordinate));
+    }
+
+    cv::Point centerOfTheCircle(contour[contour.size() - 1].x, contour[contour.size() - 1].y - RADIUS_OF_THE_CIRCLE);
+
+    const int epsilonDenominator = RADIUS_OF_THE_CIRCLE / 13; // почему 13 не знает никто
+    double epsilon = 1.0 / epsilonDenominator;
+    double angle = 90;
+    while (angle <= 180)
+    {
+        contour.emplace_back(cv::Point(centerOfTheCircle.x + RADIUS_OF_THE_CIRCLE * cos(angle / 180 * CV_PI), centerOfTheCircle.y + RADIUS_OF_THE_CIRCLE * sin(angle / 180 * CV_PI)));
+        angle += epsilon;
+    }
+
+    int lastYCoordinateOfCircle = contour[contour.size() - 1].y;
+
+    for (int yCoordinate = lastYCoordinateOfCircle; yCoordinate > lastYCoordinateOfCircle - VERTICAL_LINE_SIZE; --yCoordinate)
+    {
+        contour.emplace_back(cv::Point(centerOfTheCircle.x - RADIUS_OF_THE_CIRCLE, yCoordinate));
+    }
+
+    return contour;
+}
