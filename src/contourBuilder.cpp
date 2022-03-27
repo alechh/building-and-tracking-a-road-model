@@ -126,67 +126,13 @@ std::vector<cv::Point> contourBuilder::getSimpleStraightContour()
  * Returns a contour that looks like the picture that is in the folder /contours/Right_contour.jpg
  * @return
  */
-std::vector<std::vector<cv::Point>> contourBuilder::getRightContours()
+std::vector<std::vector<cv::Point>> contourBuilder::getRightContours(const int RADIUS_OF_THE_CIRCLES, const int VERTICAL_LINE_SIZES, const int HORIZONTAL_LINE_SIZES)
 {
     std::vector<std::vector<cv::Point>> contours;
 
-    const int centerXOfTheCircles = 600;
+    contours.emplace_back(getSimpleUpperRightContour(RADIUS_OF_THE_CIRCLES, VERTICAL_LINE_SIZES, HORIZONTAL_LINE_SIZES));
 
-    std::vector<cv::Point> firstContour;
-
-    for (int yCoordinate = 500; yCoordinate > 450; --yCoordinate)// 500 - 240
-    {
-        firstContour.emplace_back(cv::Point(479, yCoordinate));
-    }
-
-    cv::Point centerOfTheCircle(centerXOfTheCircles, firstContour[firstContour.size() - 1].y + 1);
-
-    double radius = Utils::distanceBetweenPoints(centerOfTheCircle, firstContour[firstContour.size() - 1]);
-
-    double epsilon = 1.0 / 15;
-    double angle = 180;
-    while (angle <= 270)
-    {
-        firstContour.emplace_back(cv::Point(centerOfTheCircle.x + radius * cos(angle / 180 * CV_PI), centerOfTheCircle.y + radius * sin(angle / 180 * CV_PI)));
-        angle += epsilon;
-    }
-
-    int lastYOfTheArc = centerOfTheCircle.y + radius * sin(angle / 180 * CV_PI);
-
-    for (int xCoordinate = centerXOfTheCircles; xCoordinate < 1000; ++xCoordinate)
-    {
-        firstContour.emplace_back(cv::Point(xCoordinate, lastYOfTheArc));
-    }
-
-    contours.emplace_back(firstContour);
-
-
-    std::vector<cv::Point> secondContour;
-
-    for (int yCoordinate = 1; yCoordinate < 100; ++yCoordinate) // 1 -- 200
-    {
-        secondContour.emplace_back(cv::Point(479, yCoordinate));
-    }
-
-    cv::Point centerOfTheCircle2(centerXOfTheCircles, secondContour[secondContour.size() - 1].y + 1);
-
-    double radius2 = Utils::distanceBetweenPoints(centerOfTheCircle2, secondContour[secondContour.size() - 1]);
-
-    double angle2 = 90;
-    int firstYOfTheArc2 = centerOfTheCircle2.y + radius2 * sin(angle2 / 180 * CV_PI);
-
-    while (angle2 <= 180)
-    {
-        secondContour.emplace_back(cv::Point(centerOfTheCircle2.x + radius2 * cos(angle2 / 180 * CV_PI), centerOfTheCircle2.y + radius2 * sin(angle2 / 180 * CV_PI)));
-        angle2 += epsilon;
-    }
-
-    for (int xCoordinate = centerXOfTheCircles; xCoordinate < 1000; ++xCoordinate)
-    {
-        secondContour.emplace_back(cv::Point(xCoordinate, firstYOfTheArc2));
-    }
-
-    contours.emplace_back(secondContour);
+    contours.emplace_back(getSimpleRightContour(RADIUS_OF_THE_CIRCLES, VERTICAL_LINE_SIZES, HORIZONTAL_LINE_SIZES));
 
     return contours;
 }
