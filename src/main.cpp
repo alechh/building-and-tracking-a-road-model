@@ -6,6 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include "Utils.h"
 #include "ExperimentWithCurvatureCalculation.h"
+#include "contourBuilder.h"
 
 using namespace cv;
 
@@ -169,51 +170,98 @@ Mat find_white_color(const Mat& src)
 
 void experiment_with_curvature_calculation(Mat &birdview)
 {
-    // Обрезка кадра по дистанции
-    const int distance_in_pixels = 500; // дистанция в пикселях для эксперимента по вычислению кривизны на разных расстояниях от машины
-    Mat frame_birdview_roi_distance = get_horizontal_roi(birdview, distance_in_pixels);
-
-    // Вычисление кривизны
-
-    Mat frame_birdview_vertical_white_hsv = find_white_color(frame_birdview_roi_distance);
-
-    Mat frame_canny;
-    Canny(frame_birdview_vertical_white_hsv, frame_canny, 280, 360); // 280 360
+    const int ROWS = 500;
+    const int COLS = 1000;
+    const int TYPE = 16;
 
     std::vector< std::vector<Point> > contours;
-    findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
 
-    const int min_contour_size = 30;
-    Utils::remove_small_contours(contours, min_contour_size);
+    contours.emplace_back(contourBuilder::getSimpleRightContour2());
 
-    Utils::sort_vector_of_vectors_of_points(contours);
+    contourBuilder::saveContoursOnImage(contours);
 
-//    Mat frameContours(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
-//    Utils::draw_contours(contours, frameContours, 1);
+    std::vector< std::vector<double> > contoursCurvatures_2(contours.size());
 
-    Mat frameRoadModel(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
-    std::vector< std::vector<double> > contoursCurvatureStep1(contours.size());
-    std::vector< std::vector<double> > contoursCurvatureStepN(contours.size());
+    Mat frameRoadModel_2(ROWS, COLS, TYPE, Scalar(0, 0, 0));
 
-    // TODO нужно либо грамотно удалить каждый второй вектор, либо добавить параметр "шаг" во вторую функцию вычисления кривизны
-    const int step = 10;
-    //Utils::calculate_contours_curvature(contoursCurvature, contours, step);
-    contoursCurvatureStep1[0] = Utils::calculate_curvature_2(contours[0], 1);
-    contoursCurvatureStepN[0] = Utils::calculate_curvature_2(contours[0], step);
+    double minCurvatureError = 10000;
+    int minStepCurvature = 0;
 
-    RoadModel roadModelStep1 = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvatureStep1[0]);
-    //RoadModel roadModelStepN = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvatureStepN[0]);
+    for (int iStep = 190; iStep <= 190; ++iStep)
+    {
+        //std::cout << "iStep = " << iStep << std::endl << contours[0].size() << std::endl;
 
-    Mat frameRoadModelStepN(frame_birdview_roi_distance.clone());
+        RoadModel roadModel_2;
 
-    roadModelStep1.drawModel(frame_birdview_roi_distance);
-    //roadModelStepN.drawModel(frameRoadModelStepN);
+        Mat showCurvatureOnContour(ROWS, COLS, TYPE, Scalar(0, 0, 0));
+        Mat showContourPoints(ROWS, COLS, TYPE, Scalar(0, 0, 0));
 
-    imshow("roadModelStep1", frame_birdview_roi_distance);
-    //imshow("roadModelStepN", frameRoadModelStepN);
+        for (int i = 0; i < contours.size(); ++i)
+        {
+            int betterStep = contours[i].size() / 10;
 
-    //ExperimentWithCurvatureCalculation::drawArcsOnContour(frame_birdview_roi_distance, contours[0], contoursCurvature[0]);
+            std::vector<double> tempCurvatureContour(contours[i].size());
+            Utils::calculateCurvature2(tempCurvatureContour, contours[i], betterStep);
 
+            contoursCurvatures_2[i] = std::move(tempCurvatureContour);
+
+            ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(roadModel_2, contours[i], contoursCurvatures_2[i]);
+
+            ExperimentWithCurvatureCalculation::showCurvatureOnImage(showCurvatureOnContour, contours[i], contoursCurvatures_2[i]);
+        }
+
+        roadModel_2.drawModel(frameRoadModel_2);
+        imwrite("../images/frameRoadModel.jpg", frameRoadModel_2);
+
+        //roadModel_2.printInformationOfTheRightSide();
+
+        imwrite("../images/showCurvatureOnContour/curvatureContour.jpg", showCurvatureOnContour);
+
+        roadModel_2.drawModelPoints(showContourPoints);
+        imwrite("../images/showModelPoints/modelPoints.jpg", showContourPoints);
+
+        double meanCurvature = 0;
+        int count = 0;
+        const double EXACT_CURVATURE = 0.01;
+        for (auto i: contoursCurvatures_2[0])
+        {
+            if (i != 0)
+            {
+                meanCurvature += i;
+                ++count;
+            }
+        }
+
+        meanCurvature /= count;
+
+        if (std::abs(meanCurvature - EXACT_CURVATURE) < minCurvatureError)
+        {
+            minCurvatureError = std::abs(meanCurvature - EXACT_CURVATURE);
+            minStepCurvature = iStep;
+        }
+    }
+    std::cout << std::endl << "Min curvature error = " << minCurvatureError << "\niStep = " << minStepCurvature << std::endl;
+//
+//    contoursCurvatureStepN[0] = Utils::calculateCurvature(contours[0], step);
+//    contoursCurvatures_2[0] = Utils::calculateCurvature2(contours[0], step);
+//
+//
+//
+//    RoadModel roadModelStepN = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvatureStepN[0]);
+//    RoadModel roadModelStepN_2 = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvatures_2[0]);
+//
+//    Mat frameRoadModelStepN(frame_birdview_roi_distance.clone());
+//    Mat frameRoadModelStepN_2(frame_birdview_roi_distance.clone());
+//
+//    roadModelStepN.drawModel(frameRoadModel);
+//    roadModelStepN_2.drawModel(frameRoadModel_2);
+
+    //cv::resize(frameRoadModelStepN, frameRoadModelStepN, cv::Size(), 1.5, 1.5);
+
+    //imshow("roadModelStepN", frameRoadModel);
+    //imshow("roadModelStepN_2", frameRoadModel_2);
+
+    //int l = waitKey(0);
 }
 
 
@@ -261,15 +309,15 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
 //        findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
 //
 //        const int min_contour_size = 30;
-//        Utils::remove_small_contours(contours, min_contour_size);
+//        Utils::removeSmallContours(contours, min_contour_size);
 //
-//        Utils::sort_vector_of_vectors_of_points(contours);
+//        Utils::sortVectorOfVectorsOfPoints(contours);
 //
 //        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
 //        Utils::draw_contours(contours, frame_contours, 1);
 //
 //        std::vector< std::vector<double> > contoursCurvature(contours.size());
-//        Utils::calculate_contours_curvature(contoursCurvature, contours);
+//        Utils::calculateContoursCurvature(contoursCurvature, contours);
 
         int k = waitKey(24);
         pause(k);
@@ -418,9 +466,9 @@ void checkContoursOnVideo(const std::string &PATH, const double resize = 1)
         findContours(frame_canny, contours, RETR_LIST, CHAIN_APPROX_NONE );
 
         const int min_contour_size = 30;
-        Utils::remove_small_contours(contours, min_contour_size);
+        Utils::removeSmallContours(contours, min_contour_size);
 
-        Utils::sort_vector_of_vectors_of_points(contours);
+        Utils::sortVectorOfVectorsOfPoints(contours);
 
 //        Mat frame_contours(frame_canny.rows, frame_canny.cols, frame.type(), Scalar(0, 0, 0));
 //        Utils::draw_contours(contours, frame_contours, 1);
@@ -455,7 +503,7 @@ int main()
     const std::string PATH5 = "../videos/video5.mp4";
     const std::string PATH6 = "../videos/video6.mp4"; // resize = 0.5
 
-    const std::string IMAGE_PATH = "../images/test_image.png";
+    const std::string IMAGE_PATH = "../images/test_image_3.png";
 
     /**
      * Различие в PATH
@@ -470,5 +518,6 @@ int main()
     //test_curvature_calculations_on_video(PATH6, 0.5);
     //checkContoursOnVideo(PATH4, 0.5);
     buildRoadModelUsingImage(IMAGE_PATH);
+
     return 0;
 }
