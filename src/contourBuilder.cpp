@@ -134,11 +134,7 @@ std::vector<std::vector<cv::Point>> contourBuilder::getRightContours(const int R
 
     contours.emplace_back(getSimpleUpperRightContour(RADIUS_OF_THE_CIRCLES, VERTICAL_LINE_SIZES, HORIZONTAL_LINE_SIZES));
 
-    std::cout << contours[0].size() << std::endl;
-
     contours.emplace_back(getSimpleRightContour(RADIUS_OF_THE_CIRCLES, VERTICAL_LINE_SIZES, HORIZONTAL_LINE_SIZES));
-
-    std::cout << contours[1].size() << std::endl;
 
     return contours;
 }
