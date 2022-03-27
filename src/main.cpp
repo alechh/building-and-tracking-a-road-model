@@ -4,7 +4,29 @@
 #include <opencv2/opencv.hpp>
 #include "Utils.h"
 #include "ExperimentWithCurvatureCalculation.h"
-#include "contourBuilder.h"
+#include "ContourBuilder.h"
+
+
+
+void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours)
+{
+    const int ROWS = 500;
+    const int COLS = 1000;
+    const int TYPE = 16;
+
+    cv::Mat pictuteOfTheContour(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+    for (const auto &contour : contours)
+    {
+        for (const auto &point : contour)
+        {
+            circle(pictuteOfTheContour, point, 1, cv::Scalar(255, 0, 0));
+        }
+    }
+
+    imwrite("../images/contour.jpg", pictuteOfTheContour);
+}
+
+
 
 void calculateMeanError(double &minCurvatureError, int &minStepCurvature, const int CUR_STEP, const std::vector<double> &contourCurvature)
 {
@@ -37,9 +59,9 @@ void buildRoadModelByContour()
 
     std::vector< std::vector<cv::Point> > contours;
 
-    contours.emplace_back(contourBuilder::getSimpleRightContour2());
+    contours.emplace_back(ContourBuilder::getSimpleRightContour2());
 
-    contourBuilder::saveContoursOnImage(contours);
+    saveContoursOnImage(contours);
 
     std::vector< std::vector<double> > contoursCurvatures(contours.size());
 
