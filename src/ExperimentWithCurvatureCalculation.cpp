@@ -73,7 +73,7 @@ void drawArcSegmentAndTangent(cv::Mat &dst, const std::vector<cv::Point> &segmen
  * @param R -- radius of the circle that describes the segment
  * @return
  */
-cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
+cv::Point ExperimentWithCurvatureCalculation::getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 {
     cv::Point center;
 
@@ -123,7 +123,7 @@ cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
  * @param roadModel -- model of the road
  * @param curvature -- curvature of the segment
  */
-void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature)
+void ExperimentWithCurvatureCalculation::addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature)
 {
     double radiusOfTheCircle = 1.0 / curvature;
     cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
@@ -234,18 +234,33 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
                 }
                 else // если встретился новый участок уровня кривизны
                 {
-                    addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
+                    if (arcSegment.size() >= minArcSegmentSize)
+                    {
+                        addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
 
-                    arcSegment.clear();
+                        arcSegment.clear();
 
-                    currArcSegmentNumber = 1;
-                    currSumOfArcSegmentCurvatures = contourCurvature[i];
+                        currArcSegmentNumber = 1;
+                        currSumOfArcSegmentCurvatures = contourCurvature[i];
 
-                    currElementBegin = contour[i];
-                    currElementEnd = contour[i];
-                    prevCurvature = contourCurvature[i];
+                        currElementBegin = contour[i];
+                        currElementEnd = contour[i];
+                        prevCurvature = contourCurvature[i];
+                        arcSegment.emplace_back(contour[i]);
 
-                    arcSegment.emplace_back(contour[i]);
+                    }
+                    else
+                    {
+                        //TODO Если до текущего сегмента дуги был другой сегмент дуги, который очень маленький,
+                        // то что лучше, прибавить его к текущему сегменту или добавить как участок прямой?
+                        // Пока что добавляю его к текущему сегменту
+                        currElementEnd = contour[i];
+
+                        arcSegment.emplace_back(contour[i]);
+
+                        currArcSegmentNumber++;
+                        currSumOfArcSegmentCurvatures += contourCurvature[i];
+                    }
                 }
             }
         }

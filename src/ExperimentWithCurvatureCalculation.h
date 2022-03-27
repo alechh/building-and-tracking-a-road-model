@@ -17,6 +17,8 @@ public:
 
 private:
     static void drawArc(cv::Mat &src, double radius, cv::Point center, const cv::Scalar &color);
+    static cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
+    static void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature);
 };
 
 
