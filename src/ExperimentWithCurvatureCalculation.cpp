@@ -136,13 +136,14 @@ void ExperimentWithCurvatureCalculation::addArcToTheModel(const std::vector<cv::
 }
 
 
-RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
+void ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
+                                                                               const std::vector<cv::Point> &contour,
+                                                                               const std::vector<double> &contourCurvature)
 {
     /**
      * Построение модели дороги (а точнее нашей полосы движения) по одному контуру.
      * Пока строим ПРАВУЮ часть модели
      */
-    RoadModel roadModel;
 
     cv::Point currElementBegin = contour[0];
     cv::Point currElementEnd = contour[0];
@@ -277,8 +278,6 @@ RoadModel ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleCont
     {
         roadModel.addElementToRight(currElementBegin, currElementEnd);
     }
-
-    return roadModel;
 }
 
 void ExperimentWithCurvatureCalculation::showCurvatureOnImage(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)

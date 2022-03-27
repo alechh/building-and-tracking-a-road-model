@@ -208,10 +208,9 @@ void Utils::selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next
  * @param step
  * @return
  */
-std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &contour, const int step)
+void Utils::calculateCurvature2(std::vector<double> &contourCurvature, const std::vector<cv::Point> &contour,
+                           const int step)
 {
-    std::vector<double> contourCurvature(contour.size());
-
     for (int i = 1; i < contour.size() - 2; ++i)
     {
         cv::Point prev, curr, next;
@@ -268,7 +267,6 @@ std::vector<double> Utils::calculateCurvature2(const std::vector<cv::Point> &con
 
         contourCurvature[i] = 1.0 / R; // кривизна = 1 / R
     }
-    return contourCurvature;
 }
 
 

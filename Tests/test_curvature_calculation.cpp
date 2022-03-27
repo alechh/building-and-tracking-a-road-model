@@ -252,7 +252,7 @@ TEST(CurvatureTest, CircleCurvature2)
     contours.emplace_back(circle_contour);
 
     const int step = 1;
-    circle_curvature = Utils::calculateCurvature2(circle_contour, step);
+    circle_curvature = Utils::calculateCurvature2(<#initializer#>, circle_contour, step);
 
     double errorSum = 0;
     int countNonZero = 0;
@@ -287,7 +287,7 @@ TEST(CurvatureTest, ParabolaCurvature2)
     contours.emplace_back(parabola_contour);
 
     const int step = 1;
-    parabolaCurvature = Utils::calculateCurvature2(parabola_contour, step);
+    parabolaCurvature = Utils::calculateCurvature2(<#initializer#>, parabola_contour, step);
 
     double meanError = 0;
     int countError = 0;

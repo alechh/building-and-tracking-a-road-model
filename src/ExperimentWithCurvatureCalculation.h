@@ -12,7 +12,9 @@
 class ExperimentWithCurvatureCalculation {
 public:
     static void drawArcsOnContour(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
-    static RoadModel buildRoadModelBasedOnTheSingleContour(const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
+    static void buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
+                                                      const std::vector<cv::Point> &contour,
+                                                      const std::vector<double> &contourCurvature);
     static void showCurvatureOnImage(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
 
 private:
