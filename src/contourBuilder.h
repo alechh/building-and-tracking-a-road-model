@@ -11,8 +11,8 @@
 
 class contourBuilder {
 public:
-    static std::vector<cv::Point> getSimpleRightContour();
-    static std::vector<cv::Point> getSimpleUpperRightContour();
+    static std::vector<cv::Point> getSimpleRightContour(int RADIUS_OF_THE_CIRCLE = 200, int VERTICAL_LINE_SIZE = 250, int HORIZONTAL_LINE_SIZE = 250);
+    static std::vector<cv::Point> getSimpleUpperRightContour(int RADIUS_OF_THE_CIRCLE = 200, int VERTICAL_LINE_SIZE = 250, int HORIZONTAL_LINE_SIZE = 250);
     static std::vector<cv::Point> getSimpleStraightContour();
     static void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours);
     static std::vector<std::vector<cv::Point>> getRightContours();

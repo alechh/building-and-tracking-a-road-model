@@ -15,32 +15,28 @@
  * Center of the circle = (650, 252)
  * @return
  */
-std::vector<cv::Point> contourBuilder::getSimpleRightContour()
+std::vector<cv::Point> contourBuilder::getSimpleRightContour(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE, const int HORIZONTAL_LINE_SIZE)
 {
     const int ROWS = 500;
-    const int COLS = 1000;
-    const int radiusOfTheCircle = 200;
-    const int VERTICAL_LINE_SIZE = 250;
-    const int HORIZONTAL_LINE_SIZE = 250;
 
     std::vector<cv::Point> contour;
 
     for (int yCoordinate = ROWS; yCoordinate > ROWS - VERTICAL_LINE_SIZE; --yCoordinate)
     {
-        contour.emplace_back(cv::Point(HORIZONTAL_LINE_SIZE + radiusOfTheCircle, yCoordinate));
+        contour.emplace_back(cv::Point(HORIZONTAL_LINE_SIZE + RADIUS_OF_THE_CIRCLE, yCoordinate));
     }
 
-    cv::Point centerOfTheCircle(contour[contour.size() - 1].x + radiusOfTheCircle, contour[contour.size() - 1].y + 1);
+    cv::Point centerOfTheCircle(contour[contour.size() - 1].x + RADIUS_OF_THE_CIRCLE, contour[contour.size() - 1].y + 1);
 
     double epsilon = 1.0 / 15;
     double angle = 180;
     while (angle <= 270)
     {
-        contour.emplace_back(cv::Point(centerOfTheCircle.x + radiusOfTheCircle * cos(angle / 180 * CV_PI), centerOfTheCircle.y + radiusOfTheCircle * sin(angle / 180 * CV_PI)));
+        contour.emplace_back(cv::Point(centerOfTheCircle.x + RADIUS_OF_THE_CIRCLE * cos(angle / 180 * CV_PI), centerOfTheCircle.y + RADIUS_OF_THE_CIRCLE * sin(angle / 180 * CV_PI)));
         angle += epsilon;
     }
 
-    int lastYCoordinateOfCircle = centerOfTheCircle.y + radiusOfTheCircle * sin(angle / 180 * CV_PI);
+    int lastYCoordinateOfCircle = centerOfTheCircle.y + RADIUS_OF_THE_CIRCLE * sin(angle / 180 * CV_PI);
 
     for (int xCoordinate = centerOfTheCircle.x; xCoordinate < HORIZONTAL_LINE_SIZE + centerOfTheCircle.x; ++xCoordinate)
     {
@@ -57,12 +53,8 @@ std::vector<cv::Point> contourBuilder::getSimpleRightContour()
  * Center of the circle = (650, 250)
  * @return
  */
-std::vector<cv::Point> contourBuilder::getSimpleUpperRightContour()
+std::vector<cv::Point> contourBuilder::getSimpleUpperRightContour(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE, const int HORIZONTAL_LINE_SIZE)
 {
-    const int VERTICAL_LINE_SIZE = 250;
-    const int HORIZONTAL_LINE_SIZE = 250;
-    const int RADIUS_OF_THE_CIRCLE = 200;
-
     std::vector<cv::Point> contour;
 
     for (int yCoordinate = 1; yCoordinate < VERTICAL_LINE_SIZE; ++yCoordinate)
@@ -116,11 +108,14 @@ void contourBuilder::saveContoursOnImage(const std::vector<std::vector<cv::Point
  */
 std::vector<cv::Point> contourBuilder::getSimpleStraightContour()
 {
+    const int VERTICAL_LINE_SIZE = 450;
+    const int X_COORDINATE_OF_THE_LINE = 450;
+
     std::vector<cv::Point> contour;
 
-    for (int yCoordinate = 1; yCoordinate < 500; ++yCoordinate)
+    for (int yCoordinate = 1; yCoordinate < VERTICAL_LINE_SIZE; ++yCoordinate)
     {
-        contour.emplace_back(cv::Point(479, yCoordinate));
+        contour.emplace_back(cv::Point(X_COORDINATE_OF_THE_LINE, yCoordinate));
     }
 
     return contour;
