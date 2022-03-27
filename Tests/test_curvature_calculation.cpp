@@ -2,53 +2,8 @@
 // Created by alechh on 17.11.2021.
 //
 #include "gtest/gtest.h"
-#include "Utils.cpp"
-
-std::vector<cv::Point> get_circle_contour(const int R)
-{
-    std::vector<cv::Point> contour;
-    double t = 0;
-    double epsilon = 10e-2;
-    while (t < 2 * CV_PI)
-    {
-        contour.emplace_back(500 + R * cos(t),300 + R * sin(t));
-        t += epsilon;
-    }
-    return contour;
-}
-
-
-std::vector<cv::Point> get_straight_line_contour(bool isVertical = true)
-{
-    std::vector<cv::Point> contour;
-    int t = 0;
-    while(t < 100)
-    {
-        if (isVertical)
-        {
-            contour.emplace_back(cv::Point(0, t));
-        }
-        else
-        {
-            contour.emplace_back(cv::Point(t, 0));
-        }
-        t++;
-    }
-    return contour;
-}
-
-
-std::vector<cv::Point> get_parabola_contour(int step, int left_boundary, int right_boundary)
-{
-    std::vector<cv::Point> contour;
-    int x = left_boundary;
-    while (x < right_boundary)
-    {
-        contour.emplace_back(cv::Point(x,3 * x * x));
-        x += step;
-    }
-    return contour;
-}
+#include "Utils.h"
+#include "ContourBuilder.h"
 
 
 TEST(CurvatureTest, CircleCurvature)
@@ -57,51 +12,51 @@ TEST(CurvatureTest, CircleCurvature)
 
     const int radius = 10000000;
 
-    std::vector<double> circle_curvature;
+    std::vector<double> circleCurvature;
 
     std::vector< std::vector<cv::Point> > contours;
-    std::vector<cv::Point> circle_contour = get_circle_contour(radius);
-    contours.emplace_back(circle_contour);
+    std::vector<cv::Point> circleContour = ContourBuilder::getCircleContour(radius);
+    contours.emplace_back(circleContour);
 
-    circle_curvature = Utils::calculateCurvature(circle_contour, 1);
+    circleCurvature = Utils::calculateCurvature(circleContour, 1);
 
-    double max_error = 0, min_error = 1;
-    int count_inf = 0, count_zero = 0;
+    double maxError = 0, minError = 1;
+    int countInf = 0, countZero = 0;
 
-    for (auto i : circle_curvature)
+    for (auto i : circleCurvature)
     {
-        if (i == circle_curvature[0])
+        if (i == circleCurvature[0])
         {
             continue;
         }
 
         if (i == std::numeric_limits<double>::infinity())
         {
-            count_inf++;
+            countInf++;
             continue;
         }
         if (i == 0)
         {
-            count_zero++;
+            countZero++;
             continue;
         }
 
         double error = std::abs(1.0 / radius - i);
 
-        if (error > max_error)
+        if (error > maxError)
         {
-            max_error = error;
+            maxError = error;
         }
-        if (error < min_error)
+        if (error < minError)
         {
-            min_error = error;
+            minError = error;
         }
     }
 
-    EXPECT_EQ(count_zero, 0);
-    EXPECT_EQ(count_inf, 0);
-    EXPECT_LE(max_error, 2.0e-8);
-    EXPECT_LE(min_error, 2.0e-9);
+    EXPECT_EQ(countZero, 0);
+    EXPECT_EQ(countInf, 0);
+    EXPECT_LE(maxError, 2.0e-8);
+    EXPECT_LE(minError, 2.0e-9);
 }
 
 
@@ -112,12 +67,12 @@ TEST(CurvatureTest, StraightVerticalLineCurvature)
     std::vector<double> lineCurvature;
 
     std::vector< std::vector<cv::Point> > contours;
-    std::vector<cv::Point> line_contour = get_straight_line_contour();
-    contours.emplace_back(line_contour);
+    std::vector<cv::Point> lineContour = ContourBuilder::getStraightLineContour();
+    contours.emplace_back(lineContour);
 
-    lineCurvature = Utils::calculateCurvature(line_contour, 1);
+    lineCurvature = Utils::calculateCurvature(lineContour, 1);
 
-    double max_error = 0, min_error = 1;
+    double maxError = 0, minError = 1;
 
     for (auto i : lineCurvature)
     {
@@ -128,18 +83,18 @@ TEST(CurvatureTest, StraightVerticalLineCurvature)
 
         double error = std::abs(i);
 
-        if (error > max_error)
+        if (error > maxError)
         {
-            max_error = error;
+            maxError = error;
         }
-        if (error < min_error)
+        if (error < minError)
         {
-            min_error = error;
+            minError = error;
         }
     }
 
-    EXPECT_EQ(max_error, 0);
-    EXPECT_EQ(min_error, 0);
+    EXPECT_EQ(maxError, 0);
+    EXPECT_EQ(minError, 0);
 }
 
 
@@ -150,12 +105,12 @@ TEST(CurvatureTest, StraightHorizontalLineCurvature)
     std::vector<double> lineCurvature;
 
     std::vector< std::vector<cv::Point> > contours;
-    std::vector<cv::Point> line_contour = get_straight_line_contour(false);
-    contours.emplace_back(line_contour);
+    std::vector<cv::Point> lineContour = ContourBuilder::getStraightLineContour(false);
+    contours.emplace_back(lineContour);
 
-    lineCurvature = Utils::calculateCurvature(line_contour, 1);
+    lineCurvature = Utils::calculateCurvature(lineContour, 1);
 
-    double max_error = 0, min_error = 1;
+    double maxError = 0, minError = 1;
 
     for (auto i : lineCurvature)
     {
@@ -166,18 +121,18 @@ TEST(CurvatureTest, StraightHorizontalLineCurvature)
 
         double error = std::abs(i);
 
-        if (error > max_error)
+        if (error > maxError)
         {
-            max_error = error;
+            maxError = error;
         }
-        if (error < min_error)
+        if (error < minError)
         {
-            min_error = error;
+            minError = error;
         }
     }
 
-    EXPECT_EQ(max_error, 0);
-    EXPECT_EQ(min_error, 0);
+    EXPECT_EQ(maxError, 0);
+    EXPECT_EQ(minError, 0);
 }
 
 
@@ -187,43 +142,43 @@ TEST(CurvatureTest, ParabolaCurvature)
 
     std::vector<double> parabolaCurvature;
 
-    int left_x_boundary = -50;
-    int right_x_boundary = 50;
-    int x_step = 1;
+    int leftXBoundary = -50;
+    int rightXBoundary = 50;
+    int xStep = 1;
 
     std::vector< std::vector<cv::Point> > contours;
-    std::vector<cv::Point> parabola_contour = get_parabola_contour(x_step, left_x_boundary, right_x_boundary);
-    contours.emplace_back(parabola_contour);
+    std::vector<cv::Point> parabolaContour = ContourBuilder::getParabolaContour(xStep, leftXBoundary, rightXBoundary);
+    contours.emplace_back(parabolaContour);
 
-    parabolaCurvature = Utils::calculateCurvature(parabola_contour, 1);
+    parabolaCurvature = Utils::calculateCurvature(parabolaContour, 1);
 
-    double x = left_x_boundary;
+    double x = leftXBoundary;
     int i = 0;
-    int count_inf = 0;
-    while (x < right_x_boundary)
+    int countInf = 0;
+    while (x < rightXBoundary)
     {
-        if (i == 0 || i == parabola_contour.size() - 1)
+        if (i == 0 || i == parabolaContour.size() - 1)
         {
-            x += x_step;
+            x += xStep;
             i++;
             continue;
         }
         if (parabolaCurvature[i] == std::numeric_limits<double>::infinity())
         {
             i++;
-            x += x_step;
-            count_inf++;
+            x += xStep;
+            countInf++;
             continue;
         }
 
         double exactValue = 6.0 / pow(1 + 36 * pow(x, 2), 1.5);
         EXPECT_EQ(parabolaCurvature[i],  exactValue);
 
-        x += x_step;
+        x += xStep;
         i++;
     }
 
-    EXPECT_EQ(count_inf, 0);
+    EXPECT_EQ(countInf, 0);
 }
 
 
@@ -231,9 +186,9 @@ TEST(CurvatureTest, EmptyContour)
 {
     std::vector<double> curvature;
 
-    std::vector<cv::Point> empty_contour;
+    std::vector<cv::Point> emptyContour;
 
-    curvature = Utils::calculateCurvature(empty_contour, 1);
+    curvature = Utils::calculateCurvature(emptyContour, 1);
 
     EXPECT_EQ(curvature.size(), 0);
 }
@@ -245,23 +200,23 @@ TEST(CurvatureTest, CircleCurvature2)
 
     const int radius = 1000;
 
-    std::vector<double> circle_curvature;
-
     std::vector< std::vector<cv::Point> > contours;
-    std::vector<cv::Point> circle_contour = get_circle_contour(radius);
-    contours.emplace_back(circle_contour);
+    std::vector<cv::Point> circleContour = ContourBuilder::getCircleContour(radius);
+    contours.emplace_back(circleContour);
+
+    std::vector<double> circleCurvature(circleContour.size());
 
     const int step = 1;
-    circle_curvature = Utils::calculateCurvature2(<#initializer#>, circle_contour, step);
+    Utils::calculateCurvature2(circleCurvature, circleContour, step);
 
     double errorSum = 0;
     int countNonZero = 0;
 
-    for (int i = 0; i < circle_curvature.size(); ++i)
+    for (int i = 0; i < circleCurvature.size(); ++i)
     {
-        if (circle_curvature[i] != 0)
+        if (circleCurvature[i] != 0)
         {
-            errorSum += std::abs(1.0 / radius - circle_curvature[i]);
+            errorSum += std::abs(1.0 / radius - circleCurvature[i]);
             countNonZero++;
         }
     }
@@ -276,25 +231,25 @@ TEST(CurvatureTest, ParabolaCurvature2)
 {
     // Curvature of parabola 3x^2 = 6 / (1 + 36 * x * x)^(3 / 2)
 
-    std::vector<double> parabolaCurvature;
-
-    const int left_x_boundary = -50;
-    const int right_x_boundary = 50;
-    const int x_step = 1;
+    const int leftXBoundary = -50;
+    const int rightXBoundary = 50;
+    const int xStep = 1;
 
     std::vector< std::vector<cv::Point> > contours;
-    std::vector<cv::Point> parabola_contour = get_parabola_contour(x_step, left_x_boundary, right_x_boundary);
-    contours.emplace_back(parabola_contour);
+    std::vector<cv::Point> parabolaContour = ContourBuilder::getParabolaContour(xStep, leftXBoundary, rightXBoundary);
+    contours.emplace_back(parabolaContour);
+
+    std::vector<double> parabolaCurvature(parabolaContour.size());
 
     const int step = 1;
-    parabolaCurvature = Utils::calculateCurvature2(<#initializer#>, parabola_contour, step);
+    Utils::calculateCurvature2(parabolaCurvature, parabolaContour, step);
 
     double meanError = 0;
     int countError = 0;
 
-    double x = left_x_boundary;
+    double x = leftXBoundary;
     int i = 0;
-    while (x < right_x_boundary)
+    while (x < rightXBoundary)
     {
         /* TODO
          * В точке 0 вычисляется кривизна 0.6, а должна быть (по формуле) 6. Чем дальше от точки 0, тем точнее
@@ -302,14 +257,14 @@ TEST(CurvatureTest, ParabolaCurvature2)
          */
         if (x == 0)
         {
-            x += x_step;
+            x += xStep;
             i++;
             continue;
         }
 
-        if (i == 0 || i == parabola_contour.size() - 1)
+        if (i == 0 || i == parabolaContour.size() - 1)
         {
-            x += x_step;
+            x += xStep;
             i++;
             continue;
         }
@@ -320,7 +275,7 @@ TEST(CurvatureTest, ParabolaCurvature2)
         meanError += error;
         countError++;
 
-        x += x_step;
+        x += xStep;
         i++;
     }
 

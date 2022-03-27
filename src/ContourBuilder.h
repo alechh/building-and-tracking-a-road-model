@@ -9,14 +9,16 @@
 #include <opencv2/core/types.hpp>
 
 
-class contourBuilder {
+class ContourBuilder {
 public:
     static std::vector<cv::Point> getSimpleRightContour(int RADIUS_OF_THE_CIRCLE = 200, int VERTICAL_LINE_SIZE = 250, int HORIZONTAL_LINE_SIZE = 250);
     static std::vector<cv::Point> getSimpleUpperRightContour(int RADIUS_OF_THE_CIRCLE = 200, int VERTICAL_LINE_SIZE = 250, int HORIZONTAL_LINE_SIZE = 250);
     static std::vector<cv::Point> getSimpleStraightContour();
     static std::vector<cv::Point> getSimpleRightContour2(int RADIUS_OF_THE_CIRCLE = 100, int VERTICAL_LINE_SIZE = 200);
-    static void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours);
     static std::vector<std::vector<cv::Point>> getRightContours(int RADIUS_OF_THE_CIRCLES = 110, int VERTICAL_LINE_SIZES = 100, int HORIZONTAL_LINE_SIZES = 300);
+    static std::vector<cv::Point> getCircleContour(const int R);
+    static std::vector<cv::Point> getStraightLineContour(bool isVertical = true);
+    static std::vector<cv::Point> getParabolaContour(int step, int leftBoundary, int rightBoundary);
 };
 
 
