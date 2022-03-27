@@ -28,7 +28,8 @@ std::vector<cv::Point> contourBuilder::getSimpleRightContour(const int RADIUS_OF
 
     cv::Point centerOfTheCircle(contour[contour.size() - 1].x + RADIUS_OF_THE_CIRCLE, contour[contour.size() - 1].y + 1);
 
-    double epsilon = 1.0 / 15;
+    const int epsilonDenominator = RADIUS_OF_THE_CIRCLE / 13; // почему 13 не знает никто
+    double epsilon = 1.0 / epsilonDenominator;
     double angle = 180;
     while (angle <= 270)
     {
@@ -64,7 +65,8 @@ std::vector<cv::Point> contourBuilder::getSimpleUpperRightContour(const int RADI
 
     cv::Point centerOfTheCircle(contour[contour.size() - 1].x + RADIUS_OF_THE_CIRCLE, contour[contour.size() - 1].y + 1);
 
-    double epsilon = 1.0 / 15;
+    const int epsilonDenominator = RADIUS_OF_THE_CIRCLE / 13; // почему 13 не знает никто
+    double epsilon = 1.0 / epsilonDenominator;
     double angle = 180;
     while (angle >= 90)
     {
@@ -132,7 +134,11 @@ std::vector<std::vector<cv::Point>> contourBuilder::getRightContours(const int R
 
     contours.emplace_back(getSimpleUpperRightContour(RADIUS_OF_THE_CIRCLES, VERTICAL_LINE_SIZES, HORIZONTAL_LINE_SIZES));
 
+    std::cout << contours[0].size() << std::endl;
+
     contours.emplace_back(getSimpleRightContour(RADIUS_OF_THE_CIRCLES, VERTICAL_LINE_SIZES, HORIZONTAL_LINE_SIZES));
+
+    std::cout << contours[1].size() << std::endl;
 
     return contours;
 }
