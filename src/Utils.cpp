@@ -331,29 +331,61 @@ Utils::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus
     pPlus = segment[pPlusIndex];
 
     // Нужно, чтобы точки были различными
-    // TODO если точки поменяются, нужно поменять и centerPoint
-    bool hasPMinusChanged = false;
-    while (std::abs(pMinus.x - centerPoint.x) != std::abs(pPlus.x - centerPoint.x) || pMinus.x == pPlus.x)
+    double distPMinusCenter = std::abs(pMinus.x - centerPoint.x);
+    double distPPlusCenter = std::abs(pPlus.x - centerPoint.x);
+
+    const int MAX_DELTA = 10; // если точки "разбегаются" дальше, чем на MAX_DELTA, то опускаем глаза на то, что они должны быть равноотстоящими, оставим их просто различными
+    int currDelta = 1;
+
+    while ((distPMinusCenter != distPPlusCenter || pMinus.x == pPlus.x) && currDelta < MAX_DELTA)
     {
         if (pMinusIndex == 0 && pPlusIndex == segment.size() - 1)
         {
             break;
         }
 
-        double distPMinusCenter = std::abs(pMinus.x - centerPoint.x);
-        double distPPlusCenter = std::abs(pPlus.x - centerPoint.x);
-
         if (distPMinusCenter < distPPlusCenter)
         {
             --pMinusIndex;
             pMinus = segment[pMinusIndex];
+            distPMinusCenter = std::abs(pMinus.x - centerPoint.x);
+            ++currDelta;
         }
         else
         {
             ++pPlusIndex;
             pPlus = segment[pPlusIndex];
+            distPPlusCenter = std::abs(pPlus.x - centerPoint.x);
+            ++currDelta;
         }
     }
+
+    if (currDelta == MAX_DELTA) // это значит, что не удалось найти равноотстоящие точки на расстоянии MAX_DELTA
+    {
+        pMinusIndex = indexOfTheCenter - 1;
+        pPlusIndex = indexOfTheCenter + 1;
+
+        pMinus = segment[pMinusIndex];
+        pPlus = segment[pPlusIndex];
+
+        bool hasPMinusChanged = false;
+        while(pPlus == pMinus)
+        {
+            if (!hasPMinusChanged)
+            {
+                --pMinusIndex;
+                pMinus = segment[pMinusIndex];
+                hasPMinusChanged = true;
+            }
+            else
+            {
+                ++pPlusIndex;
+                pPlus = segment[pPlusIndex];
+                hasPMinusChanged = false;
+            }
+        }
+    }
+
     h = 2 * std::abs(pPlus.x - centerPoint.x);
 }
 
