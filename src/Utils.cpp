@@ -13,13 +13,12 @@
  * @param step
  * @return
  */
-std::vector<double> Utils::calculateCurvature(const std::vector<cv::Point> &vecContourPoints, int step = 1)
+void Utils::calculateCurvature(std::vector<double> &contourCurvature, const std::vector<cv::Point> &vecContourPoints,
+                          int step = 1)
 {
-    std::vector<double> vecCurvature(vecContourPoints.size());
-
     if (vecContourPoints.size() < step)
     {
-        return vecCurvature;
+        return;
     }
 
     auto frontToBack = vecContourPoints.front() - vecContourPoints.back();
@@ -37,7 +36,7 @@ std::vector<double> Utils::calculateCurvature(const std::vector<cv::Point> &vecC
             maxStep = std::min(std::min(step, i), (int)vecContourPoints.size() - 1 - i);
             if (maxStep == 0)
             {
-                vecCurvature[i] = std::numeric_limits<double>::infinity();
+                contourCurvature[i] = std::numeric_limits<double>::infinity();
                 continue;
             }
         }
@@ -64,9 +63,8 @@ std::vector<double> Utils::calculateCurvature(const std::vector<cv::Point> &vecC
             curvature2D = std::numeric_limits<double>::infinity();
         }
 
-        vecCurvature[i] = curvature2D;
+        contourCurvature[i] = curvature2D;
     }
-    return vecCurvature;
 }
 
 
@@ -166,7 +164,9 @@ void Utils::calculateContoursCurvature(std::vector<std::vector<double>> &contour
 {
     for (int i = 0; i < contours.size(); ++i)
     {
-        contoursCurvature[i] = Utils::calculateCurvature(contours[i], step);
+        std::vector<double> curCurvature(contours[i].size());
+        Utils::calculateCurvature(curCurvature, contours[i], step);
+        contoursCurvature[i] = std::move(curCurvature);
     }
 }
 

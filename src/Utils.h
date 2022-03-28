@@ -13,7 +13,9 @@ class Utils {
 public:
     static int removeSmallContours(std::vector< std::vector<cv::Point> > & contours, const int minContoursSize);
 
-    static std::vector<double> calculateCurvature(std::vector<cv::Point> const& vecContourPoints, int step);
+    static void
+    calculateCurvature(std::vector<double> &contourCurvature, const std::vector<cv::Point> &vecContourPoints,
+                       int step);
 
     static double meanCurvature(const std::vector<double>& curvature);
 
