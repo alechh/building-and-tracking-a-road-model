@@ -13,7 +13,7 @@ using namespace cv;
  * Center of the circle = (650, 252)
  * @return
  */
-std::vector<cv::Point> ContourBuilder::getSimpleRightContour(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE, const int HORIZONTAL_LINE_SIZE)
+std::vector<cv::Point> ContourBuilder::getSimpleRightContour(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE, const int HORIZONTAL_LINE_SIZE, const int X_COORDINATE_OF_THE_STRAIGHT_LINE)
 {
     const int ROWS = 500;
 
@@ -21,7 +21,7 @@ std::vector<cv::Point> ContourBuilder::getSimpleRightContour(const int RADIUS_OF
 
     for (int yCoordinate = ROWS; yCoordinate > ROWS - VERTICAL_LINE_SIZE; --yCoordinate)
     {
-        contour.emplace_back(cv::Point(HORIZONTAL_LINE_SIZE + RADIUS_OF_THE_CIRCLE, yCoordinate));
+        contour.emplace_back(cv::Point(X_COORDINATE_OF_THE_STRAIGHT_LINE, yCoordinate));
     }
 
     cv::Point centerOfTheCircle(contour[contour.size() - 1].x + RADIUS_OF_THE_CIRCLE, contour[contour.size() - 1].y + 1);
@@ -52,13 +52,13 @@ std::vector<cv::Point> ContourBuilder::getSimpleRightContour(const int RADIUS_OF
  * Center of the circle = (650, 250)
  * @return
  */
-std::vector<cv::Point> ContourBuilder::getSimpleUpperRightContour(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE, const int HORIZONTAL_LINE_SIZE)
+std::vector<cv::Point> ContourBuilder::getSimpleUpperRightContour(const int RADIUS_OF_THE_CIRCLE, const int VERTICAL_LINE_SIZE, const int HORIZONTAL_LINE_SIZE, const int X_COORDINATE_OF_THE_STRAIGHT_LINE)
 {
     std::vector<cv::Point> contour;
 
     for (int yCoordinate = 1; yCoordinate < VERTICAL_LINE_SIZE; ++yCoordinate)
     {
-        contour.emplace_back(cv::Point(HORIZONTAL_LINE_SIZE + RADIUS_OF_THE_CIRCLE, yCoordinate));
+        contour.emplace_back(cv::Point(X_COORDINATE_OF_THE_STRAIGHT_LINE, yCoordinate));
     }
 
     cv::Point centerOfTheCircle(contour[contour.size() - 1].x + RADIUS_OF_THE_CIRCLE, contour[contour.size() - 1].y + 1);
@@ -88,11 +88,8 @@ std::vector<cv::Point> ContourBuilder::getSimpleUpperRightContour(const int RADI
  * Returns a contour that looks like the picture that is in the folder /contours/Simple_straight_contour.jpg
  * @return
  */
-std::vector<cv::Point> ContourBuilder::getSimpleStraightContour()
+std::vector<cv::Point> ContourBuilder::getSimpleStraightContour(const int X_COORDINATE_OF_THE_LINE, const int VERTICAL_LINE_SIZE)
 {
-    const int VERTICAL_LINE_SIZE = 450;
-    const int X_COORDINATE_OF_THE_LINE = 450;
-
     std::vector<cv::Point> contour;
 
     for (int yCoordinate = 1; yCoordinate < VERTICAL_LINE_SIZE; ++yCoordinate)
@@ -108,7 +105,7 @@ std::vector<cv::Point> ContourBuilder::getSimpleStraightContour()
  * Returns a contour that looks like the picture that is in the folder /contours/Right_contour.jpg
  * @return
  */
-std::vector<std::vector<cv::Point>> ContourBuilder::getRightContours(const int RADIUS_OF_THE_CIRCLES, const int VERTICAL_LINE_SIZES, const int HORIZONTAL_LINE_SIZES)
+std::vector<std::vector<cv::Point>> ContourBuilder::getRightContours(const int RADIUS_OF_THE_CIRCLES, const int VERTICAL_LINE_SIZES, const int HORIZONTAL_LINE_SIZES, const int X_COORDINATE_OF_THE_STRAIGHT_LINE)
 {
     std::vector<std::vector<cv::Point>> contours;
 
@@ -200,4 +197,19 @@ std::vector<cv::Point> ContourBuilder::getParabolaContour(int step, int leftBoun
         x += step;
     }
     return contour;
+}
+
+/**
+ * Returns a contour that looks like the picture that is in the folder /contours/Right_and_left_contour.jpg
+ * @return
+ */
+std::vector<std::vector<cv::Point>> ContourBuilder::getRightAndLeftContours(const int RADIUS_OF_THE_CIRCLES, const int VERTICAL_LINE_SIZES, const int HORIZONTAL_LINE_SIZES, const int X_COORDINATE_OF_THE_STRAIGHT_LINE)
+{
+    std::vector<std::vector<cv::Point>> contours;
+
+    contours = getRightContours(RADIUS_OF_THE_CIRCLES);
+
+    contours.emplace_back(getSimpleStraightContour(X_COORDINATE_OF_THE_STRAIGHT_LINE));
+
+    return contours;
 }
