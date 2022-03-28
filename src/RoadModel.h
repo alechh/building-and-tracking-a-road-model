@@ -85,6 +85,8 @@ public:
     int countModelRightElements() const;
     void drawModel(cv::Mat &dst) const;
     void printInformationOfTheRightSide() const;
+    void printInformationOfTheLeftSide() const;
+    void printInformationOfTheModel() const;
     void drawModelPoints(cv::Mat &dst) const;
 };
 

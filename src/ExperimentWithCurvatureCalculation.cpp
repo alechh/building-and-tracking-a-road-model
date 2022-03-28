@@ -123,7 +123,9 @@ cv::Point ExperimentWithCurvatureCalculation::getCenterOfTheArc(const std::vecto
  * @param roadModel -- model of the road
  * @param curvature -- curvature of the segment
  */
-void ExperimentWithCurvatureCalculation::addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel, double curvature)
+void
+ExperimentWithCurvatureCalculation::addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel,
+                                                     double curvature, bool isRightContour)
 {
     double radiusOfTheCircle = 1.0 / curvature;
     cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
@@ -132,13 +134,22 @@ void ExperimentWithCurvatureCalculation::addArcToTheModel(const std::vector<cv::
 
     Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
 
-    roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
+    if (isRightContour)
+    {
+        roadModel.addElementToRight(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
+    }
+    else
+    {
+        roadModel.addElementToLeft(center, radiusOfTheCircle, startAngle, endAngle, arcSegment);
+    }
+
 }
 
 
 void ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
                                                                                const std::vector<cv::Point> &contour,
-                                                                               const std::vector<double> &contourCurvature)
+                                                                               const std::vector<double> &contourCurvature,
+                                                                               bool isRightContour)
 {
     /**
      * Построение модели дороги (а точнее нашей полосы движения) по одному контуру.
@@ -178,7 +189,7 @@ void ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(R
                 }
                 else
                 {
-                    addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
+                    addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber, isRightContour);
                 }
 
                 arcSegment.clear();
@@ -211,7 +222,14 @@ void ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(R
                 }
                 else if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
                 {
-                    roadModel.addElementToRight(currElementBegin, currElementEnd);
+                    if (isRightContour)
+                    {
+                        roadModel.addElementToRight(currElementBegin, currElementEnd);
+                    }
+                    else
+                    {
+                        roadModel.addElementToLeft(currElementBegin, currElementEnd);
+                    }
 
                     currLineSegmentNumber = 0;
                     lineSegment.clear();
@@ -239,7 +257,8 @@ void ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(R
                 {
                     if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
                     {
-                        addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
+                        addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber,
+                                         isRightContour);
 
                         arcSegment.clear();
 
@@ -272,11 +291,18 @@ void ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(R
 
     if (currArcSegmentNumber > 0)
     {
-        addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber);
+        addArcToTheModel(arcSegment, roadModel, currSumOfArcSegmentCurvatures / currArcSegmentNumber, isRightContour);
     }
     else if (currLineSegmentNumber > 0)
     {
-        roadModel.addElementToRight(currElementBegin, currElementEnd);
+        if (isRightContour)
+        {
+            roadModel.addElementToRight(currElementBegin, currElementEnd);
+        }
+        else
+        {
+            roadModel.addElementToLeft(currElementBegin, currElementEnd);
+        }
     }
 }
 
