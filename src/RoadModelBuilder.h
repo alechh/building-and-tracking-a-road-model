@@ -11,15 +11,13 @@
 #include <opencv2/core/types.hpp>
 #include "RoadModel.h"
 
-class RoadModelBuilder {
+class RoadModelBuilder
+{
 public:
     static void buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
                                                       const std::vector<cv::Point> &contour,
                                                       const std::vector<double> &contourCurvature,
                                                       bool isRightContour);
-
-    static void drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
-                                                         const std::vector<double> &contourCurvature);
 
 
     static void

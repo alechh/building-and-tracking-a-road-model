@@ -253,28 +253,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModel &roadMode
     }
 }
 
-/**
- * Drawing contour points according to the curvature in them.
- * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
- * @param dst -- destination image
- * @param contour -- vector of the points
- * @param contourCurvature -- vector of the curvature of the contour
- */
-void RoadModelBuilder::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
-{
-    for (int i = 0; i < contour.size(); ++i)
-    {
-        if (contourCurvature[i] == 0)
-        {
-            cv::circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
-        }
-        else
-        {
-            cv::circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
-        }
-    }
-}
-
 
 /**
  * Function for calculating the angle shift if the arc segment is above the arc center.

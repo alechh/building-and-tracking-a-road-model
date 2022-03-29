@@ -50,6 +50,9 @@ public:
                                                                const std::vector<cv::Point> &contour, int step,
                                                                int currIndex);
 
+    static void drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
+                                                         const std::vector<double> &contourCurvature);
+
 private:
     static int calculatingYThroughX(double x, double A, double B, double C);
 
