@@ -2,34 +2,12 @@
 // Created by alechh on 21.02.2022.
 //
 
+#include <vector>
+#include "CurvatureCalculator.h"
 #include <opencv2/opencv.hpp>
 #include "RoadModelBuilder.h"
 #include "RoadModel.h"
 #include "Utils.h"
-
-
-void drawArcSegmentAndTangent(cv::Mat &dst, const std::vector<cv::Point> &segment, const std::vector<double> &coefficientsOfTheTangent)
-{
-    for (const auto &point : segment)
-    {
-        cv::circle(dst, point, 1, cv::Scalar(0, 0, 255));
-    }
-
-    // Ax + By + C = 0
-    double A, B, C;
-    A = coefficientsOfTheTangent[0];
-    B = coefficientsOfTheTangent[1];
-    C = coefficientsOfTheTangent[2];
-
-    cv::Point first, second;
-    first.x = 0;
-    first.y = C / B;
-
-    second.y = 0;
-    second.x = -C / A;
-
-    cv::line(dst, first, second, cv::Scalar(255, 0, 0));
-}
 
 
 /**
@@ -53,9 +31,9 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
     int pMinusIndex, pPlusIndex;
     cv::Point pMinus, pPlus, centerPoint;
     double h;
-    Utils::getPPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint, h);
+    getPPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint, h);
 
-    cv::Point2f firstDerivative = Utils::getFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
+    cv::Point2f firstDerivative = Utils::calculateFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
 
     // TODO Возможно, есть более красивый и правильные признак того, что производную надо взять с минусом
     if (pPlus.y > pMinus.y)
@@ -64,10 +42,12 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
     }
 
     // A * x + B * y + C = 0
-    std::vector<double> coefficientsOfTheTangent = Utils::getCoefficientsOfTheTangent(centerPoint, firstDerivative);
+    std::vector<double> coefficientsOfTheTangent = Utils::calculateCoefficientsOfTheTangent(centerPoint,
+                                                                                            firstDerivative);
 
     // A' * x + B' * y + C' = 0
-    std::vector<double> coefficientsOfThePerpendicularLine = Utils::getCoefficientsOfThePerpendicularLine(coefficientsOfTheTangent, centerPoint);
+    std::vector<double> coefficientsOfThePerpendicularLine = Utils::calculateCoefficientsOfThePerpendicularLine(
+            coefficientsOfTheTangent, centerPoint);
 
     double A, B, C;
     A = coefficientsOfThePerpendicularLine[0];
@@ -99,7 +79,7 @@ RoadModelBuilder::addArcToTheModel(const std::vector<cv::Point> &arcSegment, Roa
 
     double startAngle, endAngle;
 
-    Utils::calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+    calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
 
     if (isRightContour)
     {
@@ -296,4 +276,197 @@ void RoadModelBuilder::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, co
 }
 
 
+/**
+ * Function for calculating the angle shift if the arc segment is above the arc center.
+ * This is necessary for the correct determination of the initial and final angle of the arc.
+ * @param firstPointOfTheSegment -- first point of the arc segment
+ * @param circleCenter -- center of the circle that describes the arc
+ * @return
+ */
+double RoadModelBuilder::calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter)
+{
+    cv::Point T(firstPointOfTheSegment.x, circleCenter.y); // проекция первой точки сегмента на горизонтальную прямую, проходящую через середину окружности
+    double distAC = Utils::distanceBetweenPoints(firstPointOfTheSegment, circleCenter);
+    double distAT = Utils::distanceBetweenPoints(firstPointOfTheSegment, T);
 
+    if (distAT > distAC)
+    {
+        return 0;
+    }
+
+    double angleC = asin(distAT / distAC) * 180 / CV_PI; // sin C = distAT / distAC (противолежащий катет / гипотенуза)
+
+    return angleC;
+}
+
+/**
+ * Function for calculating the angle shift if the arc segment is below the arc center.
+ * This is necessary for the correct determination of the initial and final angle of the arc.
+ * @param firstPointOfTheSegment -- first point of the arc segment
+ * @param circleCenter -- center of the circle that describes the arc
+ * @return
+ */
+double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTheSegment, const cv::Point &circleCenter, double radiusOfTheCircle)
+{
+    double shift;
+    cv::Point P(circleCenter.x + radiusOfTheCircle, circleCenter.y);
+
+    cv::Point middlePoint((lastPointOfTheSegment.x + P.x) / 2, (lastPointOfTheSegment.y + P.y) / 2);
+
+    double distCMiddlePoint = Utils::distanceBetweenPoints(circleCenter, middlePoint);
+
+    double angleLastPoint = asin(distCMiddlePoint / radiusOfTheCircle) * 180 / CV_PI;
+
+    return 180 - 2 * angleLastPoint;
+}
+
+/**
+ * A function for calculating the start and end angles for an arc that describes a segment.
+ * @param startAngle
+ * @param endAngle
+ * @param segment
+ * @param center
+ * @param radiusOfTheCircle
+ * @return
+ */
+void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+{
+    double angleC = getAngleOfTheArc(segment, center, radiusOfTheCircle);
+
+    cv::Point middleSegmentPoint = segment[segment.size() / 2];
+
+    if (middleSegmentPoint.y < center.y) // если сегмент находится в верхней части плоскости
+    {
+        double shiftAngle = RoadModelBuilder::calculateAngleShiftUpper(segment[0], center);
+
+        startAngle = 180 + shiftAngle;
+    }
+    else // если сегмент находится в нижней части плоскости
+    {
+        int indexOfLastArcSegment = segment.size() - 1;
+        cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
+
+        double distR = Utils::distanceBetweenPoints(lastSegmentPoint, center);
+
+        double shiftAngle = calculateAngleShiftLower(lastSegmentPoint, center, radiusOfTheCircle);
+
+        startAngle = shiftAngle;
+    }
+
+    endAngle = startAngle + angleC;
+}
+
+/**
+ * Calculating the angle C in triangle ABC, where
+ * A is the first point of the segment,
+ * B is the last point of the segment,
+ * C is the center of the circle that describes this segment
+ * @param segment -- vector of points of the current segment
+ * @param center -- center of the circle that describes the segment
+ * @param radiusOfTheCircle -- radius of the circle
+ * @return
+ */
+double RoadModelBuilder::getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+{
+    cv::Point M = Utils::getMidpoint(segment[0], segment[segment.size() - 1]);
+
+    double distMCenter = Utils::distanceBetweenPoints(M, center);
+
+    if (distMCenter > radiusOfTheCircle)
+    {
+        // the hypotenuse should be larger than the catheter
+        return 0;
+    }
+
+    double angleB = asin(distMCenter / radiusOfTheCircle);
+
+    //converting to the degree
+    angleB *= 180 / CV_PI;
+
+    double angleC = 180 - 2 * angleB;
+
+    return angleC;
+}
+
+/**
+ * Get points pPlus, pMinus and its indices in segment.
+ * These points and indices are used to calculate the derivative at the point that is between pPlus and pMinus.
+ * @param segment -- vector of the points of the segment
+ * @param pPlus -- next point from the center
+ * @param pMinus -- previous point to the center
+ * @param pPlusIndex -- index of the pPlus point
+ * @param pMinusIndex -- index of the pMinus point
+ * @param h -- distance between pMinus and center point of the segment (= distance between pPlus and center point)
+ */
+void
+RoadModelBuilder::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
+                                    int &pMinusIndex, cv::Point &centerPoint, double &h)
+{
+    int indexOfTheCenter = segment.size() / 2;
+
+    centerPoint = segment[indexOfTheCenter];
+
+    pMinusIndex = indexOfTheCenter - 1;
+    pPlusIndex = indexOfTheCenter + 1;
+
+    pMinus = segment[pMinusIndex];
+    pPlus = segment[pPlusIndex];
+
+    // Нужно, чтобы точки были различными
+    double distPMinusCenter = abs(pMinus.x - centerPoint.x);
+    double distPPlusCenter = abs(pPlus.x - centerPoint.x);
+
+    const int MAX_DELTA = 10; // если точки "разбегаются" дальше, чем на MAX_DELTA, то опускаем глаза на то, что они должны быть равноотстоящими, оставим их просто различными
+    int currDelta = 1;
+
+    while ((distPMinusCenter != distPPlusCenter || pMinus.x == pPlus.x) && currDelta < MAX_DELTA)
+    {
+        if (pMinusIndex == 0 && pPlusIndex == segment.size() - 1)
+        {
+            break;
+        }
+
+        if (distPMinusCenter < distPPlusCenter)
+        {
+            --pMinusIndex;
+            pMinus = segment[pMinusIndex];
+            distPMinusCenter = abs(pMinus.x - centerPoint.x);
+            ++currDelta;
+        }
+        else
+        {
+            ++pPlusIndex;
+            pPlus = segment[pPlusIndex];
+            distPPlusCenter = abs(pPlus.x - centerPoint.x);
+            ++currDelta;
+        }
+    }
+
+    if (currDelta == MAX_DELTA) // это значит, что не удалось найти равноотстоящие точки на расстоянии MAX_DELTA
+    {
+        pMinusIndex = indexOfTheCenter - 1;
+        pPlusIndex = indexOfTheCenter + 1;
+
+        pMinus = segment[pMinusIndex];
+        pPlus = segment[pPlusIndex];
+
+        bool hasPMinusChanged = false;
+        while(pPlus == pMinus)
+        {
+            if (!hasPMinusChanged)
+            {
+                --pMinusIndex;
+                pMinus = segment[pMinusIndex];
+                hasPMinusChanged = true;
+            }
+            else
+            {
+                ++pPlusIndex;
+                pPlus = segment[pPlusIndex];
+                hasPMinusChanged = false;
+            }
+        }
+    }
+
+    h = 2 * abs(pPlus.x - centerPoint.x);
+}

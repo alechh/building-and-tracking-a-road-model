@@ -8,50 +8,50 @@
 
 #include <vector>
 #include <opencv2/core/types.hpp>
+#include <opencv2/core/mat.hpp>
+#include "RoadModel.h"
 
-class Utils {
+class Utils
+{
 public:
-    static int removeSmallContours(std::vector< std::vector<cv::Point> > & contours, const int minContoursSize);
+    static int removeSmallContours(std::vector<std::vector<cv::Point> > &contours, int minContoursSize);
 
-    static double meanCurvature(const std::vector<double>& curvature);
+    static double meanCurvature(const std::vector<double> &curvature);
 
-    static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>>& contours);
+    static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
 
-    static void draw_contours(const std::vector<std::vector<cv::Point>>& contours, cv::Mat& input_frame, int number_of_contours);
+    static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>> &contours);
 
-    static void calculateContoursCurvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
+    static void drawContours(const std::vector<std::vector<cv::Point>> &contours, cv::Mat &dst, int numberOfContours);
 
     static cv::Point2f
-    getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus, double h);
+    calculateFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus, double h);
 
-    static void
-    getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
-                      int &pMinusIndex, cv::Point &centerPoint, double &h);
+    static std::vector<double>
+    calculateCoefficientsOfTheTangent(const cv::Point &touchPoint, const cv::Point2f &firstDerivative);
 
-    static std::vector<double> getCoefficientsOfTheTangent(const cv::Point &touchPoint, const cv::Point2f &firstDerivative);
+    static std::vector<double>
+    calculateCoefficientsOfThePerpendicularLine(const std::vector<double> &coefficientsOfTheLine,
+                                                const cv::Point &touchPoint);
 
-    static std::vector<double> getCoefficientsOfThePerpendicularLine(const std::vector<double> &coefficientsOfTheLine, const cv::Point &touchPoint);
+    static std::tuple<double, double>
+    solutionOfTheSystemWithRespectToX(double A, double B, double C, double R, const cv::Point &point);
 
-    static std::tuple<double, double> solutionOfTheSystemWithRespectToX(double A, double B, double C, double R, const cv::Point &point);
+    static std::tuple<cv::Point, cv::Point>
+    calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R,
+                                                                   const cv::Point &point);
 
-    static std::tuple<cv::Point, cv::Point> calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(double A, double B, double C, double R, const cv::Point &point);
-
-    static cv::Point chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment, const std::tuple<cv::Point, cv::Point> &candidatesForCenter);
-
-    static void calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
+    static cv::Point chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> &segment,
+                                                       const std::tuple<cv::Point, cv::Point> &candidatesForCenter);
 
     static double distanceBetweenPoints(const cv::Point &A, const cv::Point &B);
 
-    static void selectionOfPointsForTriangleDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex);
+    static void selectionOfPointsForTriangleDependingOnTheStep(cv::Point &prev, cv::Point &next,
+                                                               const std::vector<cv::Point> &contour, int step,
+                                                               int currIndex);
 
 private:
-    static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
-
-    static double getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
-
-    static double calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
-
-    static double calculateAngleShiftLower(const cv::Point &lastPointOfTheSegment, const cv::Point &circleCenter, double radiusOfTheCircle);
+    static int calculatingYThroughX(double x, double A, double B, double C);
 
 };
 
