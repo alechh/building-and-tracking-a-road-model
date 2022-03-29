@@ -85,7 +85,7 @@ void CurvatureCalculator::calculateCurvature2(std::vector<double> &contourCurvat
         curr = contour[i];
         if (step != 1)
         {
-            Utils::selectionOfPointsDependingOnTheStep(prev, next, contour, step, i);
+            Utils::selectionOfPointsForTriangleDependingOnTheStep(prev, next, contour, step, i);
         }
         else
         {

@@ -42,7 +42,7 @@ public:
 
     static double distanceBetweenPoints(const cv::Point &A, const cv::Point &B);
 
-    static void selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex);
+    static void selectionOfPointsForTriangleDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex);
 
 private:
     static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);

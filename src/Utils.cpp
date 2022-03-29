@@ -120,7 +120,7 @@ void Utils::calculateContoursCurvature(std::vector<std::vector<double>> &contour
  * @param step -- size of the step
  * @param currIndex -- index of the current point of the contour
  */
-void Utils::selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex)
+void Utils::selectionOfPointsForTriangleDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex)
 {
     const int neighborhoodOfTheStep = step / 2;
 
