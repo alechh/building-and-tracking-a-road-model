@@ -5,7 +5,7 @@
 #include "Utils.h"
 #include "ExperimentWithCurvatureCalculation.h"
 #include "ContourBuilder.h"
-
+#include "CurvatureCalculator.h"
 
 
 void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours)
@@ -14,18 +14,17 @@ void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours)
     const int COLS = 1000;
     const int TYPE = 16;
 
-    cv::Mat pictuteOfTheContour(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
-    for (const auto &contour : contours)
+    cv::Mat pictuteOfTheContour(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
+    for (const auto &contour: contours)
     {
-        for (const auto &point : contour)
+        for (const auto &point: contour)
         {
-            circle(pictuteOfTheContour, point, 1, cv::Scalar(255, 0, 0));
+            circle(pictuteOfTheContour, point, 1, cv::Scalar(255, 0, 0), 3);
         }
     }
 
     imwrite("../images/contour.jpg", pictuteOfTheContour);
 }
-
 
 
 void calculateMeanError(double &minCurvatureError, int &minStepCurvature, const double EXACT_CURVATURE, const int CUR_STEP, const std::vector<double> &contourCurvature)
@@ -56,14 +55,16 @@ void buildRoadModelByContour()
     const int COLS = 1000;
     const int TYPE = 16;
 
-    std::vector< std::vector<cv::Point> > contours = ContourBuilder::getRightAndLeftContours();
+    std::vector<std::vector<cv::Point> > contours;
+    contours.emplace_back(ContourBuilder::getSimpleRightContour());
+
     const double EXACT_CURVATURE = 0.01;
 
     saveContoursOnImage(contours);
 
-    std::vector< std::vector<double> > contoursCurvatures(contours.size());
+    std::vector<std::vector<double> > contoursCurvatures(contours.size());
 
-    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
 
     double minCurvatureError = 10000;
     int minStepCurvature = 0;
@@ -82,7 +83,7 @@ void buildRoadModelByContour()
             int betterStep = contours[i].size() / 10;
 
             std::vector<double> tempCurvatureContour(contours[i].size());
-            Utils::calculateCurvature2(tempCurvatureContour, contours[i], betterStep);
+            CurvatureCalculator::calculateCurvature2(tempCurvatureContour, contours[i], betterStep);
 
             contoursCurvatures[i] = std::move(tempCurvatureContour);
 
@@ -90,16 +91,17 @@ void buildRoadModelByContour()
             if (contours[i][0].x < COLS / 2)
             {
                 isRightContour = false;
-            }
-            else
+            } else
             {
                 isRightContour = true;
             }
 
             ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(roadModel, contours[i],
-                                                                                      contoursCurvatures[i], isRightContour);
+                                                                                      contoursCurvatures[i],
+                                                                                      isRightContour);
 
-            ExperimentWithCurvatureCalculation::showCurvatureOnImage(curvatureOnContourPicture, contours[i], contoursCurvatures[i]);
+            ExperimentWithCurvatureCalculation::showCurvatureOnImage(curvatureOnContourPicture, contours[i],
+                                                                     contoursCurvatures[i]);
 
             calculateMeanError(minCurvatureError, minStepCurvature, EXACT_CURVATURE, iStep, contoursCurvatures[i]);
         }
@@ -109,13 +111,15 @@ void buildRoadModelByContour()
 
         roadModel.printInformationOfTheModel();
 
-        imwrite(cv::format("../images/curvatureOnContourPicture/curvatureContour%d.jpg", iStep), curvatureOnContourPicture);
+        imwrite(cv::format("../images/curvatureOnContourPicture/curvatureContour%d.jpg", iStep),
+                curvatureOnContourPicture);
 
         roadModel.drawModelPoints(contourPointsPicture);
         imwrite("../images/showModelPoints/modelPoints.jpg", contourPointsPicture);
     }
 
-    std::cout << std::endl << "Min curvature error = " << minCurvatureError << "\niStep = " << minStepCurvature << std::endl;
+    std::cout << std::endl << "Min curvature error = " << minCurvatureError << "\niStep = " << minStepCurvature
+              << std::endl;
 }
 
 

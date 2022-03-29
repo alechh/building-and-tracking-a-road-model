@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "Utils.h"
 #include "ContourBuilder.h"
+#include "CurvatureCalculator.h"
 
 
 TEST(CurvatureTest, CircleCurvature)
@@ -17,7 +18,7 @@ TEST(CurvatureTest, CircleCurvature)
     contours.emplace_back(circleContour);
 
     std::vector<double> circleCurvature(circleContour.size());
-    Utils::calculateCurvature(circleCurvature, circleContour, 1);
+    CurvatureCalculator::calculateCurvature(circleCurvature, circleContour, 1);
 
     double maxError = 0, minError = 1;
     int countInf = 0, countZero = 0;
@@ -68,7 +69,7 @@ TEST(CurvatureTest, StraightVerticalLineCurvature)
 
     std::vector<double> lineCurvature(lineContour.size());
 
-    Utils::calculateCurvature(lineCurvature, lineContour, 1);
+    CurvatureCalculator::calculateCurvature(lineCurvature, lineContour, 1);
 
     double maxError = 0, minError = 1;
 
@@ -105,7 +106,7 @@ TEST(CurvatureTest, StraightHorizontalLineCurvature)
     contours.emplace_back(lineContour);
 
     std::vector<double> lineCurvature(lineContour.size());
-    Utils::calculateCurvature(lineCurvature, lineContour, 1);
+    CurvatureCalculator::calculateCurvature(lineCurvature, lineContour, 1);
 
     double maxError = 0, minError = 1;
 
@@ -147,7 +148,7 @@ TEST(CurvatureTest, ParabolaCurvature)
 
     std::vector<double> parabolaCurvature(parabolaContour.size());
 
-    Utils::calculateCurvature(parabolaCurvature, parabolaContour, 1);
+    CurvatureCalculator::calculateCurvature(parabolaCurvature, parabolaContour, 1);
 
     double x = leftXBoundary;
     int i = 0;
@@ -185,7 +186,7 @@ TEST(CurvatureTest, EmptyContour)
 
     std::vector<double> curvature(emptyContour.size());
 
-    Utils::calculateCurvature(curvature, emptyContour, 1);
+    CurvatureCalculator::calculateCurvature(curvature, emptyContour, 1);
 
     EXPECT_EQ(curvature.size(), 0);
 }
@@ -204,7 +205,7 @@ TEST(CurvatureTest, CircleCurvature2)
     std::vector<double> circleCurvature(circleContour.size());
 
     const int step = 1;
-    Utils::calculateCurvature2(circleCurvature, circleContour, step);
+    CurvatureCalculator::calculateCurvature2(circleCurvature, circleContour, step);
 
     double errorSum = 0;
     int countNonZero = 0;
@@ -239,7 +240,7 @@ TEST(CurvatureTest, ParabolaCurvature2)
     std::vector<double> parabolaCurvature(parabolaContour.size());
 
     const int step = 1;
-    Utils::calculateCurvature2(parabolaCurvature, parabolaContour, step);
+    CurvatureCalculator::calculateCurvature2(parabolaCurvature, parabolaContour, step);
 
     double meanError = 0;
     int countError = 0;

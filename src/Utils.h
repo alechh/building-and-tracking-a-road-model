@@ -13,10 +13,6 @@ class Utils {
 public:
     static int removeSmallContours(std::vector< std::vector<cv::Point> > & contours, const int minContoursSize);
 
-    static void
-    calculateCurvature(std::vector<double> &contourCurvature, const std::vector<cv::Point> &vecContourPoints,
-                       int step);
-
     static double meanCurvature(const std::vector<double>& curvature);
 
     static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>>& contours);
@@ -24,10 +20,6 @@ public:
     static void draw_contours(const std::vector<std::vector<cv::Point>>& contours, cv::Mat& input_frame, int number_of_contours);
 
     static void calculateContoursCurvature(std::vector<std::vector<double>> &contoursCurvature, const std::vector<std::vector<cv::Point>> &contours, int step);
-
-    static void
-    calculateCurvature2(std::vector<double> &contourCurvature, const std::vector<cv::Point> &contour,
-                        const int step);
 
     static cv::Point2f
     getFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus, double h);
@@ -50,6 +42,8 @@ public:
 
     static double distanceBetweenPoints(const cv::Point &A, const cv::Point &B);
 
+    static void selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex);
+
 private:
     static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
 
@@ -58,8 +52,6 @@ private:
     static double calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
 
     static double calculateAngleShiftLower(const cv::Point &lastPointOfTheSegment, const cv::Point &circleCenter, double radiusOfTheCircle);
-
-    static void selectionOfPointsDependingOnTheStep(cv::Point &prev, cv::Point &next, const std::vector<cv::Point> &contour, const int step, const int currIndex);
 
 };
 
