@@ -11,16 +11,14 @@
 
 class RoadModelBuilder {
 public:
-    static void drawArcsOnContour(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
     static void buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
                                                       const std::vector<cv::Point> &contour,
                                                       const std::vector<double> &contourCurvature,
                                                       bool isRightContour);
-    static void showCurvatureOnImage(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
+    static void drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
 
 private:
-    static void drawArc(cv::Mat &src, double radius, cv::Point center, const cv::Scalar &color);
-    static cv::Point getCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
+    static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
     static void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel,
                                  double curvature, bool isRightContour);
 };

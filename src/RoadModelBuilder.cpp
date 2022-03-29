@@ -8,39 +8,6 @@
 #include "Utils.h"
 
 
-void RoadModelBuilder::drawArc(cv::Mat &src, double radius, cv::Point center, const cv::Scalar &color = cv::Scalar(0, 0, 255))
-{
-    /**
-     * https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html#ga28b2267d35786f5f890ca167236cbc69
-     */
-    cv::ellipse(src, center, cv::Size(radius, radius), 180 / CV_PI, 0, 360 / 2, color, 2);
-}
-
-void RoadModelBuilder::drawArcsOnContour(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
-{
-    if (contour.size() != contourCurvature.size())
-    {
-        std::cerr << "RoadModelBuilder::drawArcsOnContour: contour.size() != curvature.size()" << std::endl;
-        return;
-    }
-
-    for (int i = 0; i < contour.size(); ++i)
-    {
-        if (contourCurvature[i] != std::numeric_limits<double>::infinity())
-        {
-            if (contourCurvature[i] == 0)
-            {
-                drawArc(src, 3, contour[i], cv::Scalar(0, 255, 0));
-            }
-            else
-            {
-                drawArc(src, contourCurvature[i], contour[i]);
-            }
-        }
-    }
-}
-
-
 void drawArcSegmentAndTangent(cv::Mat &dst, const std::vector<cv::Point> &segment, const std::vector<double> &coefficientsOfTheTangent)
 {
     for (const auto &point : segment)
@@ -73,13 +40,13 @@ void drawArcSegmentAndTangent(cv::Mat &dst, const std::vector<cv::Point> &segmen
  * @param R -- radius of the circle that describes the segment
  * @return
  */
-cv::Point RoadModelBuilder::getCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
+cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 {
     cv::Point center;
 
     if (segment.size() < 3)
     {
-        std::cerr << "cv::Point getCenterOfTheArc -- segment.size() < 3 (=" << segment.size() << ")" << std::endl;
+        std::cerr << "cv::Point calculateCenterOfTheArc -- segment.size() < 3 (=" << segment.size() << ")" << std::endl;
         return center;
     }
 
@@ -128,7 +95,7 @@ RoadModelBuilder::addArcToTheModel(const std::vector<cv::Point> &arcSegment, Roa
                                    double curvature, bool isRightContour)
 {
     double radiusOfTheCircle = 1.0 / curvature;
-    cv::Point center = getCenterOfTheArc(arcSegment, radiusOfTheCircle);
+    cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
 
     double startAngle, endAngle;
 
@@ -306,17 +273,24 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModel &roadMode
     }
 }
 
-void RoadModelBuilder::showCurvatureOnImage(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
+/**
+ * Drawing contour points according to the curvature in them.
+ * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
+ * @param dst -- destination image
+ * @param contour -- vector of the points
+ * @param contourCurvature -- vector of the curvature of the contour
+ */
+void RoadModelBuilder::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
 {
     for (int i = 0; i < contour.size(); ++i)
     {
         if (contourCurvature[i] == 0)
         {
-            cv::circle(src, contour[i], 1, cv::Scalar(255, 0, 0));
+            cv::circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
         }
         else
         {
-            cv::circle(src, contour[i], 1, cv::Scalar(0, 0, 255));
+            cv::circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
         }
     }
 }

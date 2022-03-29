@@ -100,8 +100,8 @@ void buildRoadModelByContour()
                                                                     contoursCurvatures[i],
                                                                     isRightContour);
 
-            RoadModelBuilder::showCurvatureOnImage(curvatureOnContourPicture, contours[i],
-                                                   contoursCurvatures[i]);
+            RoadModelBuilder::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
+                                                                       contoursCurvatures[i]);
 
             calculateMeanError(minCurvatureError, minStepCurvature, EXACT_CURVATURE, iStep, contoursCurvatures[i]);
         }
