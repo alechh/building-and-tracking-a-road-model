@@ -2,14 +2,14 @@
 // Created by alechh on 21.02.2022.
 //
 
-#ifndef BUILDING_AND_TRACKING_A_ROAD_MODEL_EXPERIMENTWITHCURVATURECALCULATION_H
-#define BUILDING_AND_TRACKING_A_ROAD_MODEL_EXPERIMENTWITHCURVATURECALCULATION_H
+#ifndef BUILDING_AND_TRACKING_A_ROAD_MODEL_ROADMODELBUILDER_H
+#define BUILDING_AND_TRACKING_A_ROAD_MODEL_ROADMODELBUILDER_H
 
 
 #include <opencv2/core/mat.hpp>
 #include "RoadModel.h"
 
-class ExperimentWithCurvatureCalculation {
+class RoadModelBuilder {
 public:
     static void drawArcsOnContour(cv::Mat &src, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature);
     static void buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
@@ -26,4 +26,4 @@ private:
 };
 
 
-#endif //BUILDING_AND_TRACKING_A_ROAD_MODEL_EXPERIMENTWITHCURVATURECALCULATION_H
+#endif //BUILDING_AND_TRACKING_A_ROAD_MODEL_ROADMODELBUILDER_H

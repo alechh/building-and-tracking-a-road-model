@@ -3,7 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include "Utils.h"
-#include "ExperimentWithCurvatureCalculation.h"
+#include "RoadModelBuilder.h"
 #include "ContourBuilder.h"
 #include "CurvatureCalculator.h"
 
@@ -96,12 +96,12 @@ void buildRoadModelByContour()
                 isRightContour = true;
             }
 
-            ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(roadModel, contours[i],
-                                                                                      contoursCurvatures[i],
-                                                                                      isRightContour);
+            RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(roadModel, contours[i],
+                                                                    contoursCurvatures[i],
+                                                                    isRightContour);
 
-            ExperimentWithCurvatureCalculation::showCurvatureOnImage(curvatureOnContourPicture, contours[i],
-                                                                     contoursCurvatures[i]);
+            RoadModelBuilder::showCurvatureOnImage(curvatureOnContourPicture, contours[i],
+                                                   contoursCurvatures[i]);
 
             calculateMeanError(minCurvatureError, minStepCurvature, EXACT_CURVATURE, iStep, contoursCurvatures[i]);
         }
