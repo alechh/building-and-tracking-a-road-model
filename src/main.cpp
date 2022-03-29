@@ -192,17 +192,25 @@ void experiment_with_curvature_calculation(Mat &birdview)
 //    Utils::draw_contours(contours, frameContours, 1);
 
     Mat frameRoadModel(frame_canny.rows, frame_canny.cols, birdview.type(), Scalar(0, 0, 0));
-    std::vector< std::vector<double> > contoursCurvature(contours.size());
+    std::vector< std::vector<double> > contoursCurvatureStep1(contours.size());
+    std::vector< std::vector<double> > contoursCurvatureStepN(contours.size());
 
     // TODO нужно либо грамотно удалить каждый второй вектор, либо добавить параметр "шаг" во вторую функцию вычисления кривизны
-    int step = 1;
+    const int step = 10;
     //Utils::calculate_contours_curvature(contoursCurvature, contours, step);
-    contoursCurvature[0] = Utils::calculate_curvature_2(contours[0], step);
+    contoursCurvatureStep1[0] = Utils::calculate_curvature_2(contours[0], 1);
+    contoursCurvatureStepN[0] = Utils::calculate_curvature_2(contours[0], step);
 
-    RoadModel roadModel = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvature[0]);
-    roadModel.drawModel(frame_birdview_roi_distance);
+    RoadModel roadModelStep1 = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvatureStep1[0]);
+    //RoadModel roadModelStepN = ExperimentWithCurvatureCalculation::buildRoadModelBasedOnTheSingleContour(contours[0], contoursCurvatureStepN[0]);
 
-    imshow("roadModel", frame_birdview_roi_distance);
+    Mat frameRoadModelStepN(frame_birdview_roi_distance.clone());
+
+    roadModelStep1.drawModel(frame_birdview_roi_distance);
+    //roadModelStepN.drawModel(frameRoadModelStepN);
+
+    imshow("roadModelStep1", frame_birdview_roi_distance);
+    //imshow("roadModelStepN", frameRoadModelStepN);
 
     //ExperimentWithCurvatureCalculation::drawArcsOnContour(frame_birdview_roi_distance, contours[0], contoursCurvature[0]);
 
@@ -272,6 +280,7 @@ void test_curvature_calculations_on_video(const std::string& PATH, double resize
     }
 }
 
+// это отдельный namespace для видео PATH4
 namespace testCheckContours
 {
     Mat build_bird_view(const Mat& frame)
