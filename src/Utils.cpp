@@ -3,11 +3,12 @@
 //
 
 #include "RoadModelBuilder.h"
-#include "CurvatureCalculator.h"
 #include "RoadModel.h"
 #include "Utils.h"
 #include <vector>
+#include "opencv2/imgproc.hpp"
 #include <opencv2/opencv.hpp>
+
 
 
 /**
@@ -307,24 +308,3 @@ cv::Point Utils::getMidpoint(const cv::Point &a, const cv::Point &b)
     return midPoint;
 }
 
-/**
- * Drawing contour points according to the curvature in them.
- * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
- * @param dst -- destination image
- * @param contour -- vector of the points
- * @param contourCurvature -- vector of the curvature of the contour
- */
-void Utils::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
-{
-    for (int i = 0; i < contour.size(); ++i)
-    {
-        if (contourCurvature[i] == 0)
-        {
-            cv::circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
-        }
-        else
-        {
-            cv::circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
-        }
-    }
-}

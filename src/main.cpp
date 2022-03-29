@@ -1,3 +1,6 @@
+#include "opencv2/imgproc.hpp"
+#include <vector>
+#include "RoadModel.h"
 #include <iostream>
 #include <string>
 #include <opencv2/highgui.hpp>
@@ -6,6 +9,29 @@
 #include "RoadModelBuilder.h"
 #include "ContourBuilder.h"
 #include "CurvatureCalculator.h"
+
+
+/**
+ * Drawing contour points according to the curvature in them.
+ * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
+ * @param dst -- destination image
+ * @param contour -- vector of the points
+ * @param contourCurvature -- vector of the curvature of the contour
+ */
+void Utils::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
+{
+    for (int i = 0; i < contour.size(); ++i)
+    {
+        if (contourCurvature[i] == 0)
+        {
+            circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
+        }
+        else
+        {
+            circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
+        }
+    }
+}
 
 
 void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours)
