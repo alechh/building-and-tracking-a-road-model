@@ -22,8 +22,6 @@ public:
 
     static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>> &contours);
 
-    static void drawContours(const std::vector<std::vector<cv::Point>> &contours, cv::Mat &dst, int numberOfContours);
-
     static cv::Point2f
     calculateFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus, double h);
 
@@ -49,9 +47,6 @@ public:
     static void selectionOfPointsForTriangleDependingOnTheStep(cv::Point &prev, cv::Point &next,
                                                                const std::vector<cv::Point> &contour, int step,
                                                                int currIndex);
-
-    static void drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
-                                                         const std::vector<double> &contourCurvature);
 
 private:
     static int calculatingYThroughX(double x, double A, double B, double C);

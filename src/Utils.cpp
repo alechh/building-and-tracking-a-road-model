@@ -7,6 +7,7 @@
 #include "Utils.h"
 #include <vector>
 #include "opencv2/imgproc.hpp"
+#include "Drawer.h"
 #include <opencv2/opencv.hpp>
 
 
@@ -71,29 +72,6 @@ void Utils::sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>> &con
               {
                   return v1.size() > v2.size();
               });
-}
-
-/**
- * Drawing contours on an image
- * @param contours
- * @param dst
- * @param numberOfContours -- number of contours to draw
- */
-void Utils::drawContours(const std::vector<std::vector<cv::Point>> &contours, cv::Mat &dst, int numberOfContours)
-{
-    if (numberOfContours > contours.size())
-    {
-        std::cerr << "Utils::drawContours: numberOfContours must be less than contours.size()" << std::endl;
-        return;
-    }
-
-    std::size_t boundary = (numberOfContours == 0) ? contours.size() : numberOfContours;
-
-    for (std::size_t i = 0; i < boundary; ++i)
-    {
-        // TODO Почему-то не билдятся юнит-тесты, ругается на эту функцию, а main билдится нормально
-        // cv::drawContours(dst, contours, i, cv::Scalar(255, 255, 255));
-    }
 }
 
 

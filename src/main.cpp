@@ -9,48 +9,7 @@
 #include "RoadModelBuilder.h"
 #include "ContourBuilder.h"
 #include "CurvatureCalculator.h"
-
-
-/**
- * Drawing contour points according to the curvature in them.
- * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
- * @param dst -- destination image
- * @param contour -- vector of the points
- * @param contourCurvature -- vector of the curvature of the contour
- */
-void Utils::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
-{
-    for (int i = 0; i < contour.size(); ++i)
-    {
-        if (contourCurvature[i] == 0)
-        {
-            circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
-        }
-        else
-        {
-            circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
-        }
-    }
-}
-
-
-void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours)
-{
-    const int ROWS = 500;
-    const int COLS = 1000;
-    const int TYPE = 16;
-
-    cv::Mat pictuteOfTheContour(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
-    for (const auto &contour: contours)
-    {
-        for (const auto &point: contour)
-        {
-            circle(pictuteOfTheContour, point, 1, cv::Scalar(255, 0, 0), 3);
-        }
-    }
-
-    imwrite("../images/contour.jpg", pictuteOfTheContour);
-}
+#include "Drawer.h"
 
 
 void calculateMeanError(double &minCurvatureError, int &minStepCurvature, const double EXACT_CURVATURE, const int CUR_STEP, const std::vector<double> &contourCurvature)
@@ -86,7 +45,7 @@ void buildRoadModelByContour()
 
     const double EXACT_CURVATURE = 0.01;
 
-    saveContoursOnImage(contours);
+    Drawer::drawContoursOnImage(contours);
 
     std::vector<std::vector<double> > contoursCurvatures(contours.size());
 
@@ -126,8 +85,8 @@ void buildRoadModelByContour()
                                                                     contoursCurvatures[i],
                                                                     isRightContour);
 
-            Utils::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
-                                                            contoursCurvatures[i]);
+            Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
+                                                             contoursCurvatures[i]);
 
             calculateMeanError(minCurvatureError, minStepCurvature, EXACT_CURVATURE, iStep, contoursCurvatures[i]);
         }
