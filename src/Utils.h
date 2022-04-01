@@ -18,7 +18,7 @@ public:
 
     static double meanCurvature(const std::vector<double> &curvature);
 
-    static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
+    static cv::Point calculateMidpoint(const cv::Point &a, const cv::Point &b);
 
     static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>> &contours);
 

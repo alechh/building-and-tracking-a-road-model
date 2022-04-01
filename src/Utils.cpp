@@ -277,7 +277,7 @@ cv::Point Utils::chooseAmongTwoCandidatesForCenter(const std::vector<cv::Point> 
  * @param b
  * @return
  */
-cv::Point Utils::getMidpoint(const cv::Point &a, const cv::Point &b)
+cv::Point Utils::calculateMidpoint(const cv::Point &a, const cv::Point &b)
 {
     cv::Point midPoint;
     midPoint.x = (b.x + a.x) / 2;
