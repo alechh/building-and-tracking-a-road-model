@@ -31,7 +31,7 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
     int pMinusIndex, pPlusIndex;
     cv::Point pMinus, pPlus, centerPoint;
     double h;
-    getPPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint, h);
+    calculatePPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint, h);
 
     cv::Point2f firstDerivative = Utils::calculateFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
 
@@ -309,7 +309,7 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
  */
 void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
 {
-    double angleC = getAngleOfTheArc(segment, center, radiusOfTheCircle);
+    double angleC = calculateAngleOfTheArc(segment, center, radiusOfTheCircle);
 
     cv::Point middleSegmentPoint = segment[segment.size() / 2];
 
@@ -344,9 +344,9 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
  * @param radiusOfTheCircle -- radius of the circle
  * @return
  */
-double RoadModelBuilder::getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
+double RoadModelBuilder::calculateAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle)
 {
-    cv::Point M = Utils::getMidpoint(segment[0], segment[segment.size() - 1]);
+    cv::Point M = Utils::calculateMidpoint(segment[0], segment[segment.size() - 1]);
 
     double distMCenter = Utils::distanceBetweenPoints(M, center);
 
@@ -377,8 +377,8 @@ double RoadModelBuilder::getAngleOfTheArc(const std::vector<cv::Point> &segment,
  * @param h -- distance between pMinus and center point of the segment (= distance between pPlus and center point)
  */
 void
-RoadModelBuilder::getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
-                                    int &pMinusIndex, cv::Point &centerPoint, double &h)
+RoadModelBuilder::calculatePPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
+                                          int &pMinusIndex, cv::Point &centerPoint, double &h)
 {
     int indexOfTheCenter = segment.size() / 2;
 

@@ -21,8 +21,8 @@ public:
 
 
     static void
-    getPPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
-                      int &pMinusIndex, cv::Point &centerPoint, double &h);
+    calculatePPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
+                            int &pMinusIndex, cv::Point &centerPoint, double &h);
 
 private:
     static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
@@ -36,7 +36,7 @@ private:
                                            double radiusOfTheCircle);
 
     static double
-    getAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
+    calculateAngleOfTheArc(const std::vector<cv::Point> &segment, const cv::Point &center, double radiusOfTheCircle);
 
     static void
     calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment,
