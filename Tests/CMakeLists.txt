@@ -10,7 +10,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(tests test_curvature_calculation.cpp test_remove_small_contours.cpp test_remove_small_contours ../src/ContourBuilder.cpp ../src/ContourBuilder.h ../src/Utils.h ../src/Utils.cpp ../src/CurvatureCalculator.cpp ../src/CurvatureCalculator.h test_perpendicular_line_calculation.cpp)
+add_executable(tests test_curvature_calculation.cpp test_remove_small_contours.cpp test_remove_small_contours ../src/ContourBuilder.cpp ../src/ContourBuilder.h ../src/Utils.h ../src/Utils.cpp ../src/CurvatureCalculator.cpp ../src/CurvatureCalculator.h test_perpendicular_line_calculation.cpp test_tangent_line_calculation.cpp)
 
 target_link_libraries(tests gtest_main)
 
