@@ -12,7 +12,9 @@
 #include "Drawer.h"
 
 
-void calculateMeanError(double &minCurvatureError, int &minStepCurvature, const double EXACT_CURVATURE, const int CUR_STEP, const std::vector<double> &contourCurvature)
+void
+calculateMeanError(double &minCurvatureError, int &minStepCurvature, const double EXACT_CURVATURE, const int CUR_STEP,
+                   const std::vector<double> &contourCurvature)
 {
     double meanCurvature = 0;
     int count = 0;
@@ -41,7 +43,24 @@ void buildRoadModelByContour()
     const int TYPE = 16;
 
     std::vector<std::vector<cv::Point> > contours;
-    contours.emplace_back(ContourBuilder::getSimpleRightContour());
+    for (int t = 0; t < 460; ++t)
+    {
+        std::cout << t << std::endl;
+        std::vector<std::vector<cv::Point> > contoursT = ContourBuilder::getRightAndLeftContours(80, 100, 150, 300, t);
+        cv::Mat contoursTImage(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+
+        for (const auto &i: contoursT)
+        {
+            for (const auto & j : i)
+            {
+                cv::circle(contoursTImage, j, 1, cv::Scalar(255, 255, 255));
+            }
+        }
+
+        cv::imshow("image", contoursTImage);
+        int k = cv::waitKey(25);
+    }
+
 
     const double EXACT_CURVATURE = 0.01;
 
@@ -76,7 +95,8 @@ void buildRoadModelByContour()
             if (contours[i][0].x < COLS / 2)
             {
                 isRightContour = false;
-            } else
+            }
+            else
             {
                 isRightContour = true;
             }
