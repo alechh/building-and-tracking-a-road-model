@@ -105,10 +105,18 @@ public:
     void addElementToRight(cv::Point center, double radius, double startAngle, double endAngle,
                            std::vector<cv::Point> points);
 
+    void addElementToRight(const CircularArc &newCircularArc);
+
+    void addElementToRight(const LineSegment &newLineSegment);
+
     void addElementToLeft(cv::Point begin, cv::Point end);
 
     void addElementToLeft(cv::Point center, double radius, double startAngle, double endAngle,
                           std::vector<cv::Point> points);
+
+    void addElementToLeft(const CircularArc &newCircularArc);
+
+    void addElementToLeft(const LineSegment &newLineSegment);
 
     int getModelLeftElementCounter() const;
 

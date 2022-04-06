@@ -352,5 +352,81 @@ void RoadModel::replaceModelLeftElement(const ModelElement &newModelElement, con
     //currModelElementPointer.reset();
 }
 
+void RoadModel::addElementToRight(const CircularArc &newCircularArc)
+{
+    if (this->rightHead)
+    {
+        std::shared_ptr<ModelElement> curr(rightHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->next = std::make_shared<CircularArc>(newCircularArc);
+        this->modelRightElementCounter++;
+    }
+    else
+    {
+        this->rightHead = std::make_shared<CircularArc>(newCircularArc);
+        this->modelRightElementCounter++;
+    }
+}
+
+void RoadModel::addElementToLeft(const CircularArc &newCircularArc)
+{
+    if (this->leftHead)
+    {
+        std::shared_ptr<ModelElement> curr(leftHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->next = std::make_shared<CircularArc>(newCircularArc);
+        this->modelLeftElementCounter++;
+    }
+    else
+    {
+        this->leftHead = std::make_shared<CircularArc>(newCircularArc);
+        this->modelLeftElementCounter++;
+    }
+}
+
+void RoadModel::addElementToRight(const LineSegment &newLineSegment)
+{
+    if (this->rightHead)
+    {
+        std::shared_ptr<ModelElement> curr(rightHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->next = std::make_shared<LineSegment>(newLineSegment);
+        this->modelRightElementCounter++;
+    }
+    else
+    {
+        this->rightHead = std::make_shared<LineSegment>(newLineSegment);
+        this->modelRightElementCounter++;
+    }
+}
+
+void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
+{
+    if (this->leftHead)
+    {
+        std::shared_ptr<ModelElement> curr(leftHead);
+        while (curr->next)
+        {
+            curr = curr->next;
+        }
+        curr->next = std::make_shared<LineSegment>(newLineSegment);
+        this->modelLeftElementCounter++;
+    }
+    else
+    {
+        this->leftHead = std::make_shared<LineSegment>(newLineSegment);
+        this->modelLeftElementCounter++;
+    }
+}
+
 
 
