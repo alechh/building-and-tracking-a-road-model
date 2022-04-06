@@ -61,6 +61,16 @@ void LineSegment::printInformation() const
     std::cout << "\tlineSegment: \n\t\tbegin: " << this->begin << "\n\t\tend:" << this->end << std::endl;
 }
 
+cv::Point LineSegment::getBeginPoint() const
+{
+    return this->begin;
+}
+
+cv::Point LineSegment::getEndPoint() const
+{
+    return this->end;
+}
+
 CircularArc::CircularArc(cv::Point center, double radius, double startAngle, double endAngle,
                          std::vector<cv::Point> points)
         : center(std::move(center)), radius(radius), startAngle(startAngle), endAngle(endAngle),
@@ -92,6 +102,16 @@ void CircularArc::drawModelElementPoints(cv::Mat &src) const
 void CircularArc::printInformation() const
 {
     std::cout << "\tcircularArc:\n\t\tcenter" << this->center << "\n\t\tradius:" << this->radius << std::endl;
+}
+
+double CircularArc::getRadius() const
+{
+    return this->radius;
+}
+
+cv::Point CircularArc::getCenter() const
+{
+    return this->center;
 }
 
 RoadModel::RoadModel() : leftHead(nullptr), rightHead(nullptr), modelLeftElementCounter(0), modelRightElementCounter(0)

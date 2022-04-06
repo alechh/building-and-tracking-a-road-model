@@ -46,6 +46,9 @@ public:
     void printInformation() const override;
 
     void drawModelElementPoints(cv::Mat &src) const override;
+
+    cv::Point getBeginPoint() const;
+    cv::Point getEndPoint() const;
 };
 
 class CircularArc : public ModelElement
@@ -65,6 +68,10 @@ public:
     void printInformation() const override;
 
     void drawModelElementPoints(cv::Mat &src) const override;
+
+    double getRadius() const;
+
+    cv::Point getCenter() const;
 };
 
 
