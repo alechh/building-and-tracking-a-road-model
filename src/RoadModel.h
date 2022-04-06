@@ -119,6 +119,9 @@ public:
     void printInformationOfTheModel() const;
 
     void drawModelPoints(cv::Mat &dst) const;
+
+    std::shared_ptr<ModelElement> getRightHead() const;
+    std::shared_ptr<ModelElement> getLeftHead() const;
 };
 
 

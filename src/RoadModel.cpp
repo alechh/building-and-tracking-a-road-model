@@ -298,5 +298,15 @@ void RoadModel::printInformationOfTheModel() const
     this->printInformationOfTheRightSide();
 }
 
+std::shared_ptr<ModelElement> RoadModel::getRightHead() const
+{
+    return this->rightHead;
+}
+
+std::shared_ptr<ModelElement> RoadModel::getLeftHead() const
+{
+    return this->leftHead;
+}
+
 
 
