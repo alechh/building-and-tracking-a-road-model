@@ -308,5 +308,49 @@ std::shared_ptr<ModelElement> RoadModel::getLeftHead() const
     return this->leftHead;
 }
 
+void RoadModel::replaceModelRightElement(const ModelElement &newModelElement, const ModelElement &currModelElement)
+{
+    std::shared_ptr<ModelElement> tempElement(this->rightHead);
+    std::shared_ptr<ModelElement> currModelElementPointer = std::make_shared<ModelElement>(currModelElement);
+    std::shared_ptr<ModelElement> newModelElementPointer = std::make_shared<ModelElement>(newModelElement);
+
+    while (tempElement->next != currModelElementPointer && tempElement->next)
+    {
+        tempElement = tempElement->next;
+    }
+
+    if (!tempElement->next)
+    {
+        return;
+    }
+
+    tempElement->next = newModelElementPointer;
+    newModelElementPointer->next = currModelElementPointer->next;
+
+    //currModelElementPointer.reset();
+}
+
+void RoadModel::replaceModelLeftElement(const ModelElement &newModelElement, const ModelElement &currModelElement)
+{
+    std::shared_ptr<ModelElement> tempElement(this->leftHead);
+    std::shared_ptr<ModelElement> currModelElementPointer = std::make_shared<ModelElement>(currModelElement);
+    std::shared_ptr<ModelElement> newModelElementPointer = std::make_shared<ModelElement>(newModelElement);
+
+    while (tempElement->next != currModelElementPointer && tempElement->next)
+    {
+        tempElement = tempElement->next;
+    }
+
+    if (!tempElement->next)
+    {
+        return;
+    }
+
+    tempElement->next = newModelElementPointer;
+    newModelElementPointer->next = currModelElementPointer->next;
+
+    //currModelElementPointer.reset();
+}
+
 
 

@@ -122,6 +122,9 @@ public:
 
     std::shared_ptr<ModelElement> getRightHead() const;
     std::shared_ptr<ModelElement> getLeftHead() const;
+
+    void replaceModelRightElement(const ModelElement &newModelElement, const ModelElement &currModelElement);
+    void replaceModelLeftElement(const ModelElement &newModelElement, const ModelElement &currModelElement);
 };
 
 
