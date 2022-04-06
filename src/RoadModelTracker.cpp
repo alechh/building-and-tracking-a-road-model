@@ -9,9 +9,28 @@
 RoadModelTracker::RoadModelTracker(RoadModel roadModel) : roadModel(std::move(roadModel))
 {}
 
-void RoadModelTracker::track(const CircularArc &arcSegment)
+void RoadModelTracker::trackRightSide(const CircularArc &newArcSegment)
 {
+    std::shared_ptr<ModelElement> currModelElement(this->roadModel.getRightHead());
 
+    bool replaced = false;
+
+    while (currModelElement)
+    {
+        if (needReplace(newArcSegment, *currModelElement))
+        {
+            this->roadModel.replaceModelRightElement(newArcSegment, *currModelElement);
+            replaced = true;
+            break;
+        }
+
+        currModelElement = currModelElement->next;
+    }
+
+    if (!replaced)
+    {
+        this->roadModel.addElementToRight(newArcSegment);
+    }
 }
 
 bool RoadModelTracker::needReplace(const CircularArc &newArcSegment, const LineSegment &currModelLineSegment) const
@@ -55,5 +74,85 @@ bool RoadModelTracker::needReplace(const LineSegment &newLineSegment, const Line
     }
 
     return false;
+}
+
+bool RoadModelTracker::needReplace(const CircularArc &newArcSegment, const ModelElement &currModelElement) const
+{
+}
+
+bool RoadModelTracker::needReplace(const LineSegment &newLineSegment, const ModelElement &currModelElement) const
+{
+}
+
+void RoadModelTracker::trackRightSide(const LineSegment &newLineSegment)
+{
+    std::shared_ptr<ModelElement> currModelElement(this->roadModel.getRightHead());
+
+    bool replaced = false;
+
+    while (currModelElement)
+    {
+        if (needReplace(newLineSegment, *currModelElement))
+        {
+            this->roadModel.replaceModelRightElement(newLineSegment, *currModelElement);
+            replaced = true;
+            break;
+        }
+
+        currModelElement = currModelElement->next;
+    }
+
+    if (!replaced)
+    {
+        this->roadModel.addElementToRight(newLineSegment);
+    }
+}
+
+void RoadModelTracker::trackLeftSide(const CircularArc &newArcSegment)
+{
+    std::shared_ptr<ModelElement> currModelElement(this->roadModel.getLeftHead());
+
+    bool replaced = false;
+
+    while (currModelElement)
+    {
+        if (needReplace(newArcSegment, *currModelElement))
+        {
+            this->roadModel.replaceModelLeftElement(newArcSegment, *currModelElement);
+            replaced = true;
+            break;
+        }
+
+        currModelElement = currModelElement->next;
+    }
+
+    if (!replaced)
+    {
+        this->roadModel.addElementToLeft(newArcSegment);
+    }
+}
+
+void RoadModelTracker::trackLeftSide(const LineSegment &newLineSegment)
+{
+    std::shared_ptr<ModelElement> currModelElement(this->roadModel.getLeftHead());
+
+    bool replaced = false;
+
+    while (currModelElement)
+    {
+        if (needReplace(newLineSegment, *currModelElement))
+        {
+            this->roadModel.replaceModelLeftElement(newLineSegment, *currModelElement);
+            replaced = true;
+            break;
+        }
+
+        currModelElement = currModelElement->next;
+    }
+
+    if (!replaced)
+    {
+        this->roadModel.addElementToLeft(newLineSegment);
+    }
 }
 
