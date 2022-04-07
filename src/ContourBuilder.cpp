@@ -228,7 +228,7 @@ ContourBuilder::getRightAndLeftContours(const int RADIUS_OF_THE_CIRCLES, const i
 {
     std::vector<std::vector<cv::Point>> contours;
 
-    contours = getRightContours(RADIUS_OF_THE_CIRCLES, 100, 300, 400, t);
+    contours = getRightContours(RADIUS_OF_THE_CIRCLES, 100, 300, 600, t);
 
     contours.emplace_back(getSimpleStraightContour(X_COORDINATE_OF_THE_STRAIGHT_LINE, 500, t));
 
