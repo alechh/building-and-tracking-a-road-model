@@ -17,17 +17,12 @@ private:
     const double lineBeginDelta = 0.5;
     const double lineEndDelta = 0.5;
 
-    bool needReplace(const CircularArc &newArcSegment, const ModelElement &currModelElement) const;
-    bool needReplace(const CircularArc &newArcSegment, const LineSegment &currModelLineSegment) const;
     bool needReplace(const CircularArc &newArcSegment, const CircularArc &currModelArcSegment) const;
-
-    bool needReplace(const LineSegment &newLineSegment, const ModelElement &currModelElement) const;
     bool needReplace(const LineSegment &newLineSegment, const LineSegment &currModelLineSegment) const;
-    bool needReplace(const LineSegment &newLineSegment, const CircularArc &currModelArcSegment) const;
 
 
 public:
-    explicit RoadModelTracker(RoadModel roadModel);
+    explicit RoadModelTracker(RoadModel &roadModel);
 
     void trackRightSide(const CircularArc &newArcSegment);
     void trackRightSide(const LineSegment &newLineSegment);
