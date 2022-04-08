@@ -10,11 +10,12 @@
 #include <vector>
 #include <opencv2/core/types.hpp>
 #include "RoadModel.h"
+#include "RoadModelTracker.h"
 
 class RoadModelBuilder
 {
 public:
-    static void buildRoadModelBasedOnTheSingleContour(RoadModel &roadModel,
+    static void buildRoadModelBasedOnTheSingleContour(RoadModelTracker &modelTracker,
                                                       const std::vector<cv::Point> &contour,
                                                       const std::vector<double> &contourCurvature,
                                                       bool isRightContour);
@@ -27,8 +28,12 @@ public:
 private:
     static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
 
-    static void addArcToTheModel(const std::vector<cv::Point> &arcSegment, RoadModel &roadModel,
-                                 double curvature, bool isRightContour);
+    static void
+    addArcToTheModel(RoadModelTracker &modelTracker, const std::vector<cv::Point> &arcSegment, double curvature,
+                     bool isRightContour);
+
+    static void
+    addLineSegmentToModel(RoadModelTracker &modelTracker, const cv::Point &begin, const cv::Point &end, bool isRightContour);
 
     static double calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
 
