@@ -114,9 +114,8 @@ cv::Point CircularArc::getCenter() const
     return this->center;
 }
 
-RoadModel::RoadModel() : leftHead(nullptr), rightHead(nullptr), modelLeftElementCounter(0), modelRightElementCounter(0)
+RoadModel::RoadModel() : leftHead(std::shared_ptr<ModelElement>(nullptr)), rightHead(std::shared_ptr<ModelElement>(nullptr)), modelLeftElementCounter(0), modelRightElementCounter(0)
 {}
-
 
 void RoadModel::addElementToRight(cv::Point begin, cv::Point end)
 {
@@ -308,48 +307,78 @@ std::shared_ptr<ModelElement> RoadModel::getLeftHead() const
     return this->leftHead;
 }
 
-void RoadModel::replaceModelRightElement(const ModelElement &newModelElement, const ModelElement &currModelElement)
+void RoadModel::replaceModelRightElement(const std::shared_ptr<ModelElement> &newModelElement, const std::shared_ptr<ModelElement> &prevModelElement)
 {
     std::shared_ptr<ModelElement> tempElement(this->rightHead);
-    std::shared_ptr<ModelElement> currModelElementPointer = std::make_shared<ModelElement>(currModelElement);
-    std::shared_ptr<ModelElement> newModelElementPointer = std::make_shared<ModelElement>(newModelElement);
 
-    while (tempElement->next != currModelElementPointer && tempElement->next)
+    if (tempElement != prevModelElement)
     {
-        tempElement = tempElement->next;
-    }
+        while (tempElement->next != prevModelElement && tempElement->next)
+        {
+            tempElement = tempElement->next;
+        }
 
-    if (!tempElement->next)
+        tempElement->next = newModelElement;
+        newModelElement->next = prevModelElement->next;
+    }
+    else
     {
-        return;
+        auto tempCircularArcPointer = dynamic_cast<CircularArc*>(newModelElement.get());
+        if (!tempCircularArcPointer)
+        {
+            LineSegment* tempLineSegmentPointer = nullptr;
+            tempLineSegmentPointer = dynamic_cast<LineSegment*>(newModelElement.get());
+
+            std::shared_ptr<LineSegment> newModelLineSegment = std::make_shared<LineSegment>(*tempLineSegmentPointer);
+
+            this->rightHead = newModelLineSegment;
+            newModelLineSegment->next = tempElement->next;
+        }
+        else
+        {
+            std::shared_ptr<CircularArc> newModelCircularArc = std::make_shared<CircularArc>(*tempCircularArcPointer);
+
+            this->rightHead = newModelCircularArc;
+            newModelCircularArc->next = tempElement->next;
+        }
     }
-
-    tempElement->next = newModelElementPointer;
-    newModelElementPointer->next = currModelElementPointer->next;
-
-    //currModelElementPointer.reset();
 }
 
-void RoadModel::replaceModelLeftElement(const ModelElement &newModelElement, const ModelElement &currModelElement)
+void RoadModel::replaceModelLeftElement(const std::shared_ptr<ModelElement> &newModelElement, const std::shared_ptr<ModelElement> &prevModelElement)
 {
     std::shared_ptr<ModelElement> tempElement(this->leftHead);
-    std::shared_ptr<ModelElement> currModelElementPointer = std::make_shared<ModelElement>(currModelElement);
-    std::shared_ptr<ModelElement> newModelElementPointer = std::make_shared<ModelElement>(newModelElement);
 
-    while (tempElement->next != currModelElementPointer && tempElement->next)
+    if (tempElement != prevModelElement)
     {
-        tempElement = tempElement->next;
-    }
+        while (tempElement->next != prevModelElement && tempElement->next)
+        {
+            tempElement = tempElement->next;
+        }
 
-    if (!tempElement->next)
+        tempElement->next = newModelElement;
+        newModelElement->next = prevModelElement->next;
+    }
+    else
     {
-        return;
+        auto tempCircularArcPointer = dynamic_cast<CircularArc*>(newModelElement.get());
+        if (!tempCircularArcPointer)
+        {
+            LineSegment* tempLineSegmentPointer = nullptr;
+            tempLineSegmentPointer = dynamic_cast<LineSegment*>(newModelElement.get());
+
+            std::shared_ptr<LineSegment> newModelLineSegment = std::make_shared<LineSegment>(*tempLineSegmentPointer);
+
+            this->leftHead = newModelLineSegment;
+            newModelLineSegment->next = tempElement->next;
+        }
+        else
+        {
+            std::shared_ptr<CircularArc> newModelCircularArc = std::make_shared<CircularArc>(*tempCircularArcPointer);
+
+            this->leftHead = newModelCircularArc;
+            newModelCircularArc->next = tempElement->next;
+        }
     }
-
-    tempElement->next = newModelElementPointer;
-    newModelElementPointer->next = currModelElementPointer->next;
-
-    //currModelElementPointer.reset();
 }
 
 void RoadModel::addElementToRight(const CircularArc &newCircularArc)
@@ -427,6 +456,3 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
         this->modelLeftElementCounter++;
     }
 }
-
-
-
