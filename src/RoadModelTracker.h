@@ -11,18 +11,20 @@
 class RoadModelTracker
 {
 private:
-    RoadModel roadModel;
-    const double arcCenterDelta = 0.5;
-    const double arcRadiusDelta = 0.5;
-    const double lineBeginDelta = 0.5;
-    const double lineEndDelta = 0.5;
 
-    bool needReplace(const CircularArc &newArcSegment, const CircularArc &currModelArcSegment) const;
-    bool needReplace(const LineSegment &newLineSegment, const LineSegment &currModelLineSegment) const;
+    const double arcCenterDelta = 20;
+    const double arcRadiusDelta = 10;
+    const double lineBeginDelta = 20;
+    const double lineEndDelta = 20;
+
+    bool needReplace(const std::shared_ptr<CircularArc> &newArcSegment, const CircularArc &currModelArcSegment) const;
+    bool needReplace(const std::shared_ptr<LineSegment> &newLineSegment, const LineSegment &currModelLineSegment) const;
 
 
 public:
-    explicit RoadModelTracker(RoadModel &roadModel);
+    std::shared_ptr<RoadModel> roadModel;
+
+    explicit RoadModelTracker(std::shared_ptr<RoadModel> roadModel);
 
     void trackRightSide(const CircularArc &newArcSegment);
     void trackRightSide(const LineSegment &newLineSegment);
