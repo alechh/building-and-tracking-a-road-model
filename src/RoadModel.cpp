@@ -75,7 +75,20 @@ CircularArc::CircularArc(cv::Point center, double radius, double startAngle, dou
                          std::vector<cv::Point> points)
         : center(std::move(center)), radius(radius), startAngle(startAngle), endAngle(endAngle),
           pointsOfTheArc(std::move(points))
-{}
+{
+    if (std::isnan(this->radius))
+    {
+        this->radius = 0;
+    }
+    if (std::isnan(this->startAngle))
+    {
+        this->startAngle = 0;
+    }
+    if (std::isnan(this->endAngle))
+    {
+        this->endAngle = 0;
+    }
+}
 
 void CircularArc::drawModelElement(cv::Mat &src) const
 {
