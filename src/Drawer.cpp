@@ -76,3 +76,19 @@ void Drawer::drawContoursOnImage(const std::vector<std::vector<cv::Point>> &cont
 
     imwrite("../images/contour.jpg", pictuteOfTheContour);
 }
+
+void Drawer::drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vector<cv::Point>> &contours)
+{
+    for (const auto & contour : contours)
+    {
+        srand(time(0));
+        int red = rand() % 255;
+        int green = rand() % 255;
+        int blue = rand() % 255;
+
+        for (const auto & point : contour)
+        {
+            cv::circle(dts, point, 1, cv::Scalar(blue, green, red));
+        }
+    }
+}
