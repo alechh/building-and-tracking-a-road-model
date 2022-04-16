@@ -11,6 +11,7 @@
 #include "CurvatureCalculator.h"
 #include "Drawer.h"
 #include "RoadModelTracker.h"
+#include "RealDataTester.h"
 
 
 void
@@ -54,7 +55,7 @@ void buildRoadModelByContour()
 
         for (const auto &i: contours)
         {
-            for (const auto & j : i)
+            for (const auto &j: i)
             {
                 cv::circle(contoursTImage, j, 1, cv::Scalar(255, 255, 255));
             }
@@ -131,9 +132,20 @@ void buildRoadModelByContour()
 }
 
 
+void testModelBuildingOnRealData()
+{
+    const std::string PATH_VIDEO = "../videos/realData.MP4";
+    const std::string PATH_TXT = "../videos/bv_points.txt";
+//    RealDataTester::extractContourFromVideo(PATH_VIDEO);
+
+    RealDataTester::buildRoadModelByContour(PATH_TXT);
+}
+
+
 int main()
 {
-    buildRoadModelByContour();
+    //buildRoadModelByContour();
+    testModelBuildingOnRealData();
 
     return 0;
 }
