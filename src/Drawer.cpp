@@ -92,3 +92,11 @@ void Drawer::drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vecto
         }
     }
 }
+
+void Drawer::drawContourPointByPoint(cv::Mat &dst, const std::vector<cv::Point> &contour)
+{
+    for (const auto &point : contour)
+    {
+        cv::circle(dst, point, 1, cv::Scalar(255, 255, 255));
+    }
+}
