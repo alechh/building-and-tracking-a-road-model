@@ -13,10 +13,6 @@ void RoadModelTracker::trackRightSide(const CircularArc &newArcSegment)
 {
     std::shared_ptr<CircularArc> newArcSegmentPointer = std::make_shared<CircularArc>(newArcSegment);
 
-    if (this->roadModel->getModelRightElementCounter() == 6)
-    {
-        int a = 5;
-    }
     std::shared_ptr<ModelElement> currModelElement(this->roadModel->getRightHead());
 
     bool replaced = false;
