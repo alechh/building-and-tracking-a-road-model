@@ -266,6 +266,8 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         addLineSegmentToModel(modelTracker, lineSegment[0], lineSegment[lineSegment.size() - 1], isRightContour);
 
     }
+
+    modelTracker.modelHasBeenConstructed();
 }
 
 
