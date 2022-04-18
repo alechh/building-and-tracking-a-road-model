@@ -17,7 +17,7 @@
 
 /**
  * Drawing contour points according to the curvature in them.
- * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
+ * If the curvature at the point = 0, then the point is drawn in red, if != 0, then blue
  * @param dst -- destination image
  * @param contour -- vector of the points
  * @param contourCurvature -- vector of the curvature of the contour
@@ -28,11 +28,11 @@ void Drawer::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::v
     {
         if (contourCurvature[i] == 0)
         {
-            circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
+            circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
         }
         else
         {
-            circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
+            circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
         }
     }
 }
