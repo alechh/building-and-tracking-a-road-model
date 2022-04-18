@@ -91,13 +91,9 @@ void RealDataTester::extractContourFromVideo(const std::string &PATH)
     newFrameCap.release();
 }
 
-std::vector<FrameContour> RealDataTester::readContourFromTxtFile(const std::string &PATH)
+std::vector<FrameContours> RealDataTester::readContourFromTxtFile(const std::string &PATH)
 {
-    const int ROWS = 800;
-    const int COLS = 1500;
-    const float RESIZE_FACTOR = 1.0 / 100;
-
-    std::vector<FrameContour> vectorOfFrameContours;
+    std::vector<FrameContours> vectorOfFrameContours;
 
     std::ifstream in;
 
@@ -116,7 +112,7 @@ std::vector<FrameContour> RealDataTester::readContourFromTxtFile(const std::stri
 
         if (currString == "}") // end of the contours of the current frame
         {
-            vectorOfFrameContours.emplace_back(FrameContour(currFrameNumber, std::move(contours)));
+            vectorOfFrameContours.emplace_back(FrameContours(currFrameNumber, std::move(contours)));
 
             currFrameNumber = -1;
             continue;
@@ -141,10 +137,10 @@ std::vector<FrameContour> RealDataTester::readContourFromTxtFile(const std::stri
 
                 scalePoint(currPoint);
 
-//                if (prevPoint != cv::Point2f())
-//                {
-//                    addMissingPoints(currContour, currPoint, prevPoint);
-//                }
+                if (prevPoint != cv::Point2f())
+                {
+                    addMissingPoints(currContour, currPoint, prevPoint);
+                }
 
                 currContour.emplace_back(currPoint);
 
@@ -174,10 +170,10 @@ cv::Point2f RealDataTester::extractPointFromString(const std::string &s)
     return res;
 }
 
-void RealDataTester::addMissingPoints(std::vector<cv::Point2f> &currContour, const cv::Point2f &currPoint,
+void RealDataTester::addMissingPoints(std::vector<cv::Point> &currContour, const cv::Point2f &currPoint,
                                       const cv::Point2f &prevPoint)
 {
-    const int DELTA = 200;
+    const int DELTA = 2;
 
     cv::Point2f difference = currPoint - prevPoint;
 
@@ -186,19 +182,20 @@ void RealDataTester::addMissingPoints(std::vector<cv::Point2f> &currContour, con
 
     if (difference.x > DELTA || difference.y > DELTA)
     {
-        cv::Point directionalVector(currPoint.x - prevPoint.x, currPoint.y - prevPoint.y);
+        const cv::Point directionalVector(currPoint.x - prevPoint.x, currPoint.y - prevPoint.y);
 
-        double t = 0.1;
+        double t = 0;
 
-        while (std::abs(directionalVector.x * t + prevPoint.x - currPoint.x) > DELTA)
+        while (std::abs(directionalVector.x * t + prevPoint.x - currPoint.x) > DELTA ||
+               std::abs(directionalVector.y * t + prevPoint.y - currPoint.y) > DELTA)
         {
+            t += 0.01; // 0.05 тоже внешне норм
+
             cv::Point2d newPoint;
             newPoint.x = directionalVector.x * t + prevPoint.x;
             newPoint.y = directionalVector.y * t + prevPoint.y;
 
             currContour.emplace_back(newPoint);
-
-            t += 0.5;
         }
     }
 }
@@ -214,14 +211,157 @@ void RealDataTester::scalePoint(cv::Point2f &p)
     p.y += SHIFT_Y;
 }
 
+
 void RealDataTester::buildRoadModelByContour(const std::string &PATH)
 {
+    const int ROWS = 800;
+    const int COLS = 1500;
+    const int TYPE = 16;
+    const float RESIZE_FACTOR = 0.75;
 
+    const auto vectorOfFrameContours = readContourFromTxtFile(PATH);
+
+    const int FRAME_NUMBER = 42;
+    std::vector<std::vector<cv::Point>> contours;
+    chooseContourByFrameNumber(contours, vectorOfFrameContours, FRAME_NUMBER);
+
+    removeDuplicatePointsFromContour(contours[3], 3);
+
+    std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
+    RoadModelTracker modelTracker(roadModelPointer);
+
+    std::vector<std::vector<double>> contoursCurvatures(contours.size());
+
+    //int betterStep = contours[contourNumber].size() / 10;
+    int betterStep = 1;
+
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        CurvatureCalculator::calculateCurvature2(contoursCurvatures[i], contours[i], betterStep);
+    }
+
+    RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS);
+
+    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
+    cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+    cv::Mat contourPointsPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+
+    for (int contourNumber = 3; contourNumber < contours.size(); ++contourNumber)
+    {
+        Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture,
+                                                         contours[contourNumber],
+                                                         contoursCurvatures[contourNumber]);
+    }
+
+    cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
+    cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
+    cv::resize(contourPointsPicture, contourPointsPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
+
+
+        //cv::imshow("contourDependingOnItsCurvature", curvatureOnContourPicture);
+//        roadModelPointer->drawModelPoints(contourPointsPicture);
+//        cv::imshow("modelPoints", contourPointsPicture);
+        cv::waitKey(0);
 }
 
-FrameContour::FrameContour() : numberOfFrame(0), contour(std::vector<std::vector<cv::Point>>())
-{}
+void RealDataTester::chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour,
+                                                const std::vector<FrameContours> &frameContours, const int FRAME_NUMBER)
+{
+    for (const auto &frameContour: frameContours)
+    {
+        if (frameContour.numberOfFrame == FRAME_NUMBER)
+        {
+            contour = frameContour.contours;
+            return;
+        }
+    }
+}
 
-FrameContour::FrameContour(int numberOfFrame, std::vector<std::vector<cv::Point>> contour) :
-        numberOfFrame(numberOfFrame), contour(std::move(contour))
+void RealDataTester::removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, const int NUMBER_OF_CONTOUR)
+{
+    // for frame #42
+    const int BEGIN_1 = 104;
+    const int END_1 = 300;
+    const int BEGIN_2 = 1777;
+    const int END_2 = 1997;
+    const int BEGIN_3 = 3537;
+    const int END_3 = 6604;
+    const int BEGIN_4 = 9498;
+
+    std::vector<cv::Point> newContour;
+
+    for (int i = 0; i < contour.size(); ++i)
+    {
+        if (i == BEGIN_1)
+        {
+            i = END_1;
+            continue;
+        }
+        if (i == BEGIN_2)
+        {
+            i = END_2;
+            continue;
+        }
+        if (i == BEGIN_3)
+        {
+            i = END_3;
+            continue;
+        }
+        if (i == BEGIN_4)
+        {
+            break;
+        }
+
+        newContour.emplace_back(contour[i]);
+    }
+
+    contour = std::move(newContour);
+
+    removeClumpedPoints(contour);
+
+//    cv::Mat drawing(400, 500, 16, cv::Scalar(0, 0, 0));
+//    for (int i = 0; i < contour.size(); ++i)
+//    {
+//        cv::circle(drawing, cv::Point(contour[i].x - 700, contour[i].y), 1, cv::Scalar(255, 255, 255));
+//
+//        cv::Mat resizedDrawing(drawing.clone());
+//
+//        cv::resize(drawing, resizedDrawing, cv::Size(), 3, 3);
+//
+//        cv::imshow("resizedDrawing", resizedDrawing);
+//
+//        if (cv::waitKey(1) == 107)
+//        {
+//            std::cout << NUMBER_OF_CONTOUR << ": " << i << std::endl;
+//        }
+//    }
+//
+//    drawing.release();
+}
+
+void RealDataTester::removeClumpedPoints(std::vector<cv::Point> &contour)
+{
+    std::vector<cv::Point> newContour;
+
+    cv::Point prevPoint = contour[0];
+    newContour.emplace_back(prevPoint);
+
+
+    for (int i = 1; i < contour.size(); ++i)
+    {
+        if (contour[i] == prevPoint)
+        {
+            continue;
+        }
+
+        prevPoint = contour[i];
+        newContour.emplace_back(prevPoint);
+    }
+
+    contour = std::move(newContour);
+}
+
+
+FrameContours::FrameContours(int numberOfFrame, std::vector<std::vector<cv::Point>> contour) :
+        numberOfFrame(numberOfFrame), contours(std::move(contour))
 {}

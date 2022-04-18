@@ -5,33 +5,37 @@
 #ifndef TEST_FUNCTIONS_FOR_VKR_REALDATATESTER_H
 #define TEST_FUNCTIONS_FOR_VKR_REALDATATESTER_H
 
-struct FrameContour
+struct FrameContours
 {
     int numberOfFrame;
-    std::vector<std::vector<cv::Point>> contour;
+    std::vector<std::vector<cv::Point>> contours;
 
-    FrameContour();
-
-    FrameContour(int numberOfFrame, std::vector<std::vector<cv::Point>> contour);
+    FrameContours(int numberOfFrame, std::vector<std::vector<cv::Point>> contour);
 };
 
 
 class RealDataTester
 {
 public:
-    static void extractContourFromVideo(const std::string &PATH);
-
-    std::vector<FrameContour> readContourFromTxtFile(const std::string &PATH);
-
     static void buildRoadModelByContour(const std::string &PATH);
 
 private:
     static cv::Point2f extractPointFromString(const std::string &s);
 
     static void
-    addMissingPoints(std::vector<cv::Point2f> &currContour, const cv::Point2f &currPoint, const cv::Point2f &prevPoint);
+    addMissingPoints(std::vector<cv::Point> &currContour, const cv::Point2f &currPoint, const cv::Point2f &prevPoint);
 
-    void scalePoint(cv::Point2f &p);
+    static void scalePoint(cv::Point2f &p);
+
+    static std::vector<FrameContours> readContourFromTxtFile(const std::string &PATH);
+
+    static void extractContourFromVideo(const std::string &PATH);
+
+    static void chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour, const std::vector<FrameContours> &frameContours, const int FRAME_NUMBER);
+
+    static void removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, const int NUMBER_OF_CONTOUR);
+
+    static void removeClumpedPoints(std::vector<cv::Point> &contour);
 };
 
 
