@@ -225,7 +225,7 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
     std::vector<std::vector<cv::Point>> contours;
     chooseContourByFrameNumber(contours, vectorOfFrameContours, FRAME_NUMBER);
 
-    removeDuplicatePointsFromContour(contours[3], 3);
+    removeDuplicatePointsFromContour(contours[3]);
 
     std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
     RoadModelTracker modelTracker(roadModelPointer);
@@ -280,7 +280,7 @@ void RealDataTester::chooseContourByFrameNumber(std::vector<std::vector<cv::Poin
     }
 }
 
-void RealDataTester::removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, const int NUMBER_OF_CONTOUR)
+void RealDataTester::removeDuplicatePointsFromContour(std::vector<cv::Point> &contour)
 {
     // for frame #42
     const int BEGIN_1 = 104;
