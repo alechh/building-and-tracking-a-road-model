@@ -276,6 +276,8 @@ void RoadModel::drawModelPoints(cv::Mat &dst) const
     {
         drawRightSidePoints(dst);
     }
+
+    //TODO drawLeftSidePoints();
 }
 
 void RoadModel::drawRightSidePoints(cv::Mat &dst) const
