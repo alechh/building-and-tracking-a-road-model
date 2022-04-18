@@ -25,6 +25,10 @@ public:
     calculatePPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
                             int &pMinusIndex, cv::Point &centerPoint, double &h);
 
+    static void buildRoadModel(RoadModelTracker &modelTracker,
+                               const std::vector<std::vector<cv::Point>> &contours,
+                               const std::vector<std::vector<double>> &contoursCurvatures, int COLS);
+
 private:
     static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
 
