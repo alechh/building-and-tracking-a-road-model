@@ -51,6 +51,8 @@ private:
     calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment,
                                          const cv::Point &center, double radiusOfTheCircle);
 
+    static void addLineSegmentPointsToArcSegment(std::vector<cv::Point> &lineSegment, std::vector<cv::Point> &arcSegment, double &currSumOfArcSegmentCurvatures);
+
 };
 
 

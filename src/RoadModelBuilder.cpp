@@ -175,11 +175,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 // если в сегменте прямой "мало" точек, то добавим его к сегменту дуги
                 if (lineSegment.size() <= MIN_LINE_SEGMENT_SIZE)
                 {
-                    for (const auto &point: lineSegment)
-                    {
-                        arcSegment.emplace_back(point);
-                    }
-                    lineSegment.clear();
+                    addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
                 }
                 // если в сегменте прямой достаточно точек и сегмент дуги уже достаточно большой
                 else if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
@@ -527,4 +523,21 @@ RoadModelBuilder::buildRoadModel(RoadModelTracker &modelTracker, const std::vect
 
     // when all contours are processed, tell tracker that road model has been built, then tracker starts track it
     modelTracker.modelHasBeenConstructed();
+}
+
+void RoadModelBuilder::addLineSegmentPointsToArcSegment(std::vector<cv::Point> &lineSegment,
+                                                        std::vector<cv::Point> &arcSegment,
+                                                        double &currSumOfArcSegmentCurvatures)
+{
+    if (!arcSegment.empty())
+    {
+        const double avgCurvature = currSumOfArcSegmentCurvatures / arcSegment.size();
+        currSumOfArcSegmentCurvatures += avgCurvature * lineSegment.size();
+    }
+
+    for (const auto &lineSegmentPoint : lineSegment)
+    {
+        arcSegment.emplace_back(lineSegmentPoint);
+    }
+    lineSegment.clear();
 }
