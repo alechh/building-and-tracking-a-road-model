@@ -6,7 +6,8 @@
 
 #include <utility>
 
-RoadModelTracker::RoadModelTracker(std::shared_ptr<RoadModel> roadModel) : roadModel(std::move(roadModel))
+RoadModelTracker::RoadModelTracker(std::shared_ptr<RoadModel> roadModel) : roadModel(std::move(roadModel)),
+                                                                           isModelConstructed(false)
 {}
 
 void RoadModelTracker::trackRightSide(const CircularArc &newArcSegment)
@@ -49,7 +50,8 @@ void RoadModelTracker::trackRightSide(const CircularArc &newArcSegment)
     }
 }
 
-bool RoadModelTracker::needReplace(const std::shared_ptr<CircularArc> &newArcSegment, const CircularArc &currModelArcSegment) const
+bool RoadModelTracker::needReplace(const std::shared_ptr<CircularArc> &newArcSegment,
+                                   const CircularArc &currModelArcSegment) const
 {
     cv::Point centerDelta = newArcSegment->getCenter() - currModelArcSegment.getCenter();
 
@@ -65,7 +67,8 @@ bool RoadModelTracker::needReplace(const std::shared_ptr<CircularArc> &newArcSeg
     return false;
 }
 
-bool RoadModelTracker::needReplace(const std::shared_ptr<LineSegment> &newLineSegment, const LineSegment &currModelLineSegment) const
+bool RoadModelTracker::needReplace(const std::shared_ptr<LineSegment> &newLineSegment,
+                                   const LineSegment &currModelLineSegment) const
 {
     cv::Point beginDelta = newLineSegment->getBeginPoint() - currModelLineSegment.getBeginPoint();
     cv::Point endDelta = newLineSegment->getEndPoint() - currModelLineSegment.getEndPoint();
@@ -184,5 +187,10 @@ void RoadModelTracker::trackLeftSide(const LineSegment &newLineSegment)
     {
         this->roadModel->addElementToLeft(newLineSegment);
     }
+}
+
+void RoadModelTracker::modelHasBeenConstructed()
+{
+    this->isModelConstructed = true;
 }
 
