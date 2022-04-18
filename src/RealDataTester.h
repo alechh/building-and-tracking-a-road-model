@@ -36,6 +36,8 @@ private:
     static void removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, const int NUMBER_OF_CONTOUR);
 
     static void removeClumpedPoints(std::vector<cv::Point> &contour);
+
+    static void manualFindAndMarkDuplicatePoint(const std::vector<cv::Point> &contour, int NUMBER_OF_CONTOUR);
 };
 
 

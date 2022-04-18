@@ -237,7 +237,10 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
 
     for (int i = 0; i < contours.size(); ++i)
     {
-        CurvatureCalculator::calculateCurvature2(contoursCurvatures[i], contours[i], betterStep);
+        std::vector<double> tempCurvatures(contours[i].size());
+        CurvatureCalculator::calculateCurvature2(tempCurvatures, contours[i], betterStep);
+
+        contoursCurvatures[i] = std::move(tempCurvatures);
     }
 
     RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS);
@@ -318,25 +321,6 @@ void RealDataTester::removeDuplicatePointsFromContour(std::vector<cv::Point> &co
     contour = std::move(newContour);
 
     removeClumpedPoints(contour);
-
-//    cv::Mat drawing(400, 500, 16, cv::Scalar(0, 0, 0));
-//    for (int i = 0; i < contour.size(); ++i)
-//    {
-//        cv::circle(drawing, cv::Point(contour[i].x - 700, contour[i].y), 1, cv::Scalar(255, 255, 255));
-//
-//        cv::Mat resizedDrawing(drawing.clone());
-//
-//        cv::resize(drawing, resizedDrawing, cv::Size(), 3, 3);
-//
-//        cv::imshow("resizedDrawing", resizedDrawing);
-//
-//        if (cv::waitKey(1) == 107)
-//        {
-//            std::cout << NUMBER_OF_CONTOUR << ": " << i << std::endl;
-//        }
-//    }
-//
-//    drawing.release();
 }
 
 void RealDataTester::removeClumpedPoints(std::vector<cv::Point> &contour)
@@ -359,6 +343,28 @@ void RealDataTester::removeClumpedPoints(std::vector<cv::Point> &contour)
     }
 
     contour = std::move(newContour);
+}
+
+void RealDataTester::manualFindAndMarkDuplicatePoint(const std::vector<cv::Point> &contour, const int NUMBER_OF_CONTOUR)
+{
+    cv::Mat drawing(400, 500, 16, cv::Scalar(0, 0, 0));
+    for (int i = 0; i < contour.size(); ++i)
+    {
+        cv::circle(drawing, cv::Point(contour[i].x - 700, contour[i].y), 1, cv::Scalar(255, 255, 255));
+
+        cv::Mat resizedDrawing(drawing.clone());
+
+        cv::resize(drawing, resizedDrawing, cv::Size(), 3, 3);
+
+        cv::imshow("resizedDrawing", resizedDrawing);
+
+        if (cv::waitKey(1) == 107)
+        {
+            std::cout << NUMBER_OF_CONTOUR << ": " << i << std::endl;
+        }
+    }
+
+    drawing.release();
 }
 
 
