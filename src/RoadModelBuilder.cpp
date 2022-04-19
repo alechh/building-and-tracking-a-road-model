@@ -118,10 +118,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
     std::vector<cv::Point> arcSegment;
     std::vector<cv::Point> lineSegment;
 
-    const int MIN_LINE_SEGMENT_SIZE = 50; // 50
+    const int MIN_LINE_SEGMENT_SIZE = 30; // 50
     const int MIN_ARC_SEGMENT_SIZE = 30;
 
-    const double CURVATURE_THRESHOLD = 0.001; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
+    const double CURVATURE_THRESHOLD = 0.005; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
     const double CURVATURE_DELTA = 100; // 0.1 это для дельта-окрестности кривизны (если |prevCurvature - currCurvature| <= CURVATURE_DELTA, то currCurvature относится к текущему участку
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
@@ -168,10 +168,19 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         if (contourCurvature[i] <= CURVATURE_THRESHOLD) // если это часть прямой
         {
             // если встретилась ситуация, что сегмент прямой и дуги до этого были маленькие,
-            // то есть они никуда не добавились, тогда считаем их одним сегментом прямой
+            // то есть они никуда не добавились
             if (!lineSegment.empty() && !arcSegment.empty() && prevCurvature > CURVATURE_THRESHOLD)
             {
-                addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+                // если сегмент дуги достаточно большой, то добавим в модель предыдущие сегменты прямой и дуги
+                if (arcSegment.size() > MIN_ARC_SEGMENT_SIZE)
+                {
+                    addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
+                    addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour);
+                }
+                else
+                {
+                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+                }
             }
 
             // если до прямой была дуга и текущий сегмент прямой уже достаточно большой
@@ -196,7 +205,29 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             // то есть они никуда не добавились, тогда считаем их одним сегментом прямой
             if (!lineSegment.empty() && !arcSegment.empty() && prevCurvature <= CURVATURE_THRESHOLD)
             {
-                addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+                if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE)
+                {
+                    if (lineSegment.size() > MIN_LINE_SEGMENT_SIZE)
+                    {
+                        addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+                    }
+                    else
+                    {
+                        addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
+                    }
+                }
+                else
+                {
+                    if (lineSegment.size() > MIN_LINE_SEGMENT_SIZE)
+                    {
+                        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour);
+                        addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
+                    }
+                    else
+                    {
+                        addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
+                    }
+                }
             }
 
             if (!lineSegment.empty()) // если до дуги шел участок прямой
@@ -206,7 +237,8 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 {
                     addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
                 }
-                    // если в сегменте прямой достаточно точек и сегмент дуги уже достаточно большой
+                    // если в сегменте прямой достаточно точек и сегмент дуги уже достаточно большой,
+                    // то добавляем сегмент прямой к модели
                 else if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
                 {
                     addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
@@ -221,31 +253,31 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     arcSegment.emplace_back(contour[i]);
                     currSumOfArcSegmentCurvatures += contourCurvature[i];
                 }
-                else // если встретился новый участок уровня кривизны
-                {
-                    if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
-                    {
-                        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures,
-                                         isRightContour);
-
-                        arcSegment.emplace_back(contour[i]);
-                        currSumOfArcSegmentCurvatures = contourCurvature[i];
-                    }
-                    else
-                    {
-                        //TODO Если до текущего сегмента дуги был другой сегмент дуги, который очень маленький
-
-                        // Вариант 1: добавляю его к текущему сегменту дуги
+//                else // если встретился новый участок уровня кривизны
+//                {
+//                    if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
+//                    {
+//                        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures,
+//                                         isRightContour);
+//
 //                        arcSegment.emplace_back(contour[i]);
-//                        currSumOfArcSegmentCurvatures += contourCurvature[i];
-
-                        // Вариант 2: добавляю его как прямой отрезок
-                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
-
-                        arcSegment.emplace_back(contour[i]);
-                        currSumOfArcSegmentCurvatures = contourCurvature[i];
-                    }
-                }
+//                        currSumOfArcSegmentCurvatures = contourCurvature[i];
+//                    }
+//                    else
+//                    {
+//                        //TODO Если до текущего сегмента дуги был другой сегмент дуги, который очень маленький
+//
+//                        // Вариант 1: добавляю его к текущему сегменту дуги
+////                        arcSegment.emplace_back(contour[i]);
+////                        currSumOfArcSegmentCurvatures += contourCurvature[i];
+//
+//                        // Вариант 2: добавляю его как прямой отрезок
+//                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+//
+//                        arcSegment.emplace_back(contour[i]);
+//                        currSumOfArcSegmentCurvatures = contourCurvature[i];
+//                    }
+//                }
             }
         }
         prevCurvature = contourCurvature[i];
