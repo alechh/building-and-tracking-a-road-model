@@ -33,11 +33,11 @@ private:
     static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
 
     static void
-    addArcToTheModel(RoadModelTracker &modelTracker, const std::vector<cv::Point> &arcSegment, double curvature,
+    addArcToTheModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment, double curvature,
                      bool isRightContour);
 
     static void
-    addLineSegmentToModel(RoadModelTracker &modelTracker, const cv::Point &begin, const cv::Point &end,
+    addLineSegmentToModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &lineSegment,
                           bool isRightContour);
 
     static double calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
