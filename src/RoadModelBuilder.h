@@ -34,7 +34,7 @@ private:
 
     static void
     addArcToTheModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
-                     double &currSumOfArcSegmentCurvatures, double curvature,
+                     double &currSumOfArcSegmentCurvatures,
                      bool isRightContour);
 
     static void
