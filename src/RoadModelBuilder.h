@@ -37,7 +37,8 @@ private:
                      bool isRightContour);
 
     static void
-    addLineSegmentToModel(RoadModelTracker &modelTracker, const cv::Point &begin, const cv::Point &end, bool isRightContour);
+    addLineSegmentToModel(RoadModelTracker &modelTracker, const cv::Point &begin, const cv::Point &end,
+                          bool isRightContour);
 
     static double calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegment, const cv::Point &circleCenter);
 
@@ -51,7 +52,12 @@ private:
     calculationStartAndEndAnglesOfTheArc(double &startAngle, double &endAngle, const std::vector<cv::Point> &segment,
                                          const cv::Point &center, double radiusOfTheCircle);
 
-    static void addLineSegmentPointsToArcSegment(std::vector<cv::Point> &lineSegment, std::vector<cv::Point> &arcSegment, double &currSumOfArcSegmentCurvatures);
+    static void
+    addLineSegmentPointsToArcSegment(std::vector<cv::Point> &lineSegment, std::vector<cv::Point> &arcSegment,
+                                     double &currSumOfArcSegmentCurvatures);
+
+    static void
+    addArcSegmentPointsToLineSegment(std::vector<cv::Point> &arcSegment, std::vector<cv::Point> &lineSegment);
 
 };
 

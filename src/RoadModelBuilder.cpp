@@ -144,26 +144,16 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             {
                 if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE) // если сегмент дуги маленький, то добавляем его в прямой
                 {
-                    for (const auto &point: arcSegment)
-                    {
-                        lineSegment.emplace_back(point);
-                    }
+                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment);
                 }
                 // если сегмент дуги достаточно большой, то добавляем его в модель
                 else
                 {
                     addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures / arcSegment.size(),
                                      isRightContour);
-//                    for (const auto &point: arcSegment)
-//                    {
-//                        cv::circle(drawing, point, 1, cv::Scalar(255, 255, 255));
-//                        cv::imshow("contour", drawing);
-//                        cv::waitKey(0);
-//                    }
+                    arcSegment.clear();
                 }
 
-                arcSegment.clear();
-                //currArcSegmentNumber = 0;
                 currSumOfArcSegmentCurvatures = 0;
             }
             lineSegment.emplace_back(contour[i]);
@@ -182,12 +172,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 {
                     addLineSegmentToModel(modelTracker, lineSegment[0], lineSegment[lineSegment.size() - 1],
                                           isRightContour);
-//                    for (const auto &point: lineSegment)
-//                    {
-//                        cv::circle(drawing, point, 1, cv::Scalar(255, 255, 255));
-//                        cv::imshow("contour", drawing);
-//                        cv::waitKey(0);
-//                    }
 
                     lineSegment.clear();
 
@@ -213,12 +197,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     {
                         addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures / arcSegment.size(),
                                          isRightContour);
-//                        for (const auto &point: arcSegment)
-//                        {
-//                            cv::circle(drawing, point, 1, cv::Scalar(255, 255, 255));
-//                            cv::imshow("contour", drawing);
-//                            cv::waitKey(0);
-//                        }
 
                         arcSegment.clear();
 
@@ -246,12 +224,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                         // Вариант 2: добавляю его как прямой отрезок
                         addLineSegmentToModel(modelTracker, arcSegment[0], arcSegment[arcSegment.size() - 1],
                                               isRightContour);
-//                        for (const auto &point: arcSegment)
-//                        {
-//                            cv::circle(drawing, point, 1, cv::Scalar(255, 255, 255));
-//                            cv::imshow("contour", drawing);
-//                            cv::waitKey(0);
-//                        }
 
                         arcSegment.clear();
 
@@ -540,4 +512,14 @@ void RoadModelBuilder::addLineSegmentPointsToArcSegment(std::vector<cv::Point> &
         arcSegment.emplace_back(lineSegmentPoint);
     }
     lineSegment.clear();
+}
+
+void RoadModelBuilder::addArcSegmentPointsToLineSegment(std::vector<cv::Point> &arcSegment,
+                                                        std::vector<cv::Point> &lineSegment)
+{
+    for (const auto &arcSegmentPoint : arcSegment)
+    {
+        lineSegment.emplace_back(arcSegmentPoint);
+    }
+    arcSegment.clear();
 }
