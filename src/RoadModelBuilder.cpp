@@ -249,6 +249,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             }
         }
         prevCurvature = contourCurvature[i];
+        prevContourPoint = contour[i];
     }
 
     if (!arcSegment.empty())
