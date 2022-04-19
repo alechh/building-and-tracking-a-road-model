@@ -74,6 +74,7 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
  */
 void
 RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
+                                   double &currSumOfArcSegmentCurvatures,
                                    double curvature,
                                    bool isRightContour)
 {
@@ -94,6 +95,7 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     }
 
     arcSegment.clear();
+    currSumOfArcSegmentCurvatures = 0;
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.roadModel->drawModelPoints(drawing);
@@ -111,16 +113,15 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
      * Построение модели дороги (а точнее нашей полосы движения) по одному контуру.
      */
 
-    //int currArcSegmentNumber = 0;
     double currSumOfArcSegmentCurvatures = 0;
     std::vector<cv::Point> arcSegment;
     std::vector<cv::Point> lineSegment;
 
-    const int MIN_LINE_SEGMENT_SIZE = 100; // 50
-    const int MIN_ARC_SEGMENT_SIZE = 85;
+    const int MIN_LINE_SEGMENT_SIZE = 50; // 50
+    const int MIN_ARC_SEGMENT_SIZE = 30;
 
-    const double CURVATURE_THRESHOLD = 0.005; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
-    const double CURVATURE_DELTA = 0.1; // это для дельта-окрестности кривизны (если |prevCurvature - currCurvature| <= CURVATURE_DELTA, то currCurvature относится к текущему участку
+    const double CURVATURE_THRESHOLD = 0.001; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
+    const double CURVATURE_DELTA = 100; // 0.1 это для дельта-окрестности кривизны (если |prevCurvature - currCurvature| <= CURVATURE_DELTA, то currCurvature относится к текущему участку
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
 
@@ -137,30 +138,42 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             cv::circle(drawing, contour[i], 1, cv::Scalar(255, 0, 0));
         }
         cv::imshow("contour", drawing);
-        cv::waitKey(0);
+        cv::waitKey(25);
 
-        if (std::abs(contourCurvature[i]) <= CURVATURE_THRESHOLD) // если это часть прямой
+        if (contourCurvature[i] <= CURVATURE_THRESHOLD) // если это часть прямой
         {
+            // если встретилась ситуация, что сегмент прямой и дуги до этого были маленькие,
+            // то есть они никуда не добавились, тогда считаем их одним сегментом прямой
+            if (!lineSegment.empty() && !arcSegment.empty() && prevCurvature > CURVATURE_THRESHOLD)
+            {
+                addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+            }
+
             // если до прямой была дуга и текущий сегмент прямой уже достаточно большой
             if (!arcSegment.empty() && lineSegment.size() >= MIN_LINE_SEGMENT_SIZE)
             {
                 if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE) // если сегмент дуги маленький, то добавляем его в прямой
                 {
-                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment);
+                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
                 }
                     // если сегмент дуги достаточно большой, то добавляем его в модель
                 else
                 {
-                    addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures / arcSegment.size(),
+                    addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, currSumOfArcSegmentCurvatures / arcSegment.size(),
                                      isRightContour);
                 }
-
-                currSumOfArcSegmentCurvatures = 0;
             }
             lineSegment.emplace_back(contour[i]);
         }
         else // если это дуга окружности
         {
+            // если встретилась ситуация, что сегмент дуги и прямой до этого были маленькие,
+            // то есть они никуда не добавились, тогда считаем их одним сегментом прямой
+            if (!lineSegment.empty() && !arcSegment.empty() && prevCurvature <= CURVATURE_THRESHOLD)
+            {
+                addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+            }
+
             if (!lineSegment.empty()) // если до дуги шел участок прямой
             {
                 // если в сегменте прямой "мало" точек, то добавим его к сегменту дуги
@@ -173,7 +186,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 {
                     addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
                 }
-                prevCurvature = contourCurvature[i];
             }
 
             if (contourCurvature[i] != std::numeric_limits<double>::infinity())
@@ -183,49 +195,41 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 {
                     arcSegment.emplace_back(contour[i]);
                     currSumOfArcSegmentCurvatures += contourCurvature[i];
-
-                    prevCurvature = contourCurvature[i];
                 }
                 else // если встретился новый участок уровня кривизны
                 {
+                    std::cerr << "ERROR" << std::endl;
                     if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
                     {
-                        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures / arcSegment.size(),
+                        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, currSumOfArcSegmentCurvatures / arcSegment.size(),
                                          isRightContour);
 
                         arcSegment.emplace_back(contour[i]);
                         currSumOfArcSegmentCurvatures = contourCurvature[i];
-
-                        prevCurvature = contourCurvature[i];
                     }
                     else
                     {
                         //TODO Если до текущего сегмента дуги был другой сегмент дуги, который очень маленький
 
-
                         // Вариант 1: добавляю его к текущему сегменту дуги
-
 //                        arcSegment.emplace_back(contour[i]);
 //                        currSumOfArcSegmentCurvatures += contourCurvature[i];
-//
-//                        prevCurvature = contourCurvature[i];
 
                         // Вариант 2: добавляю его как прямой отрезок
                         addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
 
                         arcSegment.emplace_back(contour[i]);
                         currSumOfArcSegmentCurvatures = contourCurvature[i];
-
-                        prevCurvature = contourCurvature[i];
                     }
                 }
             }
         }
+        prevCurvature = contourCurvature[i];
     }
 
     if (!arcSegment.empty())
     {
-        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures / arcSegment.size(),
+        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, currSumOfArcSegmentCurvatures / arcSegment.size(),
                          isRightContour);
     }
     else if (!lineSegment.empty())
@@ -442,6 +446,7 @@ void
 RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &lineSegment,
                                         bool isRightContour)
 {
+    std::cout << "lineSegment.size() = " << lineSegment.size() << std::endl;
     if (isRightContour)
     {
         modelTracker.trackRightSide(LineSegment(lineSegment[0], lineSegment[lineSegment.size() - 1]));
@@ -502,11 +507,14 @@ void RoadModelBuilder::addLineSegmentPointsToArcSegment(std::vector<cv::Point> &
 }
 
 void RoadModelBuilder::addArcSegmentPointsToLineSegment(std::vector<cv::Point> &arcSegment,
-                                                        std::vector<cv::Point> &lineSegment)
+                                                        std::vector<cv::Point> &lineSegment,
+                                                        double &currSumOfArcSegmentCurvatures)
 {
     for (const auto &arcSegmentPoint: arcSegment)
     {
         lineSegment.emplace_back(arcSegmentPoint);
     }
     arcSegment.clear();
+    currSumOfArcSegmentCurvatures = 0;
 }
+
