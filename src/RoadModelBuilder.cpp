@@ -162,7 +162,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 }
                 else
                 {
-                    addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour);
+                    if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+                    {
+                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                    }
                 }
             }
 
@@ -193,7 +196,11 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 if (arcSegment.size() > MIN_ARC_SEGMENT_SIZE)
                 {
                     addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
-                    addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour);
+                    if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+                    {
+                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                    }
+
                 }
                 else
                 {
@@ -211,8 +218,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     // если сегмент дуги достаточно большой, то добавляем его в модель
                 else
                 {
-                    addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures,
-                                     isRightContour);
+                    if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+                    {
+                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                    }
                 }
             }
             lineSegment.emplace_back(contour[i]);
@@ -238,7 +247,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 {
                     if (lineSegment.size() > MIN_LINE_SEGMENT_SIZE)
                     {
-                        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour);
+                        if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+                        {
+                            addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                        }
                         addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
                     }
                     else
@@ -288,8 +300,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     if (!arcSegment.empty())
     {
-        addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures,
-                         isRightContour);
+        if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+        {
+            addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+        }
     }
     else if (!lineSegment.empty())
     {
