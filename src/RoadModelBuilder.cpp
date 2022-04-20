@@ -89,12 +89,17 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
 
-    if (std::isnan(startAngle))
+    if (std::isnan(startAngle) || startAngle == std::numeric_limits<double>::infinity())
     {
         isEverythingOk = false;
     }
 
-    if (std::isnan(endAngle))
+    if (std::isnan(endAngle) || endAngle == std::numeric_limits<double>::infinity())
+    {
+        isEverythingOk = false;
+    }
+
+    if (std::isnan(radiusOfTheCircle) || radiusOfTheCircle == std::numeric_limits<double>::infinity())
     {
         isEverythingOk = false;
     }
@@ -113,10 +118,10 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
         arcSegment.clear();
         currSumOfArcSegmentCurvatures = 0;
 
-        cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-        modelTracker.roadModel->drawModelPoints(drawing);
-        cv::imshow("drawing", drawing);
-        cv::waitKey(25);
+//        cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
+//        modelTracker.roadModel->drawModelPoints(drawing);
+//        cv::imshow("drawing", drawing);
+//        cv::waitKey(25);
     }
 
     return isEverythingOk;
@@ -165,6 +170,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
                     {
                         addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                        currSumOfArcSegmentCurvatures = 0;
                     }
                 }
             }
@@ -175,16 +181,16 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             }
         }
 
-        if (contourCurvature[i] <= CURVATURE_THRESHOLD)
-        {
-            cv::circle(drawing, contour[i], 1, cv::Scalar(0, 0, 255));
-        }
-        else
-        {
-            cv::circle(drawing, contour[i], 1, cv::Scalar(255, 0, 0));
-        }
-        cv::imshow("contour", drawing);
-        cv::waitKey(25);
+//        if (contourCurvature[i] <= CURVATURE_THRESHOLD)
+//        {
+//            cv::circle(drawing, contour[i], 1, cv::Scalar(0, 0, 255));
+//        }
+//        else
+//        {
+//            cv::circle(drawing, contour[i], 1, cv::Scalar(255, 0, 0));
+//        }
+//        cv::imshow("contour", drawing);
+//        cv::waitKey(25);
 
         if (contourCurvature[i] <= CURVATURE_THRESHOLD) // если это часть прямой
         {
@@ -199,6 +205,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
                     {
                         addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                        currSumOfArcSegmentCurvatures = 0;
                     }
 
                 }
@@ -221,6 +228,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
                     {
                         addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                        currSumOfArcSegmentCurvatures = 0;
                     }
                 }
             }
@@ -250,6 +258,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                         if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
                         {
                             addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                            currSumOfArcSegmentCurvatures = 0;
                         }
                         addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
                     }
@@ -303,6 +312,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
         {
             addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+            currSumOfArcSegmentCurvatures = 0;
         }
     }
     else if (!lineSegment.empty())
@@ -530,10 +540,10 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
 
     lineSegment.clear();
 
-    cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-    modelTracker.roadModel->drawModelPoints(drawing);
-    cv::imshow("drawing", drawing);
-    cv::waitKey(25);
+//    cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
+//    modelTracker.roadModel->drawModelPoints(drawing);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(25);
 }
 
 void
