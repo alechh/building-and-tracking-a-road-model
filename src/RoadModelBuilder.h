@@ -60,6 +60,8 @@ private:
     static void
     addArcSegmentPointsToLineSegment(std::vector<cv::Point> &arcSegment, std::vector<cv::Point> &lineSegment,
                                      double &currSumOfArcSegmentCurvatures);
+
+    static double calculateRadiusOfTheArcUsingContour(const std::vector<cv::Point> &arcSegment);
 };
 
 

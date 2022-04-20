@@ -79,12 +79,24 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 {
     const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
 
-    double radiusOfTheCircle = 1.0 / curvature;
-    cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
+    //double radiusOfTheCircle = 1.0 / curvature;
+    const double radiusOfTheCircle = calculateRadiusOfTheArcUsingContour(arcSegment);
+
+    const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
 
     double startAngle, endAngle;
 
     calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+
+    if (std::isnan(startAngle))
+    {
+        startAngle = 0;
+    }
+
+    if (std::isnan(endAngle))
+    {
+        endAngle = 360;
+    }
 
     if (isRightContour)
     {
@@ -101,7 +113,7 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.roadModel->drawModelPoints(drawing);
     cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+    cv::waitKey(25);
 }
 
 
@@ -501,7 +513,7 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.roadModel->drawModelPoints(drawing);
     cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+    cv::waitKey(25);
 }
 
 void
@@ -556,5 +568,32 @@ void RoadModelBuilder::addArcSegmentPointsToLineSegment(std::vector<cv::Point> &
     }
     arcSegment.clear();
     currSumOfArcSegmentCurvatures = 0;
+}
+
+double RoadModelBuilder::calculateRadiusOfTheArcUsingContour(const std::vector<cv::Point> &arcSegment)
+{
+    cv::Point prev, middlePoint, next;
+
+    middlePoint = arcSegment[arcSegment.size() / 2];
+    prev = arcSegment[0];
+    next = arcSegment[arcSegment.size() - 1];
+
+    // если точки совпадают
+    if (prev == middlePoint || middlePoint == next || next == prev)
+    {
+        return 0;
+    }
+
+    double a, b, c; // стороны треугольника
+    a = sqrt(pow(prev.x - middlePoint.x, 2) + pow(prev.y - middlePoint.y, 2));
+    b = sqrt(pow(middlePoint.x - next.x, 2) + pow(middlePoint.y - next.y, 2));
+    c = sqrt(pow(next.x - prev.x, 2) + pow(next.y - prev.y, 2));
+
+    double p = (a + b + c) / 2;
+    double S = sqrt(p * (p - a) * (p - b) * (p - c)); // площадь треугольника по формуле Геррона
+
+    double R = (a * b * c) / (4 * S); // радиус описанной окружности
+
+    return R;
 }
 
