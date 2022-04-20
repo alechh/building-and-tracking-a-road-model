@@ -118,8 +118,8 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
     std::vector<cv::Point> arcSegment;
     std::vector<cv::Point> lineSegment;
 
-    const int MIN_LINE_SEGMENT_SIZE = 30; // 50
-    const int MIN_ARC_SEGMENT_SIZE = 30;
+    const int MIN_LINE_SEGMENT_SIZE = 50; // 50
+    const int MIN_ARC_SEGMENT_SIZE = 20; // 20
 
     const double CURVATURE_THRESHOLD = 0.005; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
     const double CURVATURE_DELTA = 100; // 0.1 это для дельта-окрестности кривизны (если |prevCurvature - currCurvature| <= CURVATURE_DELTA, то currCurvature относится к текущему участку
@@ -229,22 +229,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                     }
                 }
             }
-
-//            if (!lineSegment.empty()) // если до дуги шел участок прямой
-//            {
-//                // если в сегменте прямой "мало" точек, то добавим его к сегменту дуги
-//                if (lineSegment.size() <= MIN_LINE_SEGMENT_SIZE)
-//                {
-//                    addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
-//                }
-//                    // если в сегменте прямой достаточно точек и сегмент дуги уже достаточно большой,
-//                    // то добавляем сегмент прямой к модели
-//                else if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
-//                {
-//                    addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
-//                }
-//            }
-
             if (contourCurvature[i] != std::numeric_limits<double>::infinity())
             {
                 // если продолжается текущий участок
@@ -503,7 +487,6 @@ void
 RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &lineSegment,
                                         bool isRightContour)
 {
-    std::cout << "lineSegment.size() = " << lineSegment.size() << std::endl;
     if (isRightContour)
     {
         modelTracker.trackRightSide(LineSegment(lineSegment[0], lineSegment[lineSegment.size() - 1]));
