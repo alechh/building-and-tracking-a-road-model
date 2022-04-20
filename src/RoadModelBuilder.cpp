@@ -230,20 +230,20 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                 }
             }
 
-            if (!lineSegment.empty()) // если до дуги шел участок прямой
-            {
-                // если в сегменте прямой "мало" точек, то добавим его к сегменту дуги
-                if (lineSegment.size() <= MIN_LINE_SEGMENT_SIZE)
-                {
-                    addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
-                }
-                    // если в сегменте прямой достаточно точек и сегмент дуги уже достаточно большой,
-                    // то добавляем сегмент прямой к модели
-                else if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
-                {
-                    addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
-                }
-            }
+//            if (!lineSegment.empty()) // если до дуги шел участок прямой
+//            {
+//                // если в сегменте прямой "мало" точек, то добавим его к сегменту дуги
+//                if (lineSegment.size() <= MIN_LINE_SEGMENT_SIZE)
+//                {
+//                    addLineSegmentPointsToArcSegment(lineSegment, arcSegment, currSumOfArcSegmentCurvatures);
+//                }
+//                    // если в сегменте прямой достаточно точек и сегмент дуги уже достаточно большой,
+//                    // то добавляем сегмент прямой к модели
+//                else if (arcSegment.size() >= MIN_ARC_SEGMENT_SIZE)
+//                {
+//                    addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
+//                }
+//            }
 
             if (contourCurvature[i] != std::numeric_limits<double>::infinity())
             {
