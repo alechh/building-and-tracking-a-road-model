@@ -31,7 +31,8 @@ private:
 
     static void extractContourFromVideo(const std::string &PATH);
 
-    static void chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour, const std::vector<FrameContours> &frameContours, const int FRAME_NUMBER);
+    static void chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour,
+                                           const std::vector<FrameContours> &frameContours, int FRAME_NUMBER);
 
     static void removeDuplicatePointsFromContour(std::vector<cv::Point> &contour);
 

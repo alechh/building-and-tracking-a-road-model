@@ -219,6 +219,8 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
     const int TYPE = 16;
     const float RESIZE_FACTOR = 0.75;
 
+    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
+
     const auto vectorOfFrameContours = readContourFromTxtFile(PATH);
 
     const int FRAME_NUMBER = 42;
@@ -227,44 +229,49 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
 
     removeDuplicatePointsFromContour(contours[3]);
 
+    // remove extra contours for debug
+    for (auto iter = contours.begin(); iter != contours.end() - 1;)
+    {
+        contours.erase(iter);
+    }
+
     std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
     RoadModelTracker modelTracker(roadModelPointer);
 
     std::vector<std::vector<double>> contoursCurvatures(contours.size());
 
     //int betterStep = contours[contourNumber].size() / 10;
-    int betterStep = 1;
 
-    for (int i = 0; i < contours.size(); ++i)
+    for (int betterStep = 6; betterStep <= 6; betterStep += 1)
     {
-        std::vector<double> tempCurvatures(contours[i].size());
-        CurvatureCalculator::calculateCurvature2(tempCurvatures, contours[i], betterStep);
+        cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+        std::cout << betterStep << std::endl;
+        for (int i = 0; i < contours.size(); ++i)
+        {
+            //std::vector<double> tempCurvatures(contours[i].size());
+            contoursCurvatures[0].resize(contours[i].size());
+            CurvatureCalculator::calculateCurvature2(contoursCurvatures[i], contours[i], betterStep);
 
-        contoursCurvatures[i] = std::move(tempCurvatures);
+            //contoursCurvatures[i] = std::move(tempCurvatures);
+        }
+
+        Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture,
+                                                         contours[0],
+                                                         contoursCurvatures[0]);
+
+
+        cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
+
+        //cv::imshow("contourDependingOnItsCurvature", curvatureOnContourPicture);
+        //cv::waitKey(0);
     }
 
     RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS);
-
-    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
-    cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
-    cv::Mat contourPointsPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
-
-    for (int contourNumber = 3; contourNumber < contours.size(); ++contourNumber)
-    {
-        Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture,
-                                                         contours[contourNumber],
-                                                         contoursCurvatures[contourNumber]);
-    }
-
-    cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
     cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
-    cv::resize(contourPointsPicture, contourPointsPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
-
-        //cv::imshow("contourDependingOnItsCurvature", curvatureOnContourPicture);
-//        roadModelPointer->drawModelPoints(contourPointsPicture);
-//        cv::imshow("modelPoints", contourPointsPicture);
-        cv::waitKey(0);
+    roadModelPointer->drawModel(roadModelPicture);
+    cv::imshow("model", roadModelPicture);
+    cv::waitKey(0);
 }
 
 void RealDataTester::chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour,
