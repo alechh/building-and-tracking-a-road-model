@@ -32,7 +32,7 @@ public:
 private:
     static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);
 
-    static void
+    static bool
     addArcToTheModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
                      double &currSumOfArcSegmentCurvatures,
                      bool isRightContour);

@@ -72,11 +72,12 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
  * @param roadModel -- model of the road
  * @param curvature -- curvature of the segment
  */
-void
+bool
 RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
                                    double &currSumOfArcSegmentCurvatures,
                                    bool isRightContour)
 {
+    bool isEverythingOk = true;
     const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
 
     //double radiusOfTheCircle = 1.0 / curvature;
@@ -90,30 +91,35 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     if (std::isnan(startAngle))
     {
-        startAngle = 0;
+        isEverythingOk = false;
     }
 
     if (std::isnan(endAngle))
     {
-        endAngle = 360;
+        isEverythingOk = false;
     }
 
-    if (isRightContour)
+    if (isEverythingOk)
     {
-        modelTracker.trackRightSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
-    }
-    else
-    {
-        modelTracker.trackLeftSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
+        if (isRightContour)
+        {
+            modelTracker.trackRightSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
+        }
+        else
+        {
+            modelTracker.trackLeftSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
+        }
+
+        arcSegment.clear();
+        currSumOfArcSegmentCurvatures = 0;
+
+        cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
+        modelTracker.roadModel->drawModelPoints(drawing);
+        cv::imshow("drawing", drawing);
+        cv::waitKey(25);
     }
 
-    arcSegment.clear();
-    currSumOfArcSegmentCurvatures = 0;
-
-    cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-    modelTracker.roadModel->drawModelPoints(drawing);
-    cv::imshow("drawing", drawing);
-    cv::waitKey(25);
+    return isEverythingOk;
 }
 
 
