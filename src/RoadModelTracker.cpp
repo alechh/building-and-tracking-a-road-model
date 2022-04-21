@@ -206,3 +206,8 @@ void RoadModelTracker::modelHasBeenConstructed()
     this->isModelConstructed = true;
 }
 
+std::shared_ptr<RoadModel> RoadModelTracker::getRoadModelPointer() const
+{
+    return this->roadModel;
+}
+

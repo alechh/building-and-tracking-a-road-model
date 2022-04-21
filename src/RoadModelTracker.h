@@ -22,9 +22,9 @@ private:
 
     bool needReplace(const std::shared_ptr<LineSegment> &newLineSegment, const LineSegment &currModelLineSegment) const;
 
-
-public:
     std::shared_ptr<RoadModel> roadModel;
+public:
+    std::shared_ptr<RoadModel> getRoadModelPointer() const;
 
     explicit RoadModelTracker(std::shared_ptr<RoadModel> roadModel);
 
