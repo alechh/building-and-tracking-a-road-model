@@ -100,3 +100,13 @@ void Drawer::drawContourPointByPoint(cv::Mat &dst, const std::vector<cv::Point> 
         cv::circle(dst, point, 1, cv::Scalar(255, 255, 255));
     }
 }
+
+void
+Drawer::drawContoursPointsDependingOnItsCurvatures(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours,
+                                                   const std::vector<std::vector<double>> &contoursCurvatures)
+{
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        drawContourPointsDependingOnItsCurvature(dst, contours[i], contoursCurvatures[i]);
+    }
+}

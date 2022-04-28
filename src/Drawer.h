@@ -19,6 +19,10 @@ public:
                                                          const std::vector<double> &contourCurvature);
 
     static void
+    drawContoursPointsDependingOnItsCurvatures(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours,
+                                               const std::vector<std::vector<double>> &contoursCurvatures);
+
+    static void
     drawContours(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours, int numberOfContours = 0);
 
     static void drawContoursOnImage(const std::vector<std::vector<cv::Point>> &contours);
