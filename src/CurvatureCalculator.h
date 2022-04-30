@@ -18,6 +18,10 @@ public:
                                       const std::vector<std::vector<cv::Point>> &contours, const int step);
 
     static void
+    calculateCurvatureForAllContours(std::vector<std::vector<double>> &contoursCurvatures,
+                                      const std::vector<std::vector<cv::Point>> &contours, const int step);
+
+    static void
     calculateCurvature(std::vector<double> &contourCurvature, const std::vector<cv::Point> &vecContourPoints,
                        int step);
 
