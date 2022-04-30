@@ -77,11 +77,10 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
                                    double &currSumOfArcSegmentCurvatures,
                                    bool isRightContour)
 {
-    bool isEverythingOk = true;
     const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
 
-    //double radiusOfTheCircle = 1.0 / curvature;
-    const double radiusOfTheCircle = calculateRadiusOfTheArcUsingContour(arcSegment);
+    double radiusOfTheCircle = 1.0 / curvature;
+    //const double radiusOfTheCircle = calculateRadiusOfTheArcUsingContour(arcSegment);
 
     const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
 
@@ -91,40 +90,37 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     if (std::isnan(startAngle) || startAngle == std::numeric_limits<double>::infinity())
     {
-        isEverythingOk = false;
+        return false;
     }
 
     if (std::isnan(endAngle) || endAngle == std::numeric_limits<double>::infinity())
     {
-        isEverythingOk = false;
+        return false;
     }
 
     if (std::isnan(radiusOfTheCircle) || radiusOfTheCircle == std::numeric_limits<double>::infinity())
     {
-        isEverythingOk = false;
+        return false;
     }
 
-    if (isEverythingOk)
+    if (isRightContour)
     {
-        if (isRightContour)
-        {
-            modelTracker.trackRightSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
-        }
-        else
-        {
-            modelTracker.trackLeftSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
-        }
-
-        arcSegment.clear();
-        currSumOfArcSegmentCurvatures = 0;
-
-//        cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-//        modelTracker.roadModel->drawModelPoints(drawing);
-//        cv::imshow("drawing", drawing);
-//        cv::waitKey(25);
+        modelTracker.trackRightSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
+    }
+    else
+    {
+        modelTracker.trackLeftSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
     }
 
-    return isEverythingOk;
+    arcSegment.clear();
+    currSumOfArcSegmentCurvatures = 0;
+
+    cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
+    modelTracker.getRoadModelPointer()->drawModelPoints(drawing);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(25);
+
+    return true;
 }
 
 
@@ -141,10 +137,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
     std::vector<cv::Point> arcSegment;
     std::vector<cv::Point> lineSegment;
 
-    const int MIN_LINE_SEGMENT_SIZE = 50; // 50
-    const int MIN_ARC_SEGMENT_SIZE = 20; // 20
+    const int MIN_LINE_SEGMENT_SIZE = 10; // 50
+    const int MIN_ARC_SEGMENT_SIZE = 10; // 20
 
-    const double CURVATURE_THRESHOLD = 0.005; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
+    const double CURVATURE_THRESHOLD = 0.002; // это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
     const double CURVATURE_DELTA = 100; // 0.1 это для дельта-окрестности кривизны (если |prevCurvature - currCurvature| <= CURVATURE_DELTA, то currCurvature относится к текущему участку
 
     double prevCurvature = contourCurvature[0]; // это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
@@ -155,6 +151,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     for (int i = 0; i < contour.size(); ++i)
     {
+        std::cout << contourCurvature[i] << std::endl;
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (std::abs(contour[i].x - prevContourPoint.x) > CONTOUR_POINTS_DELTA ||
             std::abs(contour[i].y - prevContourPoint.y) > CONTOUR_POINTS_DELTA)
@@ -181,14 +178,14 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             }
         }
 
-//        if (contourCurvature[i] <= CURVATURE_THRESHOLD)
-//        {
-//            cv::circle(drawing, contour[i], 1, cv::Scalar(0, 0, 255));
-//        }
-//        else
-//        {
-//            cv::circle(drawing, contour[i], 1, cv::Scalar(255, 0, 0));
-//        }
+        if (contourCurvature[i] <= CURVATURE_THRESHOLD)
+        {
+            cv::circle(drawing, contour[i], 1, cv::Scalar(0, 0, 255));
+        }
+        else
+        {
+            cv::circle(drawing, contour[i], 1, cv::Scalar(255, 0, 0));
+        }
 //        cv::imshow("contour", drawing);
 //        cv::waitKey(25);
 
@@ -207,7 +204,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                         addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
                         currSumOfArcSegmentCurvatures = 0;
                     }
-
                 }
                 else
                 {
@@ -236,6 +232,12 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         }
         else // если это дуга окружности
         {
+            if (lineSegment.size() > MIN_LINE_SEGMENT_SIZE && arcSegment.size() > MIN_ARC_SEGMENT_SIZE)
+            {
+                addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
+            }
+
+
             // если встретилась ситуация, что сегмент дуги и прямой до этого были маленькие,
             // то есть они никуда не добавились, тогда считаем их одним сегментом прямой
             if (!lineSegment.empty() && !arcSegment.empty() && prevCurvature <= CURVATURE_THRESHOLD)
@@ -540,8 +542,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
 
     lineSegment.clear();
 
-//    cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-//    modelTracker.roadModel->drawModelPoints(drawing);
+    cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
+    modelTracker.getRoadModelPointer()->drawModelPoints(drawing);
 //    cv::imshow("drawing", drawing);
 //    cv::waitKey(25);
 }
