@@ -117,10 +117,24 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModelPoints(drawing);
-//    cv::imshow("drawing", drawing);
-//    cv::waitKey(25);
+    cv::imshow("drawing", drawing);
+    cv::waitKey(0);
 
     return true;
+}
+
+void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvature,  const double CURVATURE_THRESHOLD)
+{
+    if (curvature <= CURVATURE_THRESHOLD)
+    {
+        cv::circle(drawing, point, 1, cv::Scalar(0, 0, 255));
+    }
+    else
+    {
+        cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
+    }
+    cv::imshow("contour", drawing);
+    cv::waitKey(25);
 }
 
 
@@ -151,43 +165,12 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     for (int i = 0; i < contour.size(); ++i)
     {
-        std::cout << contourCurvature[i] << std::endl;
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
-        if (std::abs(contour[i].x - prevContourPoint.x) > CONTOUR_POINTS_DELTA ||
-            std::abs(contour[i].y - prevContourPoint.y) > CONTOUR_POINTS_DELTA)
-        {
-            if (!arcSegment.empty())
-            {
-                if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
-                {
-                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
-                }
-                else
-                {
-                    if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
-                    {
-                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
-                        currSumOfArcSegmentCurvatures = 0;
-                    }
-                }
-            }
+        checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
+                                         MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
+                                         MIN_LINE_SEGMENT_SIZE);
 
-            if (!lineSegment.empty())
-            {
-                addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
-            }
-        }
-
-        if (contourCurvature[i] <= CURVATURE_THRESHOLD)
-        {
-            cv::circle(drawing, contour[i], 1, cv::Scalar(0, 0, 255));
-        }
-        else
-        {
-            cv::circle(drawing, contour[i], 1, cv::Scalar(255, 0, 0));
-        }
-//        cv::imshow("contour", drawing);
-//        cv::waitKey(25);
+        drawContourPoints(drawing, contour[i], contourCurvature[i], CURVATURE_THRESHOLD);
 
         if (contourCurvature[i] <= CURVATURE_THRESHOLD) // если это часть прямой
         {
@@ -544,8 +527,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModelPoints(drawing);
-//    cv::imshow("drawing", drawing);
-//    cv::waitKey(25);
+    cv::imshow("drawing", drawing);
+    cv::waitKey(0);
 }
 
 void
@@ -629,3 +612,34 @@ double RoadModelBuilder::calculateRadiusOfTheArcUsingContour(const std::vector<c
     return R;
 }
 
+void RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelTracker, bool isRightContour,
+                                                        const cv::Point &prevPoint,
+                                                        const cv::Point &currPoint,
+                                                        std::vector<cv::Point> &arcSegment,
+                                                        const int MIN_ARC_SEGMENT_SIZE,
+                                                        double &currSumOfArcSegmentCurvatures,
+                                                        std::vector<cv::Point> &lineSegment,
+                                                        const int MIN_LINE_SEGMENT_SIZE)
+{
+    const int CONTOUR_POINTS_DELTA = 100;
+
+    if (std::abs(currPoint.x - prevPoint.x) > CONTOUR_POINTS_DELTA ||
+        std::abs(currPoint.y - prevPoint.y) > CONTOUR_POINTS_DELTA)
+    {
+        if (!arcSegment.empty())
+        {
+            if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
+            {
+                addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+            }
+            else
+            {
+                if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+                {
+                    addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                    currSumOfArcSegmentCurvatures = 0;
+                }
+            }
+        }
+    }
+}
