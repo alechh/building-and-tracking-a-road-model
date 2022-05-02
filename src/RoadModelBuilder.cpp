@@ -64,7 +64,7 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
     return center;
 }
 
-void drawArcSegment(const std::vector<cv::Point> &arcSegment, const cv::Point &endPoint)
+void drawArcSegment(const std::vector<cv::Point> &arcSegment, const cv::Point &endPoint, const cv::Point &center)
 {
     cv::Mat segmentPicture(800, 1500, 16, cv::Scalar(0, 0, 0));
     for (const auto &point : arcSegment)
@@ -78,6 +78,9 @@ void drawArcSegment(const std::vector<cv::Point> &arcSegment, const cv::Point &e
             cv::circle(segmentPicture, point, 1, cv::Scalar(255, 0, 0));
         }
     }
+
+    cv::circle(segmentPicture, center, 1, cv::Scalar(255, 255, 0));
+
     cv::imshow("segmentPicture", segmentPicture);
     cv::waitKey(0);
 }
@@ -356,17 +359,28 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
 
 cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, double radius, const cv::Point &center)
 {
-    const double RADIUS_DELTA = 5;
-    for (int i = arcSegment.size() - 1; i >= 0; --i)
+    const double DISTANCE_DELTA = 1;
+    const cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
+    const cv::Point directionalVector(center.x - lastPoint.x, center.y - lastPoint.y);
+
+    double t = 0;
+    double currDistance = Utils::distanceBetweenPoints(lastPoint, center);
+
+    cv::Point newPoint;
+    while (std::abs(currDistance - radius) > DISTANCE_DELTA)
     {
-        double radiusError = std::abs(Utils::distanceBetweenPoints(arcSegment[i], center) - radius);
-        if (radiusError <= RADIUS_DELTA)
-        {
-            std::cout << "last norm segment point index = " << i  << " / " << arcSegment.size() << std::endl;
-            drawArcSegment(arcSegment, arcSegment[i]);
-            return arcSegment[i];
-        }
+        t += 0.01;
+
+        newPoint.x = directionalVector.x * t + lastPoint.x;
+        newPoint.y = directionalVector.y * t + lastPoint.y;
+        currDistance = Utils::distanceBetweenPoints(newPoint, center);
+        std::cout << "currDistance = " << currDistance << std::endl;
     }
+
+    std::vector<cv::Point> newArcSegment = std::move(arcSegment);
+    newArcSegment.emplace_back(newPoint);
+
+    drawArcSegment(newArcSegment, newArcSegment[newArcSegment.size() - 1], center);
 }
 
 
