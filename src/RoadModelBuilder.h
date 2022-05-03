@@ -63,7 +63,7 @@ private:
 
     static double calculateRadiusOfTheArcUsingContour(const std::vector<cv::Point> &arcSegment);
 
-    static void
+    static bool
     checkingForStartOfAnotherContour(RoadModelTracker &modelTracker, bool isRightContour, const cv::Point &prevPoint,
                                      const cv::Point &currPoint,
                                      std::vector<cv::Point> &arcSegment, int MIN_ARC_SEGMENT_SIZE,

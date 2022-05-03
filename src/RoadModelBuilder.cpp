@@ -203,10 +203,10 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     currSumOfArcSegmentCurvatures = 0;
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-    modelTracker.getRoadModelPointer()->drawModelPoints(drawing);
+    modelTracker.getRoadModelPointer()->drawModel(drawing);
     std::cout << "arcSegment added" << std::endl;
-    cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(0);
 
     return true;
 }
@@ -256,9 +256,22 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         std::cout << "\tarcSegment.size() = " << arcSegment.size() << std::endl;
         std::cout << "\tcurr curvature = " << contourCurvature[i] << std::endl;
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
-        checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
-                                         MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
-                                         MIN_LINE_SEGMENT_SIZE);
+        //TODO
+        if (checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
+                                             MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
+                                             MIN_LINE_SEGMENT_SIZE))
+        {
+            prevContourPoint = contour[0];
+            prevCurvature = 0;
+            lineSegment.emplace_back(contour[i]);
+
+            std::cout << i << std::endl;
+            std::cout << "\tlineSegment.size() = " << lineSegment.size() << std::endl;
+            std::cout << "\tarcSegment.size() = " << arcSegment.size() << std::endl;
+            std::cout << "\tcurr curvature = " << contourCurvature[i] << std::endl;
+
+            continue;
+        }
 
         drawContourPoints(drawing, contour[i], contourCurvature[i], CURVATURE_THRESHOLD);
 
@@ -428,24 +441,24 @@ cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, double radiu
     const cv::Point directionalVector(center.x - lastPoint.x, center.y - lastPoint.y);
 
     double t = 0;
-    double currDistance = Utils::distanceBetweenPoints(lastPoint, center);
-    //std::cout << "currDistance = " << currDistance << std::endl;
+    double currDistanceError = std::abs(Utils::distanceBetweenPoints(lastPoint, center) - radius);
+    std::cout << "currDistanceError = " << currDistanceError << std::endl;
 
     cv::Point newPoint;
-    while (std::abs(currDistance - radius) > DISTANCE_DELTA)
+    while (currDistanceError > DISTANCE_DELTA)
     {
         t += 0.01;
 
         newPoint.x = directionalVector.x * t + lastPoint.x;
         newPoint.y = directionalVector.y * t + lastPoint.y;
-        currDistance = Utils::distanceBetweenPoints(newPoint, center);
-        std::cout << "currDistance = " << currDistance << std::endl;
+        currDistanceError = std::abs(Utils::distanceBetweenPoints(newPoint, center) - radius);
+        std::cout << "currDistanceError = " << currDistanceError << std::endl;
     }
 
     std::vector<cv::Point> newArcSegment = std::move(arcSegment);
     newArcSegment.emplace_back(newPoint);
 
-    drawArcSegment(newArcSegment, newArcSegment[newArcSegment.size() - 1], center);
+    //drawArcSegment(newArcSegment, newArcSegment[newArcSegment.size() - 1], center);
 }
 
 
@@ -622,10 +635,10 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
     lineSegment.clear();
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
-    modelTracker.getRoadModelPointer()->drawModelPoints(drawing);
+    modelTracker.getRoadModelPointer()->drawModel(drawing);
     std::cout << "lineSegment added" << std::endl;
-    cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(0);
 }
 
 void
@@ -709,7 +722,7 @@ double RoadModelBuilder::calculateRadiusOfTheArcUsingContour(const std::vector<c
     return R;
 }
 
-void RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelTracker, bool isRightContour,
+bool RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelTracker, bool isRightContour,
                                                         const cv::Point &prevPoint,
                                                         const cv::Point &currPoint,
                                                         std::vector<cv::Point> &arcSegment,
@@ -738,5 +751,7 @@ void RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelT
                 }
             }
         }
+        return true;
     }
+    return false;
 }
