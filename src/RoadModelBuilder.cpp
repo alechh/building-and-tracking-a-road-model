@@ -190,6 +190,11 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
         return false;
     }
 
+    if (radiusOfTheCircle > 5000)
+    {
+        return false;
+    }
+
     if (isRightContour)
     {
         modelTracker.trackRightSide(CircularArc(center, radiusOfTheCircle, startAngle, endAngle, arcSegment));
@@ -221,8 +226,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-//    cv::imshow("contour", drawing);
-//    cv::waitKey(1);
+    cv::imshow("contour", drawing);
+    cv::waitKey(1);
 }
 
 
@@ -252,7 +257,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
     for (int i = 0; i < contour.size(); ++i)
     {
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
-        //TODO
         if (checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
                                              MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
                                              MIN_LINE_SEGMENT_SIZE))
@@ -426,34 +430,49 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
 
 cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, const double radius, const cv::Point &center)
 {
-    const double DISTANCE_DELTA = 1;
-    const cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
-    cv::Point directionalVector(center.x - lastPoint.x, - (center.y - lastPoint.y));
+    const int MAX_VALUE = 5000;
+    if (std::abs(center.x) > MAX_VALUE || std::abs(center.y) > MAX_VALUE)
+    {
+        throw std::string("Error in getLastArcPoint: center point isn't correct");
+    }
 
-    double t = 0;
+    const double DISTANCE_DELTA = 3;
+    const cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
+
     double currDistance = Utils::distanceBetweenPoints(lastPoint, center);
     if (currDistance <= radius)
     {
         return lastPoint;
     }
 
+    cv::Point directionalVector(center.x - lastPoint.x, - (center.y - lastPoint.y));
+
     double currDistanceError = std::abs(Utils::distanceBetweenPoints(lastPoint, center) - radius);
-    std::cout << "currDistanceError = " << currDistanceError << std::endl;
+    std::cout << "currDistanceError (lastPoint) = " << currDistanceError << std::endl;
 
-    cv::Point newPoint = lastPoint;
-    while (currDistanceError > DISTANCE_DELTA)
-    {
-        t += 0.01;
+    double t = 0;
 
-        newPoint.x = directionalVector.x * t + lastPoint.x;
-        newPoint.y = directionalVector.y * t + lastPoint.y;
-        currDistanceError = std::abs(Utils::distanceBetweenPoints(newPoint, center) - radius);
+    //TODO check it
+    t = 1 - (radius - sqrt(directionalVector.x * directionalVector.x + directionalVector.y * directionalVector.y));
+    cv::Point newPoint(directionalVector.x * t + lastPoint.x, directionalVector.y * t + lastPoint.y);
 
-        std::cout << "currDistanceError = " << currDistanceError << std::endl;
-    }
+    currDistanceError = std::abs(Utils::distanceBetweenPoints(newPoint, center) - radius);
+    std::cout << "currDistanceError (newPoint) = " << currDistanceError << std::endl;
 
-    std::vector<cv::Point> newArcSegment = std::move(arcSegment);
-    newArcSegment.emplace_back(newPoint);
+//    cv::Point newPoint = lastPoint;
+//    while (currDistanceError > DISTANCE_DELTA)
+//    {
+//        t += 0.01;
+//
+//        newPoint.x = directionalVector.x * t + lastPoint.x;
+//        newPoint.y = directionalVector.y * t + lastPoint.y;
+//        currDistanceError = std::abs(Utils::distanceBetweenPoints(newPoint, center) - radius);
+//
+//        std::cout << "currDistanceError = " << currDistanceError << std::endl;
+//    }
+
+//    std::vector<cv::Point> newArcSegment = std::move(arcSegment);
+//    newArcSegment.emplace_back(newPoint);
 
     return newPoint;
     //drawArcSegment(newArcSegment, newArcSegment[newArcSegment.size() - 1], center);
