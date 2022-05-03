@@ -221,8 +221,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-    cv::imshow("contour", drawing);
-    cv::waitKey(25);
+//    cv::imshow("contour", drawing);
+//    cv::waitKey(1);
 }
 
 
@@ -251,10 +251,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     for (int i = 0; i < contour.size(); ++i)
     {
-        std::cout << i << std::endl;
-        std::cout << "\tlineSegment.size() = " << lineSegment.size() << std::endl;
-        std::cout << "\tarcSegment.size() = " << arcSegment.size() << std::endl;
-        std::cout << "\tcurr curvature = " << contourCurvature[i] << std::endl;
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         //TODO
         if (checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
@@ -264,12 +260,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             prevContourPoint = contour[0];
             prevCurvature = 0;
             lineSegment.emplace_back(contour[i]);
-
-            std::cout << i << std::endl;
-            std::cout << "\tlineSegment.size() = " << lineSegment.size() << std::endl;
-            std::cout << "\tarcSegment.size() = " << arcSegment.size() << std::endl;
-            std::cout << "\tcurr curvature = " << contourCurvature[i] << std::endl;
-
             continue;
         }
 
@@ -434,17 +424,23 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
 }
 
 
-cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, double radius, const cv::Point &center)
+cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, const double radius, const cv::Point &center)
 {
     const double DISTANCE_DELTA = 1;
     const cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
-    const cv::Point directionalVector(center.x - lastPoint.x, center.y - lastPoint.y);
+    cv::Point directionalVector(center.x - lastPoint.x, - (center.y - lastPoint.y));
 
     double t = 0;
+    double currDistance = Utils::distanceBetweenPoints(lastPoint, center);
+    if (currDistance <= radius)
+    {
+        return lastPoint;
+    }
+
     double currDistanceError = std::abs(Utils::distanceBetweenPoints(lastPoint, center) - radius);
     std::cout << "currDistanceError = " << currDistanceError << std::endl;
 
-    cv::Point newPoint;
+    cv::Point newPoint = lastPoint;
     while (currDistanceError > DISTANCE_DELTA)
     {
         t += 0.01;
@@ -452,12 +448,14 @@ cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, double radiu
         newPoint.x = directionalVector.x * t + lastPoint.x;
         newPoint.y = directionalVector.y * t + lastPoint.y;
         currDistanceError = std::abs(Utils::distanceBetweenPoints(newPoint, center) - radius);
+
         std::cout << "currDistanceError = " << currDistanceError << std::endl;
     }
 
     std::vector<cv::Point> newArcSegment = std::move(arcSegment);
     newArcSegment.emplace_back(newPoint);
 
+    return newPoint;
     //drawArcSegment(newArcSegment, newArcSegment[newArcSegment.size() - 1], center);
 }
 
@@ -488,10 +486,14 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
     else // если сегмент находится в нижней части плоскости
     {
         int indexOfLastArcSegment = segment.size() - 1;
-        //cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
-        //FIXME
-        cv::Point lastSegmentPoint = getLastArcPoint(segment, radiusOfTheCircle, center);
+        const int DELTA = 5;
+        cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
 
+        double distanceError = std::abs(Utils::distanceBetweenPoints(lastSegmentPoint, center) - radiusOfTheCircle);
+        if (distanceError > DELTA)
+        {
+            lastSegmentPoint = getLastArcPoint(segment, radiusOfTheCircle, center);
+        }
         double distR = Utils::distanceBetweenPoints(lastSegmentPoint, center);
 
         double shiftAngle = calculateAngleShiftLower(lastSegmentPoint, center, radiusOfTheCircle);
