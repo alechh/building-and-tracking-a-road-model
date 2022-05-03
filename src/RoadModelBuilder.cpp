@@ -10,6 +10,67 @@
 #include "Utils.h"
 #include "RoadModelTracker.h"
 
+void drawArcSegment(const std::vector<cv::Point> &arcSegment, const cv::Point &center)
+{
+    cv::Mat segmentPicture(800, 1500, 16, cv::Scalar(0, 0, 0));
+    for (const auto &point: arcSegment)
+    {
+        cv::circle(segmentPicture, point, 1, cv::Scalar(255, 0, 0));
+    }
+
+    cv::circle(segmentPicture, center, 1, cv::Scalar(255, 255, 0));
+
+    cv::imshow("arcSegment", segmentPicture);
+    cv::waitKey(0);
+}
+
+/**
+ * Calculating the center of the circle in the following way:
+ * 1. Calculation of the the midpoints of the sides of the triangle
+ * 2. Calculation of the coefficients of the mid-perpendiculars
+ * 3. Calculating the point of their intersection
+ * @param segment
+ * @param radius
+ * @return
+ */
+cv::Point calculateCenterOfTheArc2(const std::vector<cv::Point> &segment, double radius)
+{
+    const cv::Point &p1 = segment[0];
+    const cv::Point &p2 = segment[segment.size() - 1];
+    const cv::Point &middleSegment = segment[segment.size() / 2];
+
+    std::vector<double> perpendicular1(3), perpendicular2(3);
+
+    cv::Point middle1 = Utils::calculateMidpoint(p1, middleSegment);
+    cv::Point middle2 = Utils::calculateMidpoint(p2, middleSegment);
+
+    std::vector<double> sideOfTriangle1(3);
+    sideOfTriangle1[0] = middleSegment.y - p1.y;
+    sideOfTriangle1[1] = -(-middleSegment.x + p1.x);
+    sideOfTriangle1[2] = p1.y * (middleSegment.x - p1.x) - p1.x * (middleSegment.y - p1.y);
+
+    std::vector<double> sideOfTriangle2(3);
+    sideOfTriangle2[0] = middleSegment.y - p2.y;
+    sideOfTriangle2[1] = -(-middleSegment.x + p2.x);
+    sideOfTriangle2[2] = p2.y * (middleSegment.x - p2.x) - p2.x * (middleSegment.y - p2.y);
+
+    perpendicular1 = Utils::calculateCoefficientsOfThePerpendicularLine(sideOfTriangle1, middle1);
+    perpendicular2 = Utils::calculateCoefficientsOfThePerpendicularLine(sideOfTriangle2, middle2);
+
+    perpendicular1[0] /= perpendicular1[1];
+    perpendicular1[2] /= perpendicular1[1];
+    perpendicular1[1] = 1;
+
+    perpendicular2[0] /= perpendicular2[1];
+    perpendicular2[2] /= perpendicular2[1];
+    perpendicular2[1] = 1;
+
+    double x = (perpendicular2[2] - perpendicular1[2]) / (perpendicular1[0] - perpendicular2[0]);
+    double y = -(-perpendicular1[0] * x - perpendicular1[2]);
+
+    return cv::Point(x, y);
+}
+
 
 /**
  * A circle center search function that describes an arc segment.
@@ -21,12 +82,10 @@
  */
 cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R)
 {
-    cv::Point center;
-
     if (segment.size() < 3)
     {
         //std::cerr << "cv::Point calculateCenterOfTheArc -- segment.size() < 3 (=" << segment.size() << ")" << std::endl;
-        return center;
+        return cv::Point();
     }
 
     int pMinusIndex, pPlusIndex;
@@ -34,9 +93,11 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
     double h;
     calculatePPlusAndPMinus(segment, pPlus, pMinus, pPlusIndex, pMinusIndex, centerPoint, h);
 
+    //drawArcSegment(segment, centerPoint, pPlus, pMinus);
+
     cv::Point2f firstDerivative = Utils::calculateFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
 
-    // TODO Возможно, есть более красивый и правильные признак того, что производную надо взять с минусом
+    // TODO Возможно, есть более красивый и правильный признак того, что производную надо взять с минусом
     if (pPlus.y > pMinus.y)
     {
         firstDerivative.x = -firstDerivative.x;
@@ -59,7 +120,7 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
     std::tuple<cv::Point, cv::Point> candidatesForCenter = Utils::calculatingPointsOfStraightLineAtCertainDistanceFromGivenPoint(
             A, -B, C, R, centerPoint);
 
-    center = Utils::chooseAmongTwoCandidatesForCenter(segment, candidatesForCenter);
+    cv::Point center = Utils::chooseAmongTwoCandidatesForCenter(segment, candidatesForCenter);
     //return (begin + end) / 2;
     return center;
 }
@@ -67,7 +128,7 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
 void drawArcSegment(const std::vector<cv::Point> &arcSegment, const cv::Point &endPoint, const cv::Point &center)
 {
     cv::Mat segmentPicture(800, 1500, 16, cv::Scalar(0, 0, 0));
-    for (const auto &point : arcSegment)
+    for (const auto &point: arcSegment)
     {
         if (point == arcSegment[0] || point == endPoint)
         {
@@ -105,7 +166,10 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     //double radiusOfTheCircle = 1.0 / curvature;
     const double radiusOfTheCircle = calculateRadiusOfTheArcUsingContour(arcSegment);
 
-    const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
+    //const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
+    const cv::Point center = calculateCenterOfTheArc2(arcSegment, radiusOfTheCircle);
+
+    //drawArcSegment(arcSegment, center);
 
     double startAngle, endAngle;
 
@@ -365,6 +429,7 @@ cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, double radiu
 
     double t = 0;
     double currDistance = Utils::distanceBetweenPoints(lastPoint, center);
+    //std::cout << "currDistance = " << currDistance << std::endl;
 
     cv::Point newPoint;
     while (std::abs(currDistance - radius) > DISTANCE_DELTA)
