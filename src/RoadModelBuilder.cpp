@@ -270,16 +270,18 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         {
             addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
                                          lineSegment, isRightContour);
-            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature, contour[i]);
+            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
+                                               contour[i]);
             continue;
         }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
-        if (checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
-                                             MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
-                                             MIN_LINE_SEGMENT_SIZE))
+        if (checkingForStartOfAnotherContour(prevContourPoint, contour[i]))
         {
-            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature, contour[i]);
+            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+                                         lineSegment, isRightContour);
+            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
+                                               contour[i]);
             continue;
         }
 
@@ -754,22 +756,15 @@ double RoadModelBuilder::calculateRadiusOfTheArcUsingContour(const std::vector<c
     return R;
 }
 
-bool RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelTracker, bool isRightContour,
-                                                        const cv::Point &prevPoint,
-                                                        const cv::Point &currPoint,
-                                                        std::vector<cv::Point> &arcSegment,
-                                                        const int MIN_ARC_SEGMENT_SIZE,
-                                                        double &currSumOfArcSegmentCurvatures,
-                                                        std::vector<cv::Point> &lineSegment,
-                                                        const int MIN_LINE_SEGMENT_SIZE)
+bool RoadModelBuilder::checkingForStartOfAnotherContour(const cv::Point &prevPoint, const cv::Point &currPoint)
 {
     const int CONTOUR_POINTS_DELTA = 100;
 
     if (std::abs(currPoint.x - prevPoint.x) > CONTOUR_POINTS_DELTA ||
         std::abs(currPoint.y - prevPoint.y) > CONTOUR_POINTS_DELTA)
     {
-        addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
-                                     lineSegment, isRightContour);
+//        addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+//                                     lineSegment, isRightContour);
         return true;
     }
     return false;
