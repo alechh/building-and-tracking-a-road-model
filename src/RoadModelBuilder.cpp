@@ -190,7 +190,8 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
         return false;
     }
 
-    if (radiusOfTheCircle > 5000)
+    const int MAX_VALUE = 5000;
+    if (std::abs(center.x) > MAX_VALUE || std::abs(center.y) > MAX_VALUE || radiusOfTheCircle > MAX_VALUE)
     {
         return false;
     }
@@ -209,7 +210,7 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
-    std::cout << "arcSegment added" << std::endl;
+    //std::cout << "arcSegment added" << std::endl;
 //    cv::imshow("drawing", drawing);
 //    cv::waitKey(0);
 
@@ -251,11 +252,16 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     double prevCurvature = contourCurvature[0]; // Это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
     cv::Point prevContourPoint = contour[0];
+    cv::Point prevPrevContourPoint = contour[0];
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
 
-    for (int i = 0; i < contour.size(); ++i)
+    for (int i = 0; i < contour.size() / 2; ++i)
     {
+//        const cv::Point directionalVector(contour[i].x - prevPrevContourPoint.x, contour[i].y - prevPrevContourPoint.y);
+//        std::cout << "directionalVector = " << directionalVector << std::endl;
+//        cv::waitKey(0);
+
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
                                              MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
@@ -356,6 +362,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             }
         }
         prevCurvature = contourCurvature[i];
+        prevPrevContourPoint = prevContourPoint;
         prevContourPoint = contour[i];
     }
 
@@ -430,12 +437,6 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
 
 cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, const double radius, const cv::Point &center)
 {
-    const int MAX_VALUE = 5000;
-    if (std::abs(center.x) > MAX_VALUE || std::abs(center.y) > MAX_VALUE)
-    {
-        throw std::string("Error in getLastArcPoint: center point isn't correct");
-    }
-
     const double DISTANCE_DELTA = 3;
     const cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
 
@@ -657,7 +658,7 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
-    std::cout << "lineSegment added" << std::endl;
+    //std::cout << "lineSegment added" << std::endl;
 //    cv::imshow("drawing", drawing);
 //    cv::waitKey(0);
 }
