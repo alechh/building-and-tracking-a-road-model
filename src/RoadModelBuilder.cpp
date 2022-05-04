@@ -268,21 +268,8 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 //        }
         if (checkingChangeOfContourDirection2(prevPrevContourPoint, prevContourPoint, contour[i]))
         {
-            if (!arcSegment.empty())
-            {
-                if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
-                {
-                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
-                }
-                else
-                {
-                    if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
-                    {
-                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
-                        currSumOfArcSegmentCurvatures = 0;
-                    }
-                }
-            }
+            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+                                         lineSegment, isRightContour);
             lineSegment.emplace_back(contour[i]);
             prevPrevContourPoint = prevContourPoint;
             prevContourPoint = contour[i];
@@ -474,7 +461,7 @@ cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, const double
         return lastPoint;
     }
 
-    cv::Point directionalVector(center.x - lastPoint.x, - (center.y - lastPoint.y));
+    cv::Point directionalVector(center.x - lastPoint.x, -(center.y - lastPoint.y));
 
     double currDistanceError = std::abs(Utils::distanceBetweenPoints(lastPoint, center) - radius);
     std::cout << "currDistanceError (lastPoint) = " << currDistanceError << std::endl;
@@ -786,41 +773,30 @@ bool RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelT
     if (std::abs(currPoint.x - prevPoint.x) > CONTOUR_POINTS_DELTA ||
         std::abs(currPoint.y - prevPoint.y) > CONTOUR_POINTS_DELTA)
     {
-        if (!arcSegment.empty())
-        {
-            if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
-            {
-                addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
-            }
-            else
-            {
-                if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
-                {
-                    addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
-                    currSumOfArcSegmentCurvatures = 0;
-                }
-            }
-        }
+        addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+                                     lineSegment, isRightContour);
         return true;
     }
     return false;
 }
 
-bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint, const cv::Point &currPoint)
+bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint,
+                                                         const cv::Point &currPoint)
 {
     double A = Utils::distanceBetweenPoints(prevPrevPoint, prevPoint);
     double B = Utils::distanceBetweenPoints(prevPoint, currPoint);
     double C = Utils::distanceBetweenPoints(currPoint, prevPrevPoint);
-
-    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
-    double angle;
 
     if (A * B == 0)
     {
         std::cerr << "A or B = 0" << std::endl;
         return false;
     }
-    else if (cosAngle > 1 || cosAngle < -1)
+
+    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
+    double angle;
+
+    if (cosAngle > 1 || cosAngle < -1)
     {
         std::cerr << "cos = " << cosAngle << std::endl;
         return false;
@@ -829,19 +805,19 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPo
     {
         angle = acos(cosAngle);
         angle *= 180 / CV_PI;
-        std::cout << "angle = " << angle << std::endl;
-    }
+        //std::cout << "angle = " << angle << std::endl;
 
-    if (angle == 0)
-    {
-        return false;
+        if (angle == 0)
+        {
+            return false;
+        }
     }
 
     const double ANGLE_THRESHOLD = 20;
     if (angle < ANGLE_THRESHOLD)
     {
         std::cout << "changed" << std::endl;
-        //return true;
+        return true;
     }
     return false;
 }
@@ -883,4 +859,26 @@ bool RoadModelBuilder::checkingChangeOfContourDirection(const cv::Point &prevPre
         prevDirectionalVector = directionalVector;
     }
     return changed;
+}
+
+void RoadModelBuilder::addArcAndLineSegmentsToModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
+                                                    double &currSumOfArcSegmentCurvatures,
+                                                    const int MIN_ARC_SEGMENT_SIZE,
+                                                    std::vector<cv::Point> &lineSegment, const bool isRightContour)
+{
+    if (!arcSegment.empty())
+    {
+        if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
+        {
+            addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+        }
+        else
+        {
+            if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+            {
+                addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                currSumOfArcSegmentCurvatures = 0;
+            }
+        }
+    }
 }
