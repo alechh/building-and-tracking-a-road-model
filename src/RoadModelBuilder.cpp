@@ -228,7 +228,7 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
     cv::imshow("contour", drawing);
-    cv::waitKey(1);
+    cv::waitKey(100);
 }
 
 
@@ -258,9 +258,37 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     for (int i = 0; i < contour.size() / 2; ++i)
     {
-//        const cv::Point directionalVector(contour[i].x - prevPrevContourPoint.x, contour[i].y - prevPrevContourPoint.y);
-//        std::cout << "directionalVector = " << directionalVector << std::endl;
-//        cv::waitKey(0);
+        // TODO Первая точка всегда должна быть прямой
+//        if (lineSegment.empty() && arcSegment.empty())
+//        {
+//            lineSegment.emplace_back(contour[i]);
+//            prevContourPoint = contour[i];
+//            prevCurvature = 0;
+//            continue;
+//        }
+        if (checkingChangeOfContourDirection2(prevPrevContourPoint, prevContourPoint, contour[i]))
+        {
+            if (!arcSegment.empty())
+            {
+                if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
+                {
+                    addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+                }
+                else
+                {
+                    if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
+                    {
+                        addLineSegmentToModel(modelTracker, arcSegment, isRightContour);
+                        currSumOfArcSegmentCurvatures = 0;
+                    }
+                }
+            }
+            lineSegment.emplace_back(contour[i]);
+            prevPrevContourPoint = prevContourPoint;
+            prevContourPoint = contour[i];
+            prevCurvature = 0;
+            continue;
+        }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (checkingForStartOfAnotherContour(modelTracker, isRightContour, prevContourPoint, contour[i], arcSegment,
@@ -776,4 +804,83 @@ bool RoadModelBuilder::checkingForStartOfAnotherContour(RoadModelTracker &modelT
         return true;
     }
     return false;
+}
+
+bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint, const cv::Point &currPoint)
+{
+    double A = Utils::distanceBetweenPoints(prevPrevPoint, prevPoint);
+    double B = Utils::distanceBetweenPoints(prevPoint, currPoint);
+    double C = Utils::distanceBetweenPoints(currPoint, prevPrevPoint);
+
+    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
+    double angle;
+
+    if (A * B == 0)
+    {
+        std::cerr << "A or B = 0" << std::endl;
+        return false;
+    }
+    else if (cosAngle > 1 || cosAngle < -1)
+    {
+        std::cerr << "cos = " << cosAngle << std::endl;
+        return false;
+    }
+    else
+    {
+        angle = acos(cosAngle);
+        angle *= 180 / CV_PI;
+        std::cout << "angle = " << angle << std::endl;
+    }
+
+    if (angle == 0)
+    {
+        return false;
+    }
+
+    const double ANGLE_THRESHOLD = 20;
+    if (angle < ANGLE_THRESHOLD)
+    {
+        std::cout << "changed" << std::endl;
+        //return true;
+    }
+    return false;
+}
+
+bool RoadModelBuilder::checkingChangeOfContourDirection(const cv::Point &prevPrevPoint, const cv::Point &currPoint)
+{
+    bool changed = false;
+
+    static cv::Point prevDirectionalVector;
+    cv::Point directionalVector(currPoint.x - prevPrevPoint.x, currPoint.y - prevPrevPoint.y);
+
+    cv::Point change = prevDirectionalVector + directionalVector;
+
+    std::cout << "change" << change << std::endl;
+//    if (cv::waitKey(25) == 107)
+//    {
+//        cv::waitKey(0);
+//    }
+
+    if (std::abs(change.y - 1) <= 1 && std::abs(change.x - 1) <= 1 && prevDirectionalVector != cv::Point())
+    {
+        std::cout << "direction changed (not sights)" << std::endl;
+//        cv::waitKey(0);
+
+        prevDirectionalVector = cv::Point();
+        changed = true;
+    }
+    else if (directionalVector.x * prevDirectionalVector.x < 0 || directionalVector.y * prevDirectionalVector.y < 0)
+    {
+        std::cout << "direction changed (sights)" << std::endl;
+//        cv::waitKey(0);
+
+        prevDirectionalVector = cv::Point();
+
+        changed = true;
+    }
+    else
+    {
+        prevDirectionalVector = directionalVector;
+    }
+    return changed;
 }
