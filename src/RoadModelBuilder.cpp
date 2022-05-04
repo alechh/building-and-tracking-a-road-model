@@ -270,10 +270,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         {
             addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
                                          lineSegment, isRightContour);
-            lineSegment.emplace_back(contour[i]);
-            prevPrevContourPoint = prevContourPoint;
-            prevContourPoint = contour[i];
-            prevCurvature = 0;
+            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature, contour[i]);
             continue;
         }
 
@@ -282,9 +279,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                                              MIN_ARC_SEGMENT_SIZE, currSumOfArcSegmentCurvatures, lineSegment,
                                              MIN_LINE_SEGMENT_SIZE))
         {
-            prevContourPoint = contour[0];
-            prevCurvature = 0;
-            lineSegment.emplace_back(contour[i]);
+            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature, contour[i]);
             continue;
         }
 
@@ -881,4 +876,14 @@ void RoadModelBuilder::addArcAndLineSegmentsToModel(RoadModelTracker &modelTrack
             }
         }
     }
+}
+
+void RoadModelBuilder::setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment,
+                                                          cv::Point &prevPrevContourPoint, cv::Point &prevContourPoint,
+                                                          double &prevCurvature, const cv::Point &currPoint)
+{
+    lineSegment.emplace_back(currPoint);
+    prevPrevContourPoint = prevContourPoint;
+    prevContourPoint = currPoint;
+    prevCurvature = 0;
 }

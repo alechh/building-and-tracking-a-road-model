@@ -77,7 +77,11 @@ private:
 
     static void addArcAndLineSegmentsToModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
                                              double &currSumOfArcSegmentCurvatures, int MIN_ARC_SEGMENT_SIZE,
-                                             std::vector<cv::Point> &lineSegment, bool isRightContour)
+                                             std::vector<cv::Point> &lineSegment, bool isRightContour);
+
+    static void setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment, cv::Point &prevPrevContourPoint,
+                                                   cv::Point &prevContourPoint, double &prevCurvature,
+                                                   const cv::Point &currPoint);
 };
 
 
