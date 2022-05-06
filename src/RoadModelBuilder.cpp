@@ -217,6 +217,7 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     return true;
 }
 
+
 void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvature, const double CURVATURE_THRESHOLD)
 {
     if (curvature <= CURVATURE_THRESHOLD)
@@ -227,8 +228,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-    cv::imshow("contour", drawing);
-    cv::waitKey(100);
+//    cv::imshow("contour", drawing);
+//    cv::waitKey(1);
 }
 
 
@@ -266,14 +267,16 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 //            prevCurvature = 0;
 //            continue;
 //        }
-        if (checkingChangeOfContourDirection2(prevPrevContourPoint, prevContourPoint, contour[i]))
-        {
-            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
-                                         lineSegment, isRightContour);
-            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
-                                               contour[i]);
-            continue;
-        }
+
+        //FIXME
+//        if (checkingChangeOfContourDirection2(prevPrevContourPoint, prevContourPoint, contour[i]))
+//        {
+//            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+//                                         lineSegment, isRightContour);
+//            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
+//                                               contour[i]);
+//            continue;
+//        }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (checkingForStartOfAnotherContour(prevContourPoint, contour[i]))
@@ -777,9 +780,11 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPo
     double B = Utils::distanceBetweenPoints(prevPoint, currPoint);
     double C = Utils::distanceBetweenPoints(currPoint, prevPrevPoint);
 
-    if (A * B == 0)
+    static double prevAngle = 0;
+
+    if (A * B * C == 0)
     {
-        std::cerr << "A or B = 0" << std::endl;
+        //std::cerr << "A or B or C = 0" << std::endl;
         return false;
     }
 
@@ -788,7 +793,7 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPo
 
     if (cosAngle > 1 || cosAngle < -1)
     {
-        std::cerr << "cos = " << cosAngle << std::endl;
+        //std::cerr << "cos = " << cosAngle << std::endl;
         return false;
     }
     else
@@ -799,16 +804,20 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPo
 
         if (angle == 0)
         {
+            prevAngle = angle;
             return false;
         }
     }
 
-    const double ANGLE_THRESHOLD = 20;
-    if (angle < ANGLE_THRESHOLD)
+    const double ANGLE_THRESHOLD = 90;
+    const double DIFFERENCE_BETWEEN_ANGLES = 20;
+
+    if (std::abs(prevAngle - angle) < DIFFERENCE_BETWEEN_ANGLES)
     {
-        std::cout << "changed" << std::endl;
         return true;
     }
+
+    prevAngle = angle;
     return false;
 }
 
@@ -881,4 +890,29 @@ void RoadModelBuilder::setValuesForFirstPointOfTheContour(std::vector<cv::Point>
     prevPrevContourPoint = prevContourPoint;
     prevContourPoint = currPoint;
     prevCurvature = 0;
+}
+
+double RoadModelBuilder::calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv::Point &prevPoint,
+                                                  const cv::Point &currPoint)
+{
+    double A = Utils::distanceBetweenPoints(prevPrevPoint, prevPoint);
+    double B = Utils::distanceBetweenPoints(prevPoint, currPoint);
+    double C = Utils::distanceBetweenPoints(currPoint, prevPrevPoint);
+
+    if (A * B * C == 0)
+    {
+        //std::cerr << "A or B or C = 0" << std::endl;
+        return 0;
+    }
+
+    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
+    double angle = 0;
+
+    if (-1 <= cosAngle && cosAngle <= 1)
+    {
+        angle = acos(cosAngle);
+        angle *= 180 / CV_PI;
+        //std::cout << "angle = " << angle << std::endl;
+    }
+    return angle;
 }
