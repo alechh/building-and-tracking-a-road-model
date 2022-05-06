@@ -776,7 +776,7 @@ bool RoadModelBuilder::checkingForStartOfAnotherContour(const cv::Point &prevPoi
 bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint,
                                                          const cv::Point &currPoint)
 {
-    double angle = calculateAngleOfTriangle(prevPrevPoint, prevPoint, currPoint);
+    double angle = Utils::calculateAngleOfTriangle(prevPrevPoint, prevPoint, currPoint);
 
     const double ANGLE_THRESHOLD = 90;
     const double DIFFERENCE_BETWEEN_ANGLES = 20;
@@ -860,27 +860,3 @@ void RoadModelBuilder::setValuesForFirstPointOfTheContour(std::vector<cv::Point>
     prevCurvature = 0;
 }
 
-double RoadModelBuilder::calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv::Point &prevPoint,
-                                                  const cv::Point &currPoint)
-{
-    double A = Utils::distanceBetweenPoints(prevPrevPoint, prevPoint);
-    double B = Utils::distanceBetweenPoints(prevPoint, currPoint);
-    double C = Utils::distanceBetweenPoints(currPoint, prevPrevPoint);
-
-    if (A * B * C == 0)
-    {
-        //std::cerr << "A or B or C = 0" << std::endl;
-        return 0;
-    }
-
-    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
-    double angle = 0;
-
-    if (-1 <= cosAngle && cosAngle <= 1)
-    {
-        angle = acos(cosAngle);
-        angle *= 180 / CV_PI;
-        //std::cout << "angle = " << angle << std::endl;
-    }
-    return angle;
-}

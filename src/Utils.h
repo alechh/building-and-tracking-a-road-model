@@ -10,6 +10,7 @@
 #include <opencv2/core/types.hpp>
 #include <opencv2/core/mat.hpp>
 #include "RoadModel.h"
+#include "RoadModelTracker.h"
 
 class Utils
 {
@@ -47,6 +48,9 @@ public:
     static void selectionOfPointsForTriangleDependingOnTheStep(cv::Point &prev, cv::Point &next,
                                                                const std::vector<cv::Point> &contour, int step,
                                                                int currIndex);
+
+    static double
+    calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv::Point &prevPoint, const cv::Point &currPoint);
 
 private:
     static int calculatingYThroughX(double x, double A, double B, double C);

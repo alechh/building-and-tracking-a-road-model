@@ -78,8 +78,6 @@ private:
                                                    cv::Point &prevContourPoint, double &prevCurvature,
                                                    const cv::Point &currPoint);
 
-    static double
-    calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv::Point &prevPoint, const cv::Point &currPoint);
 };
 
 
