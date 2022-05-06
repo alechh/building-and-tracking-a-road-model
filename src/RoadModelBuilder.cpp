@@ -776,48 +776,16 @@ bool RoadModelBuilder::checkingForStartOfAnotherContour(const cv::Point &prevPoi
 bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint,
                                                          const cv::Point &currPoint)
 {
-    double A = Utils::distanceBetweenPoints(prevPrevPoint, prevPoint);
-    double B = Utils::distanceBetweenPoints(prevPoint, currPoint);
-    double C = Utils::distanceBetweenPoints(currPoint, prevPrevPoint);
-
-    static double prevAngle = 0;
-
-    if (A * B * C == 0)
-    {
-        //std::cerr << "A or B or C = 0" << std::endl;
-        return false;
-    }
-
-    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
-    double angle;
-
-    if (cosAngle > 1 || cosAngle < -1)
-    {
-        //std::cerr << "cos = " << cosAngle << std::endl;
-        return false;
-    }
-    else
-    {
-        angle = acos(cosAngle);
-        angle *= 180 / CV_PI;
-        //std::cout << "angle = " << angle << std::endl;
-
-        if (angle == 0)
-        {
-            prevAngle = angle;
-            return false;
-        }
-    }
+    double angle = calculateAngleOfTriangle(prevPrevPoint, prevPoint, currPoint);
 
     const double ANGLE_THRESHOLD = 90;
     const double DIFFERENCE_BETWEEN_ANGLES = 20;
 
-    if (std::abs(prevAngle - angle) < DIFFERENCE_BETWEEN_ANGLES)
+    if (angle < ANGLE_THRESHOLD)
     {
         return true;
     }
 
-    prevAngle = angle;
     return false;
 }
 
