@@ -228,8 +228,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-//    cv::imshow("contour", drawing);
-//    cv::waitKey(1);
+    cv::imshow("contour", drawing);
+    cv::waitKey(25);
 }
 
 
@@ -254,11 +254,14 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
     double prevCurvature = contourCurvature[0]; // Это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
     cv::Point prevContourPoint = contour[0];
     cv::Point prevPrevContourPoint = contour[0];
+    cv::Point prev3ContourPoint = contour[0];
+    cv::Point prev4ContourPoint = contour[0];
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
 
     for (int i = 0; i < contour.size() / 2; ++i)
     {
+        std::cout << "i = " << i << "\tpoint = " << contour[i] << std::endl;
         // TODO Первая точка всегда должна быть прямой
 //        if (lineSegment.empty() && arcSegment.empty())
 //        {
@@ -269,20 +272,29 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 //        }
 
         //FIXME
-//        if (checkingChangeOfContourDirection2(prevPrevContourPoint, prevContourPoint, contour[i]))
-//        {
-//            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
-//                                         lineSegment, isRightContour);
-//            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
-//                                               contour[i]);
-//            continue;
-//        }
+
+        if (i > 3 && checkingChangeOfContourDirection2(contour[i - 4], contour[i-2], contour[i]))
+        {
+            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+                                         lineSegment, isRightContour);
+
+            prev4ContourPoint = prev3ContourPoint;
+            prev3ContourPoint = prevPrevContourPoint;
+
+            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
+                                               contour[i]);
+            continue;
+        }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (checkingForStartOfAnotherContour(prevContourPoint, contour[i]))
         {
             addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
                                          lineSegment, isRightContour);
+
+            prev4ContourPoint = prev3ContourPoint;
+            prev3ContourPoint = prevPrevContourPoint;
+
             setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
                                                contour[i]);
             continue;
@@ -377,6 +389,8 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             }
         }
         prevCurvature = contourCurvature[i];
+        prev4ContourPoint = prev3ContourPoint;
+        prev3ContourPoint = prevPrevContourPoint;
         prevPrevContourPoint = prevContourPoint;
         prevContourPoint = contour[i];
     }
@@ -773,16 +787,27 @@ bool RoadModelBuilder::checkingForStartOfAnotherContour(const cv::Point &prevPoi
     return false;
 }
 
-bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint,
+bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPrevPoint, const cv::Point &prevPoint,
                                                          const cv::Point &currPoint)
 {
     double angle = Utils::calculateAngleOfTriangle(prevPrevPoint, prevPoint, currPoint);
 
-    const double ANGLE_THRESHOLD = 90;
-    const double DIFFERENCE_BETWEEN_ANGLES = 20;
+    if (angle == 0)
+    {
+        return false;
+    }
+
+    std::cout << angle << std::endl;
+
+    const double ANGLE_THRESHOLD = 45;
 
     if (angle < ANGLE_THRESHOLD)
     {
+        std::cout << "angle changed" << std::endl;
+//        std::cout << "\t" <<prevPrevPoint << std::endl;
+//        std::cout << "\t" <<prevPoint << std::endl;
+//        std::cout << "\t" <<currPoint << std::endl;
+//        cv::waitKey(0);
         return true;
     }
 

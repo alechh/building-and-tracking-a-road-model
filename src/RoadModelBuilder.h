@@ -67,7 +67,7 @@ private:
 
     static bool checkingChangeOfContourDirection(const cv::Point &prevPrevPoint, const cv::Point &currPoint);
 
-    static bool checkingChangeOfContourDirection2(const cv::Point &prevPoint, const cv::Point &prevPrevPoint,
+    static bool checkingChangeOfContourDirection2(const cv::Point &prevPrevPoint, const cv::Point &prevPoint,
                                                   const cv::Point &currPoint);
 
     static void addArcAndLineSegmentsToModel(RoadModelTracker &modelTracker, std::vector<cv::Point> &arcSegment,
