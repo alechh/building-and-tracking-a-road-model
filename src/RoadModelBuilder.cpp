@@ -252,10 +252,10 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
     const double CURVATURE_THRESHOLD = 0.002; // Это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
 
     double prevCurvature = contourCurvature[0]; // Это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
-    cv::Point prevContourPoint = contour[0];
-    cv::Point prevPrevContourPoint = contour[0];
-    cv::Point prev3ContourPoint = contour[0];
-    cv::Point prev4ContourPoint = contour[0];
+//    cv::Point prevContourPoint = contour[0];
+//    cv::Point prevPrevContourPoint = contour[0];
+//    cv::Point prev3ContourPoint = contour[0];
+//    cv::Point prev4ContourPoint = contour[0];
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
 
@@ -286,25 +286,19 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
                                          lineSegment, isRightContour);
 
-            prev4ContourPoint = prev3ContourPoint;
-            prev3ContourPoint = prevPrevContourPoint;
 
-            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
-                                               contour[i]);
+            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature,contour[i]);
             continue;
         }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
-        if (checkingForStartOfAnotherContour(prevContourPoint, contour[i]))
+        if (i > 0 && checkingForStartOfAnotherContour(contour[i - 1], contour[i]))
         {
             addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
                                          lineSegment, isRightContour);
 
-            prev4ContourPoint = prev3ContourPoint;
-            prev3ContourPoint = prevPrevContourPoint;
 
-            setValuesForFirstPointOfTheContour(lineSegment, prevPrevContourPoint, prevContourPoint, prevCurvature,
-                                               contour[i]);
+            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature, contour[i]);
             continue;
         }
 
@@ -397,10 +391,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
             }
         }
         prevCurvature = contourCurvature[i];
-        prev4ContourPoint = prev3ContourPoint;
-        prev3ContourPoint = prevPrevContourPoint;
-        prevPrevContourPoint = prevContourPoint;
-        prevContourPoint = contour[i];
     }
 
     std::cout << "equalPoints : " << countEqualPoints << std::endl;
@@ -897,12 +887,9 @@ void RoadModelBuilder::addArcAndLineSegmentsToModel(RoadModelTracker &modelTrack
 }
 
 void RoadModelBuilder::setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment,
-                                                          cv::Point &prevPrevContourPoint, cv::Point &prevContourPoint,
                                                           double &prevCurvature, const cv::Point &currPoint)
 {
     lineSegment.emplace_back(currPoint);
-    prevPrevContourPoint = prevContourPoint;
-    prevContourPoint = currPoint;
     prevCurvature = 0;
 }
 

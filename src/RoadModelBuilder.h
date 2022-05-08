@@ -74,8 +74,7 @@ private:
                                              double &currSumOfArcSegmentCurvatures, int MIN_ARC_SEGMENT_SIZE,
                                              std::vector<cv::Point> &lineSegment, bool isRightContour);
 
-    static void setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment, cv::Point &prevPrevContourPoint,
-                                                   cv::Point &prevContourPoint, double &prevCurvature,
+    static void setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment, double &prevCurvature,
                                                    const cv::Point &currPoint);
 
 };
