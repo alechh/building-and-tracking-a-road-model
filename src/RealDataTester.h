@@ -34,11 +34,15 @@ private:
     static void chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour,
                                            const std::vector<FrameContours> &frameContours, int FRAME_NUMBER);
 
-    static void removeDuplicatePointsFromContour(std::vector<cv::Point> &contour);
+    static void removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, int FRAME_NUMBER);
 
     static void removeClumpedPoints(std::vector<cv::Point> &contour);
 
     static void manualFindAndMarkDuplicatePoint(const std::vector<cv::Point> &contour, int NUMBER_OF_CONTOUR);
+
+    static void removeDuplicatePointsFromContours(std::vector<std::vector<cv::Point>> &contours, int FRAME_NUMBER);
+
+    static void removeLocallyIdenticalContourPoints(std::vector<cv::Point> &contour);
 };
 
 

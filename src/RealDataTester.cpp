@@ -137,10 +137,10 @@ std::vector<FrameContours> RealDataTester::readContourFromTxtFile(const std::str
 
                 scalePoint(currPoint);
 
-                if (prevPoint != cv::Point2f())
-                {
-                    addMissingPoints(currContour, currPoint, prevPoint);
-                }
+//                if (prevPoint != cv::Point2f())
+//                {
+//                    addMissingPoints(currContour, currPoint, prevPoint);
+//                }
 
                 currContour.emplace_back(currPoint);
 
@@ -219,59 +219,78 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
     const int TYPE = 16;
     const float RESIZE_FACTOR = 0.75;
 
-    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
 
     const auto vectorOfFrameContours = readContourFromTxtFile(PATH);
 
-    const int FRAME_NUMBER = 42;
-    std::vector<std::vector<cv::Point>> contours;
-    chooseContourByFrameNumber(contours, vectorOfFrameContours, FRAME_NUMBER);
-
-    removeDuplicatePointsFromContour(contours[3]);
-
-    // remove extra contours for debug
-    for (auto iter = contours.begin(); iter != contours.end() - 1;)
+    //const int FRAME_NUMBER = 42;
+    for (int i = 0; i < vectorOfFrameContours.size(); ++i)
     {
-        contours.erase(iter);
-    }
+//        if (vectorOfFrameContours[i].numberOfFrame < 42)
+//        {
+//            continue;
+//        }
 
-    std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
-    RoadModelTracker modelTracker(roadModelPointer);
+        cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
 
-    std::vector<std::vector<double>> contoursCurvatures(contours.size());
+        std::cout << "frame number: " << vectorOfFrameContours[i].numberOfFrame << std::endl;
+        std::vector<std::vector<cv::Point>> contours = vectorOfFrameContours[i].contours;
+        //chooseContourByFrameNumber(contours, vectorOfFrameContours, FRAME_NUMBER);
 
-    //int betterStep = contours[contourNumber].size() / 10;
-
-    for (int betterStep = 6; betterStep <= 6; betterStep += 1)
-    {
-        cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
-        std::cout << betterStep << std::endl;
-        for (int i = 0; i < contours.size(); ++i)
+        // remove extra contours for debug
+        if (vectorOfFrameContours[i].numberOfFrame == 42)
         {
-            //std::vector<double> tempCurvatures(contours[i].size());
-            contoursCurvatures[0].resize(contours[i].size());
-            CurvatureCalculator::calculateCurvature2(contoursCurvatures[i], contours[i], betterStep);
-
-            //contoursCurvatures[i] = std::move(tempCurvatures);
+            for (auto iter = contours.begin(); iter != contours.end() - 1;)
+            {
+                contours.erase(iter);
+            }
         }
 
-        Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture,
-                                                         contours[0],
-                                                         contoursCurvatures[0]);
+        removeDuplicatePointsFromContours(contours, vectorOfFrameContours[i].numberOfFrame);
+
+        std::vector<std::vector<double>> contoursCurvatures(contours.size());
+
+        //int betterStep = contours[contourNumber].size() / 10;
+
+        for (int betterStep = 1; betterStep <= 1; ++betterStep)
+        {
+            /**
+             * for frame 42, first method betterStep := 4
+             * for frame 42, second method betterStep := 8
+             */
+
+            //std::cout << betterStep << std::endl;
+
+            cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+
+            CurvatureCalculator::calculateCurvature2ForAllContours(contoursCurvatures, contours, betterStep);
+
+            const bool addMissingPointsToImage = false;
+            Drawer::drawContoursPointsDependingOnItsCurvatures(curvatureOnContourPicture, contours, contoursCurvatures,
+                                                               addMissingPointsToImage);
+
+            //cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
+
+            //cv::imshow("contourDependingOnItsCurvature", curvatureOnContourPicture);
+            //cv::imwrite(cv::format("../images/curvatureOnContourPicture/curvatureStep%d.jpg", betterStep),
+            //            curvatureOnContourPicture);
+
+            std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
+            RoadModelTracker modelTracker(roadModelPointer);
+
+            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS);
+            //cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
 
-        cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
+            cv::imshow(cv::format("contour_frame%d", vectorOfFrameContours[i].numberOfFrame), curvatureOnContourPicture);
 
-        //cv::imshow("contourDependingOnItsCurvature", curvatureOnContourPicture);
-        //cv::waitKey(0);
+            roadModelPointer->drawModel(roadModelPicture);
+
+
+            cv::imshow("model", roadModelPicture);
+            cv::waitKey(0);
+            cv::destroyWindow(cv::format("contour_frame%d", vectorOfFrameContours[i].numberOfFrame));
+        }
     }
-
-    RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS);
-    cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
-
-    roadModelPointer->drawModel(roadModelPicture);
-    cv::imshow("model", roadModelPicture);
-    cv::waitKey(0);
 }
 
 void RealDataTester::chooseContourByFrameNumber(std::vector<std::vector<cv::Point>> &contour,
@@ -287,46 +306,55 @@ void RealDataTester::chooseContourByFrameNumber(std::vector<std::vector<cv::Poin
     }
 }
 
-void RealDataTester::removeDuplicatePointsFromContour(std::vector<cv::Point> &contour)
+void RealDataTester::removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, const int FRAME_NUMBER)
 {
-    // for frame #42
-    const int BEGIN_1 = 104;
-    const int END_1 = 300;
-    const int BEGIN_2 = 1777;
-    const int END_2 = 1997;
-    const int BEGIN_3 = 3537;
-    const int END_3 = 6604;
-    const int BEGIN_4 = 9498;
-
-    std::vector<cv::Point> newContour;
-
-    for (int i = 0; i < contour.size(); ++i)
+    if (FRAME_NUMBER == 42)
     {
-        if (i == BEGIN_1)
+        // with addMissingPoints();
+//        const int BEGIN_1 = 104;
+//        const int END_1 = 300;
+//        const int BEGIN_2 = 1777;
+//        const int END_2 = 1997;
+//        const int BEGIN_3 = 3537;
+//        const int END_3 = 6604;
+//        const int BEGIN_4 = 9498;
+
+        // without addMissingPoints();
+        const int BEGIN_1 = 34;
+        const int END_1 = 42;
+        const int BEGIN_2 = 232;
+        const int END_2 = 433;
+        const int BEGIN_4 = 524;
+
+        std::vector<cv::Point> newContour;
+
+        for (int i = 0; i < contour.size(); ++i)
         {
-            i = END_1;
-            continue;
-        }
-        if (i == BEGIN_2)
-        {
-            i = END_2;
-            continue;
-        }
-        if (i == BEGIN_3)
-        {
-            i = END_3;
-            continue;
-        }
-        if (i == BEGIN_4)
-        {
-            break;
+            if (i == BEGIN_1)
+            {
+                i = END_1;
+                continue;
+            }
+            if (i == BEGIN_2)
+            {
+                i = END_2;
+                continue;
+            }
+//            if (i == BEGIN_3)
+//            {
+//                i = END_3;
+//                continue;
+//            }
+            if (i == BEGIN_4)
+            {
+                break;
+            }
+
+            newContour.emplace_back(contour[i]);
         }
 
-        newContour.emplace_back(contour[i]);
+        contour = std::move(newContour);
     }
-
-    contour = std::move(newContour);
-
     removeClumpedPoints(contour);
 }
 
@@ -337,17 +365,21 @@ void RealDataTester::removeClumpedPoints(std::vector<cv::Point> &contour)
     cv::Point prevPoint = contour[0];
     newContour.emplace_back(prevPoint);
 
+    int count = 0;
 
     for (int i = 1; i < contour.size(); ++i)
     {
         if (contour[i] == prevPoint)
         {
+            ++count;
             continue;
         }
 
         prevPoint = contour[i];
         newContour.emplace_back(prevPoint);
     }
+
+    //std::cout << "remove clumped points: " << count << std::endl;
 
     contour = std::move(newContour);
 }
@@ -365,13 +397,43 @@ void RealDataTester::manualFindAndMarkDuplicatePoint(const std::vector<cv::Point
 
         cv::imshow("resizedDrawing", resizedDrawing);
 
-        if (cv::waitKey(1) == 107)
+        if (cv::waitKey(100) == 107)
         {
             std::cout << NUMBER_OF_CONTOUR << ": " << i << std::endl;
         }
     }
 
     drawing.release();
+}
+
+void RealDataTester::removeDuplicatePointsFromContours(std::vector<std::vector<cv::Point>> &contours, const int FRAME_NUMBER)
+{
+    for (auto &contour : contours)
+    {
+        removeDuplicatePointsFromContour(contour, FRAME_NUMBER);
+        removeLocallyIdenticalContourPoints(contour);
+    }
+}
+
+void RealDataTester::removeLocallyIdenticalContourPoints(std::vector<cv::Point> &contour)
+{
+    std::vector<cv::Point> newContour;
+    newContour.emplace_back(contour[0]);
+    newContour.emplace_back(contour[1]);
+
+    for (int i = 2; i < contour.size(); ++i)
+    {
+        if (contour[i - 2] == contour[i])
+        {
+            continue;
+        }
+        else
+        {
+            newContour.emplace_back(contour[i]);
+        }
+    }
+
+    contour = std::move(newContour);
 }
 
 
