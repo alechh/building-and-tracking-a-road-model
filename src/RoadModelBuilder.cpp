@@ -228,8 +228,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-    cv::imshow("contour", drawing);
-    cv::waitKey(25);
+//    cv::imshow("contour", drawing);
+//    cv::waitKey(25);
 }
 
 
@@ -259,9 +259,17 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
 
+    int countEqualPoints = 0;
+
     for (int i = 0; i < contour.size() / 2; ++i)
     {
-        std::cout << "i = " << i << "\tpoint = " << contour[i] << std::endl;
+        //std::cout << "i = " << i << "\tpoint = " << contour[i] << std::endl;
+
+        if (i > 1 && contour[i - 2] == contour[i])
+        {
+            ++countEqualPoints;
+        }
+
         // TODO Первая точка всегда должна быть прямой
 //        if (lineSegment.empty() && arcSegment.empty())
 //        {
@@ -394,6 +402,8 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         prevPrevContourPoint = prevContourPoint;
         prevContourPoint = contour[i];
     }
+
+    std::cout << "equalPoints : " << countEqualPoints << std::endl;
 
     if (!arcSegment.empty())
     {
@@ -797,7 +807,7 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPr
         return false;
     }
 
-    std::cout << angle << std::endl;
+    //std::cout << angle << std::endl;
 
     const double ANGLE_THRESHOLD = 45;
 
@@ -863,6 +873,7 @@ void RoadModelBuilder::addArcAndLineSegmentsToModel(RoadModelTracker &modelTrack
         if (arcSegment.size() < MIN_ARC_SEGMENT_SIZE && !lineSegment.empty())
         {
             addArcSegmentPointsToLineSegment(arcSegment, lineSegment, currSumOfArcSegmentCurvatures);
+            addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
         }
         else
         {
@@ -873,6 +884,16 @@ void RoadModelBuilder::addArcAndLineSegmentsToModel(RoadModelTracker &modelTrack
             }
         }
     }
+
+    if (!lineSegment.empty())
+    {
+        addLineSegmentToModel(modelTracker, lineSegment, isRightContour);
+    }
+
+
+    assert(arcSegment.empty());
+    assert(lineSegment.empty());
+    assert(currSumOfArcSegmentCurvatures == 0);
 }
 
 void RoadModelBuilder::setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment,
