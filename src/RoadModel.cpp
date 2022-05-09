@@ -6,6 +6,7 @@
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 #include <utility>
+#include "Utils.h"
 
 ModelElement::ModelElement() : next(nullptr)
 {}
@@ -508,7 +509,9 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
 
 bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const LineSegment &newLineSegment)
 {
-    if (lastLineSegment->getEndPoint() != newLineSegment.getBeginPoint())
+    int distance = Utils::distanceBetweenPoints(lastLineSegment->getEndPoint(), newLineSegment.getBeginPoint());
+
+    if (distance != 0 && distance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
     {
         lastLineSegment->next = std::make_shared<LineSegment>(lastLineSegment->getEndPoint(), newLineSegment.getBeginPoint());
         return true;
@@ -523,7 +526,9 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularA
     endPoint.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getEndAngle() / 180 * CV_PI);
     endPoint.y = lastCircularArc->getCenter().y + lastCircularArc->getRadius() * sin(lastCircularArc->getEndAngle() / 180 * CV_PI);
 
-    if (endPoint != newLineSegment.getBeginPoint())
+    int distance = Utils::distanceBetweenPoints(endPoint, newLineSegment.getBeginPoint());
+
+    if (distance != 0 && distance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
     {
         lastCircularArc->next = std::make_shared<LineSegment>(endPoint, newLineSegment.getBeginPoint());
         return true;
@@ -538,7 +543,9 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegme
     beginPoint.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getStartAngle() / 180 * CV_PI);
     beginPoint.y = newCircularArc.getCenter().y + newCircularArc.getRadius() * sin(newCircularArc.getStartAngle() / 180 * CV_PI);
 
-    if (lastLineSegment->getEndPoint() != beginPoint)
+    int distance = Utils::distanceBetweenPoints(lastLineSegment->getEndPoint(), beginPoint);
+
+    if (distance != 0 && distance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
     {
         lastLineSegment->next = std::make_shared<LineSegment>(lastLineSegment->getEndPoint(), beginPoint);
         return true;
@@ -557,7 +564,9 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularA
     beginPointOfNewArc.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getStartAngle() / 180 * CV_PI);
     beginPointOfNewArc.y = newCircularArc.getCenter().y + newCircularArc.getRadius() * sin(newCircularArc.getStartAngle() / 180 * CV_PI);
 
-    if (endPointOfLastArc != beginPointOfNewArc)
+    int distance = Utils::distanceBetweenPoints(endPointOfLastArc, beginPointOfNewArc);
+
+    if (distance != 0 && distance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
     {
         lastCircularArc->next = std::make_shared<LineSegment>(endPointOfLastArc, beginPointOfNewArc);
         return true;
