@@ -24,11 +24,13 @@
  */
 void Drawer::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
                                                       const std::vector<double> &contourCurvature,
-                                                      bool addMissingPoints)
+                                                      bool addMissingPoints,
+                                                      double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS)
 {
     if (!addMissingPoints)
     {
-        for (int i = 0; i < contour.size(); ++i)
+        const double BORDER = contour.size() * MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS;
+        for (int i = 0; i < BORDER; ++i)
         {
             drawPointDependingOnCurvature(dst, contour[i], contourCurvature[i]);
         }
@@ -40,7 +42,7 @@ void Drawer::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::v
     double prevCurvature = contourCurvature[0];
     drawPointDependingOnCurvature(dst, prevPoint, contourCurvature[0]);
 
-    for (int i = 1; i < contour.size(); ++i)
+    for (int i = 1; i < contour.size() * MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS; ++i)
     {
         const cv::Point &currPoint = contour[i];
         cv::Point2f difference = currPoint - prevPoint;
@@ -138,11 +140,12 @@ void Drawer::drawContourPointByPoint(cv::Mat &dst, const std::vector<cv::Point> 
 void
 Drawer::drawContoursPointsDependingOnItsCurvatures(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours,
                                                    const std::vector<std::vector<double>> &contoursCurvatures,
-                                                   bool addMissingPoints)
+                                                   bool addMissingPoints,
+                                                   const double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS)
 {
     for (int i = 0; i < contours.size(); ++i)
     {
-        drawContourPointsDependingOnItsCurvature(dst, contours[i], contoursCurvatures[i], addMissingPoints);
+        drawContourPointsDependingOnItsCurvature(dst, contours[i], contoursCurvatures[i], addMissingPoints, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
     }
 }
 

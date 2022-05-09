@@ -18,16 +18,17 @@ public:
     static void buildRoadModelBasedOnTheSingleContour(RoadModelTracker &modelTracker,
                                                       const std::vector<cv::Point> &contour,
                                                       const std::vector<double> &contourCurvature,
-                                                      bool isRightContour);
+                                                      bool isRightContour,
+                                                      double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
 
 
     static void
     calculatePPlusAndPMinus(const std::vector<cv::Point> &segment, cv::Point &pPlus, cv::Point &pMinus, int &pPlusIndex,
                             int &pMinusIndex, cv::Point &centerPoint, double &h);
 
-    static void buildRoadModel(RoadModelTracker &modelTracker,
-                               const std::vector<std::vector<cv::Point>> &contours,
-                               const std::vector<std::vector<double>> &contoursCurvatures, int COLS);
+    static void buildRoadModel(RoadModelTracker &modelTracker, const std::vector<std::vector<cv::Point>> &contours,
+                               const std::vector<std::vector<double>> &contoursCurvatures, int COLS,
+                               double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS = 1);
 
 private:
     static cv::Point calculateCenterOfTheArc(const std::vector<cv::Point> &segment, double R);

@@ -219,16 +219,17 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
     const int TYPE = 16;
     const float RESIZE_FACTOR = 0.75;
 
-
     const auto vectorOfFrameContours = readContourFromTxtFile(PATH);
+
+    const double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS = 1;
 
     //const int FRAME_NUMBER = 42;
     for (int i = 0; i < vectorOfFrameContours.size(); ++i)
     {
-//        if (vectorOfFrameContours[i].numberOfFrame < 42)
-//        {
-//            continue;
-//        }
+        if (vectorOfFrameContours[i].numberOfFrame < 42)
+        {
+            continue;
+        }
 
         cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
 
@@ -266,7 +267,7 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
 
             const bool addMissingPointsToImage = false;
             Drawer::drawContoursPointsDependingOnItsCurvatures(curvatureOnContourPicture, contours, contoursCurvatures,
-                                                               addMissingPointsToImage);
+                                                               addMissingPointsToImage, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
 
             //cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
@@ -277,7 +278,7 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
             std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
             RoadModelTracker modelTracker(roadModelPointer);
 
-            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS);
+            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
             //cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
 

@@ -236,7 +236,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
 void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &modelTracker,
                                                              const std::vector<cv::Point> &contour,
                                                              const std::vector<double> &contourCurvature,
-                                                             bool isRightContour)
+                                                             bool isRightContour,
+                                                             double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS = 1)
 {
     /**
      * Построение модели дороги (а точнее нашей полосы движения) по одному контуру.
@@ -251,45 +252,26 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
 
     const double CURVATURE_THRESHOLD = 0.002; // Это порог кривизны (почему он такой, не знает никто). Если кривизна <= этого порога, то считаем эту часть контура прямой
 
-    double prevCurvature = contourCurvature[0]; // Это предыдущее значение, чтобы выделять участки контура с одним и тем же значением кривизны для построения модели
-//    cv::Point prevContourPoint = contour[0];
-//    cv::Point prevPrevContourPoint = contour[0];
-//    cv::Point prev3ContourPoint = contour[0];
-//    cv::Point prev4ContourPoint = contour[0];
-
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
 
-    int countEqualPoints = 0;
+    // Всегда первую точку контура будем считать прямой
+    lineSegment.emplace_back(contour[0]);
+    double prevCurvature = 0;
 
-    for (int i = 0; i < contour.size() / 2; ++i)
+    for (int i = 1; i < contour.size() * MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS; ++i)
     {
         //std::cout << "i = " << i << "\tpoint = " << contour[i] << std::endl;
 
-        if (i > 1 && contour[i - 2] == contour[i])
-        {
-            ++countEqualPoints;
-        }
-
-        // TODO Первая точка всегда должна быть прямой
-//        if (lineSegment.empty() && arcSegment.empty())
+        //FIXME
+//        if (i > 3 && checkingChangeOfContourDirection2(contour[i - 4], contour[i-2], contour[i]))
 //        {
-//            lineSegment.emplace_back(contour[i]);
-//            prevContourPoint = contour[i];
-//            prevCurvature = 0;
+//            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+//                                         lineSegment, isRightContour);
+//
+//
+//            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature,contour[i]);
 //            continue;
 //        }
-
-        //FIXME
-
-        if (i > 3 && checkingChangeOfContourDirection2(contour[i - 4], contour[i-2], contour[i]))
-        {
-            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
-                                         lineSegment, isRightContour);
-
-
-            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature,contour[i]);
-            continue;
-        }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (i > 0 && checkingForStartOfAnotherContour(contour[i - 1], contour[i]))
@@ -393,8 +375,6 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         prevCurvature = contourCurvature[i];
     }
 
-    std::cout << "equalPoints : " << countEqualPoints << std::endl;
-
     if (!arcSegment.empty())
     {
         if (!addArcToTheModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, isRightContour))
@@ -467,7 +447,7 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
 cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, const double radius, const cv::Point &center)
 {
     const double DISTANCE_DELTA = 3;
-    const cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
+    cv::Point lastPoint = arcSegment[arcSegment.size() - 1];
 
     double currDistance = Utils::distanceBetweenPoints(lastPoint, center);
     if (currDistance <= radius)
@@ -478,16 +458,18 @@ cv::Point getLastArcPoint(const std::vector<cv::Point> &arcSegment, const double
     cv::Point directionalVector(center.x - lastPoint.x, -(center.y - lastPoint.y));
 
     double currDistanceError = std::abs(Utils::distanceBetweenPoints(lastPoint, center) - radius);
-    std::cout << "currDistanceError (lastPoint) = " << currDistanceError << std::endl;
+    //std::cout << "currDistanceError (lastPoint) = " << currDistanceError << std::endl;
 
     double t = 0;
 
     //TODO check it
+    // Нахожу параметр, чтобы найти точку на направляющей прямой, которая отдалена от центра на расстояние радиуса
+    // Это раскрытие модуля |t-a| < 1
     t = 1 - (radius - sqrt(directionalVector.x * directionalVector.x + directionalVector.y * directionalVector.y));
     cv::Point newPoint(directionalVector.x * t + lastPoint.x, directionalVector.y * t + lastPoint.y);
 
     currDistanceError = std::abs(Utils::distanceBetweenPoints(newPoint, center) - radius);
-    std::cout << "currDistanceError (newPoint) = " << currDistanceError << std::endl;
+    //std::cout << "currDistanceError (newPoint) = " << currDistanceError << std::endl;
 
 //    cv::Point newPoint = lastPoint;
 //    while (currDistanceError > DISTANCE_DELTA)
@@ -694,7 +676,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
 
 void
 RoadModelBuilder::buildRoadModel(RoadModelTracker &modelTracker, const std::vector<std::vector<cv::Point>> &contours,
-                                 const std::vector<std::vector<double>> &contoursCurvatures, const int COLS)
+                                 const std::vector<std::vector<double>> &contoursCurvatures, int COLS,
+                                 double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS)
 {
     for (int contourNumber = 0; contourNumber < contours.size(); ++contourNumber)
     {
@@ -710,7 +693,7 @@ RoadModelBuilder::buildRoadModel(RoadModelTracker &modelTracker, const std::vect
 
         RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(modelTracker, contours[contourNumber],
                                                                 contoursCurvatures[contourNumber],
-                                                                isRightContour);
+                                                                isRightContour, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
     }
 
     // when all contours are processed, tell tracker that road model has been built, then tracker starts track it

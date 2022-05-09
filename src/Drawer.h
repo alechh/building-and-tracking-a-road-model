@@ -17,12 +17,14 @@ class Drawer
 public:
     static void drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
                                                          const std::vector<double> &contourCurvature,
-                                                         bool addMissingPoints = false);
+                                                         bool addMissingPoints = false,
+                                                         double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS = 1);
 
     static void
     drawContoursPointsDependingOnItsCurvatures(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours,
                                                const std::vector<std::vector<double>> &contoursCurvatures,
-                                               bool addMissingPoints = false);
+                                               bool addMissingPoints = false,
+                                               double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS = 1);
 
     static void
     drawContours(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours, int numberOfContours = 0);
