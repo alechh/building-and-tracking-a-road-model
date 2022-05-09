@@ -568,33 +568,31 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularA
 
 bool RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const CircularArc &newCircularArc)
 {
-    if (!dynamic_cast<CircularArc *>(lastModelElement.get())) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
+    std::shared_ptr<CircularArc> tempCircularArcPointer = std::dynamic_pointer_cast<CircularArc>(lastModelElement);
+
+    if (tempCircularArcPointer) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
     {
-        auto *tempLineSegment = dynamic_cast<LineSegment *>(lastModelElement.get());
-        std::shared_ptr<LineSegment> lastLineSegment(tempLineSegment);
-        return addConnectingSegment(lastLineSegment, newCircularArc);
+        return addConnectingSegment(tempCircularArcPointer, newCircularArc);
     }
     else
     {
-        auto *tempCircularArc = dynamic_cast<CircularArc *>(lastModelElement.get());
-        std::shared_ptr<CircularArc> lastCircularArc(tempCircularArc);
-        return addConnectingSegment(lastCircularArc, newCircularArc);
+        std::shared_ptr<LineSegment> tempLineSegmentPointer = std::dynamic_pointer_cast<LineSegment>(lastModelElement);
+        return addConnectingSegment(tempLineSegmentPointer, newCircularArc);
     }
 }
 
 bool RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const LineSegment &newLineSegment)
 {
-    if (!dynamic_cast<CircularArc *>(lastModelElement.get())) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
+    std::shared_ptr<CircularArc> tempCircularArcPointer = std::dynamic_pointer_cast<CircularArc>(lastModelElement);
+
+    if (tempCircularArcPointer) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
     {
-        auto *tempLineSegment = dynamic_cast<LineSegment *>(lastModelElement.get());
-        std::shared_ptr<LineSegment> lastLineSegment(tempLineSegment);
-        return addConnectingSegment(lastLineSegment, newLineSegment);
+        return addConnectingSegment(tempCircularArcPointer, newLineSegment);
     }
     else
     {
-        auto *tempCircularArc = dynamic_cast<CircularArc *>(lastModelElement.get());
-        std::shared_ptr<CircularArc> lastCircularArc(tempCircularArc);
-        return addConnectingSegment(lastCircularArc, newLineSegment);
+        std::shared_ptr<LineSegment> tempLineSegmentPointer = std::dynamic_pointer_cast<LineSegment>(lastModelElement);
+        return addConnectingSegment(tempLineSegmentPointer, newLineSegment);
     }
 }
 
