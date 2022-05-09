@@ -48,6 +48,7 @@ public:
     void drawModelElementPoints(cv::Mat &src) const override;
 
     cv::Point getBeginPoint() const;
+
     cv::Point getEndPoint() const;
 };
 
@@ -72,6 +73,10 @@ public:
     double getRadius() const;
 
     cv::Point getCenter() const;
+
+    double getStartAngle() const;
+
+    double getEndAngle() const;
 };
 
 
@@ -96,8 +101,15 @@ private:
 
     void printInformationOfTheLeftSide() const;
 
-public:
+    void addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const LineSegment &newLineSegment);
 
+    void addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const LineSegment &newLineSegment);
+
+    void addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const CircularArc &newCircularArc);
+
+    void addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const CircularArc &newCircularArc);
+
+public:
     RoadModel();
 
     void addElementToRight(cv::Point begin, cv::Point end);
@@ -129,10 +141,14 @@ public:
     void drawModelPoints(cv::Mat &dst) const;
 
     std::shared_ptr<ModelElement> getRightHead() const;
+
     std::shared_ptr<ModelElement> getLeftHead() const;
 
-    void replaceModelRightElement(const std::shared_ptr<ModelElement> &newModelElement, const std::shared_ptr<ModelElement> &prevModelElement);
-    void replaceModelLeftElement(const std::shared_ptr<ModelElement> &newModelElement, const std::shared_ptr<ModelElement> &prevModelElement);
+    void replaceModelRightElement(const std::shared_ptr<ModelElement> &newModelElement,
+                                  const std::shared_ptr<ModelElement> &prevModelElement);
+
+    void replaceModelLeftElement(const std::shared_ptr<ModelElement> &newModelElement,
+                                 const std::shared_ptr<ModelElement> &prevModelElement);
 };
 
 
