@@ -419,6 +419,7 @@ void RoadModel::addElementToRight(const CircularArc &newCircularArc)
 
         if (addConnectingSegment(curr, newCircularArc))
         {
+            std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -444,6 +445,7 @@ void RoadModel::addElementToLeft(const CircularArc &newCircularArc)
 
         if (addConnectingSegment(curr, newCircularArc))
         {
+            std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -469,6 +471,7 @@ void RoadModel::addElementToRight(const LineSegment &newLineSegment)
 
         if (addConnectingSegment(curr, newLineSegment))
         {
+            std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -494,6 +497,7 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
 
         if (addConnectingSegment(curr, newLineSegment))
         {
+            std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -522,15 +526,34 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegme
 
 bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const LineSegment &newLineSegment)
 {
+    cv::Point beginPoint;
+    beginPoint.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getStartAngle() / 180 * CV_PI);
+    beginPoint.y = lastCircularArc->getCenter().y + lastCircularArc->getRadius() * sin(lastCircularArc->getStartAngle() / 180 * CV_PI);
+
     cv::Point endPoint;
     endPoint.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getEndAngle() / 180 * CV_PI);
     endPoint.y = lastCircularArc->getCenter().y + lastCircularArc->getRadius() * sin(lastCircularArc->getEndAngle() / 180 * CV_PI);
 
-    int distance = Utils::distanceBetweenPoints(endPoint, newLineSegment.getBeginPoint());
+    int distanceWithBeginPoint = Utils::distanceBetweenPoints(newLineSegment.getBeginPoint(), beginPoint);
+    int distanceWithEndPoint = Utils::distanceBetweenPoints(newLineSegment.getBeginPoint(), endPoint);
 
-    if (distance != 0 && distance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
+    cv::Point correctPoint;
+    int correctDistance;
+
+    if (distanceWithBeginPoint < distanceWithEndPoint)
     {
-        lastCircularArc->next = std::make_shared<LineSegment>(endPoint, newLineSegment.getBeginPoint());
+        correctPoint = beginPoint;
+        correctDistance = distanceWithBeginPoint;
+    }
+    else
+    {
+        correctPoint = endPoint;
+        correctDistance = distanceWithEndPoint;
+    }
+
+    if (correctDistance != 0 && correctDistance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
+    {
+        lastCircularArc->next = std::make_shared<LineSegment>(correctPoint, newLineSegment.getBeginPoint());
         return true;
     }
 
@@ -543,11 +566,30 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegme
     beginPoint.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getStartAngle() / 180 * CV_PI);
     beginPoint.y = newCircularArc.getCenter().y + newCircularArc.getRadius() * sin(newCircularArc.getStartAngle() / 180 * CV_PI);
 
-    int distance = Utils::distanceBetweenPoints(lastLineSegment->getEndPoint(), beginPoint);
+    cv::Point endPoint;
+    beginPoint.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getEndAngle() / 180 * CV_PI);
+    beginPoint.y = newCircularArc.getCenter().y + newCircularArc.getRadius() * sin(newCircularArc.getEndAngle() / 180 * CV_PI);
 
-    if (distance != 0 && distance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
+    int distanceWithBeginPoint = Utils::distanceBetweenPoints(lastLineSegment->getEndPoint(), beginPoint);
+    int distanceWithEndPoint = Utils::distanceBetweenPoints(lastLineSegment->getEndPoint(), endPoint);
+
+    cv::Point correctPoint;
+    int correctDistance;
+
+    if (distanceWithBeginPoint < distanceWithEndPoint)
     {
-        lastLineSegment->next = std::make_shared<LineSegment>(lastLineSegment->getEndPoint(), beginPoint);
+        correctPoint = beginPoint;
+        correctDistance = distanceWithBeginPoint;
+    }
+    else
+    {
+        correctPoint = endPoint;
+        correctDistance = distanceWithEndPoint;
+    }
+
+    if (correctDistance != 0 && correctDistance < this->MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS)
+    {
+        lastLineSegment->next = std::make_shared<LineSegment>(lastLineSegment->getEndPoint(), correctPoint);
         return true;
     }
 
@@ -556,6 +598,10 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegme
 
 bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const CircularArc &newCircularArc)
 {
+    cv::Point beginPointOfLastArc;
+    beginPointOfLastArc.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getStartAngle() / 180 * CV_PI);
+    beginPointOfLastArc.y = lastCircularArc->getCenter().y + lastCircularArc->getRadius() * sin(lastCircularArc->getStartAngle() / 180 * CV_PI);
+
     cv::Point endPointOfLastArc;
     endPointOfLastArc.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getEndAngle() / 180 * CV_PI);
     endPointOfLastArc.y = lastCircularArc->getCenter().y + lastCircularArc->getRadius() * sin(lastCircularArc->getEndAngle() / 180 * CV_PI);
@@ -563,6 +609,18 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularA
     cv::Point beginPointOfNewArc;
     beginPointOfNewArc.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getStartAngle() / 180 * CV_PI);
     beginPointOfNewArc.y = newCircularArc.getCenter().y + newCircularArc.getRadius() * sin(newCircularArc.getStartAngle() / 180 * CV_PI);
+
+    cv::Point endPointOfNewArc;
+    beginPointOfLastArc.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getEndAngle() / 180 * CV_PI);
+    beginPointOfLastArc.y = newCircularArc.getCenter().y + newCircularArc.getRadius() * sin(newCircularArc.getEndAngle() / 180 * CV_PI);
+
+    int distanceWithBeginPoints = Utils::distanceBetweenPoints(beginPointOfNewArc, beginPointOfLastArc);
+    int distanceWithEndPoints = Utils::distanceBetweenPoints(endPointOfNewArc, endPointOfLastArc);
+    int distanceBeginNewEndLast = Utils::distanceBetweenPoints(beginPointOfNewArc, endPointOfLastArc);
+    int distanceEndNewBeginLast = Utils::distanceBetweenPoints(endPointOfNewArc, beginPointOfLastArc);
+
+    cv::Point correctPoint;
+    int correctDistance;
 
     int distance = Utils::distanceBetweenPoints(endPointOfLastArc, beginPointOfNewArc);
 
@@ -581,6 +639,9 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelEle
 
     if (tempCircularArcPointer) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
     {
+        std::string errorMessage = "RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const CircularArc &newCircularArc)";
+        errorMessage += "\n lastModelElement = CircularArc, newModelElement = CircularArc";
+        throw errorMessage;
         return addConnectingSegment(tempCircularArcPointer, newCircularArc);
     }
     else

@@ -91,7 +91,7 @@ private:
     int modelLeftElementCounter;
     int modelRightElementCounter;
 
-    const int MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS = 20;
+    const int MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS = 100;
 
     void drawLeftSide(cv::Mat &dst) const;
 
