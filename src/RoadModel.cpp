@@ -415,6 +415,12 @@ void RoadModel::addElementToRight(const CircularArc &newCircularArc)
         {
             curr = curr->next;
         }
+
+        if (addConnectingSegment(curr, newCircularArc))
+        {
+            curr = curr->next;
+        }
+
         curr->next = std::make_shared<CircularArc>(newCircularArc);
         this->modelRightElementCounter++;
     }
@@ -434,6 +440,12 @@ void RoadModel::addElementToLeft(const CircularArc &newCircularArc)
         {
             curr = curr->next;
         }
+
+        if (addConnectingSegment(curr, newCircularArc))
+        {
+            curr = curr->next;
+        }
+
         curr->next = std::make_shared<CircularArc>(newCircularArc);
         this->modelLeftElementCounter++;
     }
@@ -453,6 +465,12 @@ void RoadModel::addElementToRight(const LineSegment &newLineSegment)
         {
             curr = curr->next;
         }
+
+        if (addConnectingSegment(curr, newLineSegment))
+        {
+            curr = curr->next;
+        }
+
         curr->next = std::make_shared<LineSegment>(newLineSegment);
         this->modelRightElementCounter++;
     }
@@ -472,6 +490,12 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
         {
             curr = curr->next;
         }
+
+        if (addConnectingSegment(curr, newLineSegment))
+        {
+            curr = curr->next;
+        }
+
         curr->next = std::make_shared<LineSegment>(newLineSegment);
         this->modelLeftElementCounter++;
     }
@@ -482,15 +506,18 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
     }
 }
 
-void RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const LineSegment &newLineSegment)
+bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const LineSegment &newLineSegment)
 {
     if (lastLineSegment->getEndPoint() != newLineSegment.getBeginPoint())
     {
         lastLineSegment->next = std::make_shared<LineSegment>(lastLineSegment->getEndPoint(), newLineSegment.getBeginPoint());
+        return true;
     }
+
+    return false;
 }
 
-void RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const LineSegment &newLineSegment)
+bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const LineSegment &newLineSegment)
 {
     cv::Point endPoint;
     endPoint.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getEndAngle() / 180 * CV_PI);
@@ -499,10 +526,13 @@ void RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularA
     if (endPoint != newLineSegment.getBeginPoint())
     {
         lastCircularArc->next = std::make_shared<LineSegment>(endPoint, newLineSegment.getBeginPoint());
+        return true;
     }
+
+    return false;
 }
 
-void RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const CircularArc &newCircularArc)
+bool RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const CircularArc &newCircularArc)
 {
     cv::Point beginPoint;
     beginPoint.x = newCircularArc.getCenter().x + newCircularArc.getRadius() * cos(newCircularArc.getStartAngle() / 180 * CV_PI);
@@ -511,10 +541,13 @@ void RoadModel::addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegme
     if (lastLineSegment->getEndPoint() != beginPoint)
     {
         lastLineSegment->next = std::make_shared<LineSegment>(lastLineSegment->getEndPoint(), beginPoint);
+        return true;
     }
+
+    return false;
 }
 
-void RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const CircularArc &newCircularArc)
+bool RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const CircularArc &newCircularArc)
 {
     cv::Point endPointOfLastArc;
     endPointOfLastArc.x = lastCircularArc->getCenter().x + lastCircularArc->getRadius() * cos(lastCircularArc->getEndAngle() / 180 * CV_PI);
@@ -527,6 +560,41 @@ void RoadModel::addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularA
     if (endPointOfLastArc != beginPointOfNewArc)
     {
         lastCircularArc->next = std::make_shared<LineSegment>(endPointOfLastArc, beginPointOfNewArc);
+        return true;
+    }
+
+    return false;
+}
+
+bool RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const CircularArc &newCircularArc)
+{
+    if (!dynamic_cast<CircularArc *>(lastModelElement.get())) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
+    {
+        auto *tempLineSegment = dynamic_cast<LineSegment *>(lastModelElement.get());
+        std::shared_ptr<LineSegment> lastLineSegment(tempLineSegment);
+        return addConnectingSegment(lastLineSegment, newCircularArc);
+    }
+    else
+    {
+        auto *tempCircularArc = dynamic_cast<CircularArc *>(lastModelElement.get());
+        std::shared_ptr<CircularArc> lastCircularArc(tempCircularArc);
+        return addConnectingSegment(lastCircularArc, newCircularArc);
+    }
+}
+
+bool RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const LineSegment &newLineSegment)
+{
+    if (!dynamic_cast<CircularArc *>(lastModelElement.get())) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
+    {
+        auto *tempLineSegment = dynamic_cast<LineSegment *>(lastModelElement.get());
+        std::shared_ptr<LineSegment> lastLineSegment(tempLineSegment);
+        return addConnectingSegment(lastLineSegment, newLineSegment);
+    }
+    else
+    {
+        auto *tempCircularArc = dynamic_cast<CircularArc *>(lastModelElement.get());
+        std::shared_ptr<CircularArc> lastCircularArc(tempCircularArc);
+        return addConnectingSegment(lastCircularArc, newLineSegment);
     }
 }
 
