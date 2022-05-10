@@ -22,6 +22,7 @@ void drawArcSegment(const std::vector<cv::Point> &arcSegment, const cv::Point &c
 
     cv::imshow("arcSegment", segmentPicture);
     cv::waitKey(0);
+    cv::destroyWindow("arcSegment");
 }
 
 /**
@@ -39,32 +40,41 @@ cv::Point calculateCenterOfTheArc2(const std::vector<cv::Point> &segment, double
     const cv::Point &p2 = segment[segment.size() - 1];
     const cv::Point &middleSegment = segment[segment.size() / 2];
 
+    drawArcSegment(segment, middleSegment);
+
     std::vector<double> perpendicular1(3), perpendicular2(3);
 
-    cv::Point middle1 = Utils::calculateMidpoint(p1, middleSegment);
-    cv::Point middle2 = Utils::calculateMidpoint(p2, middleSegment);
-
+    // уравнение прямой через 2 точки p1 и middlePoint
     std::vector<double> sideOfTriangle1(3);
     sideOfTriangle1[0] = middleSegment.y - p1.y;
     sideOfTriangle1[1] = -(-middleSegment.x + p1.x);
     sideOfTriangle1[2] = p1.y * (middleSegment.x - p1.x) - p1.x * (middleSegment.y - p1.y);
 
+    // уравнение прямой через 2 точки p2 и middlePoint
     std::vector<double> sideOfTriangle2(3);
     sideOfTriangle2[0] = middleSegment.y - p2.y;
     sideOfTriangle2[1] = -(-middleSegment.x + p2.x);
     sideOfTriangle2[2] = p2.y * (middleSegment.x - p2.x) - p2.x * (middleSegment.y - p2.y);
 
+    // серединные точки на сторонах треугольника
+    cv::Point middle1 = Utils::calculateMidpoint(p1, middleSegment);
+    cv::Point middle2 = Utils::calculateMidpoint(p2, middleSegment);
+
+    // серединные перпендикуляры
     perpendicular1 = Utils::calculateCoefficientsOfThePerpendicularLine(sideOfTriangle1, middle1);
     perpendicular2 = Utils::calculateCoefficientsOfThePerpendicularLine(sideOfTriangle2, middle2);
 
+    // делим на коэффициент при y
     perpendicular1[0] /= perpendicular1[1];
     perpendicular1[2] /= perpendicular1[1];
     perpendicular1[1] = 1;
 
+    // делим на коэффициент при y
     perpendicular2[0] /= perpendicular2[1];
     perpendicular2[2] /= perpendicular2[1];
     perpendicular2[1] = 1;
 
+    // точка пересечения двух прямых perpendicular1 и perpendicular2
     double x = (perpendicular2[2] - perpendicular1[2]) / (perpendicular1[0] - perpendicular2[0]);
     double y = -(-perpendicular1[0] * x - perpendicular1[2]);
 
@@ -97,7 +107,7 @@ cv::Point RoadModelBuilder::calculateCenterOfTheArc(const std::vector<cv::Point>
 
     cv::Point2f firstDerivative = Utils::calculateFirstDerivative(pPlus, pMinus, pPlusIndex, pMinusIndex, h);
 
-    // TODO Возможно, есть более красивый и правильный признак того, что производную надо взять с минусом
+    // Возможно, есть более красивый и правильный признак того, что производную надо взять с минусом
     if (pPlus.y > pMinus.y)
     {
         firstDerivative.x = -firstDerivative.x;
@@ -159,17 +169,32 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
                                    double &currSumOfArcSegmentCurvatures,
                                    bool isRightContour)
 {
-    //drawArcSegment(arcSegment);
-
-    const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
-
+    //const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
     //double radiusOfTheCircle = 1.0 / curvature;
+
     const double radiusOfTheCircle = calculateRadiusOfTheArcUsingContour(arcSegment);
+
+    if (std::isnan(radiusOfTheCircle) || radiusOfTheCircle == std::numeric_limits<double>::infinity() ||
+        radiusOfTheCircle == 0)
+    {
+        return false;
+    }
+
+    /** TODO
+     * Если радиус слишком большой для маленького сегмента, это значит, что такой сегмент на самом деле очень похож
+     * на сегмент прямой
+     */
+     const int MAXIMUM_RATIO_OF_RADIUS_TO_LENGHT = 5;
+     double arcSegmentLength = Utils::distanceBetweenPoints(arcSegment[0], arcSegment[arcSegment.size() - 1]);
+     if (radiusOfTheCircle / arcSegmentLength > MAXIMUM_RATIO_OF_RADIUS_TO_LENGHT)
+     {
+         return false;
+     }
 
     //const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
     const cv::Point center = calculateCenterOfTheArc2(arcSegment, radiusOfTheCircle);
 
-    //drawArcSegment(arcSegment, center);
+    drawArcSegment(arcSegment, center);
 
     double startAngle, endAngle;
 
@@ -185,10 +210,6 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
         return false;
     }
 
-    if (std::isnan(radiusOfTheCircle) || radiusOfTheCircle == std::numeric_limits<double>::infinity())
-    {
-        return false;
-    }
 
     const int MAX_VALUE = 5000;
     if (std::abs(center.x) > MAX_VALUE || std::abs(center.y) > MAX_VALUE || radiusOfTheCircle > MAX_VALUE)
@@ -211,8 +232,8 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
     //std::cout << "arcSegment added" << std::endl;
-//    cv::imshow("drawing", drawing);
-//    cv::waitKey(0);
+    cv::imshow("drawing", drawing);
+    cv::waitKey(0);
 
     return true;
 }
@@ -228,8 +249,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-//    cv::imshow("contour", drawing);
-//    cv::waitKey(25);
+    cv::imshow("contour", drawing);
+    cv::waitKey(25);
 }
 
 
@@ -670,8 +691,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
     //std::cout << "lineSegment added" << std::endl;
-//    cv::imshow("drawing", drawing);
-//    cv::waitKey(0);
+    cv::imshow("drawing", drawing);
+    cv::waitKey(0);
 }
 
 void
