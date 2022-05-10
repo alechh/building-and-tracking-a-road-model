@@ -99,6 +99,8 @@ private:
 
     void drawRightSidePoints(cv::Mat &dst) const;
 
+    void drawLeftSidePoints(cv::Mat &dst) const;
+
     void printInformationOfTheRightSide() const;
 
     void printInformationOfTheLeftSide() const;

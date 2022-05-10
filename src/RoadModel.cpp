@@ -290,7 +290,10 @@ void RoadModel::drawModelPoints(cv::Mat &dst) const
         drawRightSidePoints(dst);
     }
 
-    //TODO drawLeftSidePoints();
+    if (this->leftHead)
+    {
+        drawLeftSidePoints(dst);
+    }
 }
 
 void RoadModel::drawRightSidePoints(cv::Mat &dst) const
@@ -699,6 +702,17 @@ bool RoadModel::addConnectingSegment(std::shared_ptr<ModelElement> &lastModelEle
     {
         std::shared_ptr<LineSegment> tempLineSegmentPointer = std::dynamic_pointer_cast<LineSegment>(lastModelElement);
         return addConnectingSegment(tempLineSegmentPointer, newLineSegment);
+    }
+}
+
+void RoadModel::drawLeftSidePoints(cv::Mat &dst) const
+{
+    std::shared_ptr<ModelElement> currModelElement(this->leftHead);
+
+    while (currModelElement)
+    {
+        currModelElement->drawModelElementPoints(dst);
+        currModelElement = currModelElement->next;
     }
 }
 
