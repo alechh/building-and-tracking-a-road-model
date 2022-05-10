@@ -423,7 +423,7 @@ void RoadModel::addElementToRight(const CircularArc &newCircularArc)
 
         if (addConnectingSegment(curr, newCircularArc))
         {
-            std::cout << "connecting segment was added" << std::endl;
+            //std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -449,7 +449,7 @@ void RoadModel::addElementToLeft(const CircularArc &newCircularArc)
 
         if (addConnectingSegment(curr, newCircularArc))
         {
-            std::cout << "connecting segment was added" << std::endl;
+            //std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -475,7 +475,7 @@ void RoadModel::addElementToRight(const LineSegment &newLineSegment)
 
         if (addConnectingSegment(curr, newLineSegment))
         {
-            std::cout << "connecting segment was added" << std::endl;
+            //std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
@@ -501,7 +501,7 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
 
         if (addConnectingSegment(curr, newLineSegment))
         {
-            std::cout << "connecting segment was added" << std::endl;
+            //std::cout << "connecting segment was added" << std::endl;
             curr = curr->next;
         }
 
