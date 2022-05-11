@@ -40,7 +40,7 @@ cv::Point calculateCenterOfTheArc2(const std::vector<cv::Point> &segment, double
     const cv::Point &p2 = segment[segment.size() - 1];
     const cv::Point &middleSegment = segment[segment.size() / 2];
 
-    drawArcSegment(segment, middleSegment);
+    //drawArcSegment(segment, middleSegment);
 
     std::vector<double> perpendicular1(3), perpendicular2(3);
 
@@ -169,6 +169,40 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
                                    double &currSumOfArcSegmentCurvatures,
                                    bool isRightContour)
 {
+//    std::cout << "ARC SEGMENT:" << std::endl;
+//    for (int i = 0; i < arcSegment.size() - 3; ++i)
+//    {
+//        cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
+//        for (int j = 0; j < arcSegment.size() - 1; ++j)
+//        {
+//            if (arcSegment[j] == arcSegment[i - 3] || arcSegment[j] == arcSegment[i] ||
+//                arcSegment[j] == arcSegment[i + 3])
+//            {
+//                cv::circle(drawing, arcSegment[j], 2, cv::Scalar(0, 255, 0));
+//            }
+//            else
+//            {
+//                cv::circle(drawing, arcSegment[j], 2, cv::Scalar(255, 0, 0));
+//            }
+//        }
+//
+//        if (i > 2)
+//        {
+//            checkingChangeOfContourDirection2(arcSegment[i - 3], arcSegment[i], arcSegment[i + 3]);
+//        }
+//
+//        cv::imshow("angle", drawing);
+//        if (cv::waitKey(0) == 107)
+//        {
+//            cv::destroyWindow("angle");
+//            break;
+//        }
+//        cv::destroyWindow("angle");
+//    }
+//    std::cout << "END ARC SEGMENT" << std::endl;
+
+
+
     //const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
     //double radiusOfTheCircle = 1.0 / curvature;
 
@@ -184,12 +218,12 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
      * Если радиус слишком большой для маленького сегмента, это значит, что такой сегмент на самом деле очень похож
      * на сегмент прямой
      */
-     const int MAXIMUM_RATIO_OF_RADIUS_TO_LENGHT = 5;
-     double arcSegmentLength = Utils::distanceBetweenPoints(arcSegment[0], arcSegment[arcSegment.size() - 1]);
-     if (radiusOfTheCircle / arcSegmentLength > MAXIMUM_RATIO_OF_RADIUS_TO_LENGHT)
-     {
-         return false;
-     }
+    const int MAXIMUM_RATIO_OF_RADIUS_TO_LENGTH = 5;
+    double arcSegmentLength = Utils::distanceBetweenPoints(arcSegment[0], arcSegment[arcSegment.size() - 1]);
+    if (radiusOfTheCircle / arcSegmentLength > MAXIMUM_RATIO_OF_RADIUS_TO_LENGTH)
+    {
+        return false;
+    }
 
     //const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
     const cv::Point center = calculateCenterOfTheArc2(arcSegment, radiusOfTheCircle);
@@ -209,7 +243,6 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     {
         return false;
     }
-
 
     const int MAX_VALUE = 5000;
     if (std::abs(center.x) > MAX_VALUE || std::abs(center.y) > MAX_VALUE || radiusOfTheCircle > MAX_VALUE)
@@ -249,8 +282,8 @@ void drawContourPoints(cv::Mat &drawing, const cv::Point &point, double curvatur
     {
         cv::circle(drawing, point, 1, cv::Scalar(255, 0, 0));
     }
-    cv::imshow("contour", drawing);
-    cv::waitKey(25);
+//    cv::imshow("contour", drawing);
+//    cv::waitKey(25);
 }
 
 
@@ -284,15 +317,15 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
         //std::cout << "i = " << i << "\tpoint = " << contour[i] << std::endl;
 
         //FIXME
-//        if (i > 3 && checkingChangeOfContourDirection2(contour[i - 4], contour[i-2], contour[i]))
-//        {
-//            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
-//                                         lineSegment, isRightContour);
-//
-//
-//            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature,contour[i]);
-//            continue;
-//        }
+        if (i > 2 && checkingChangeOfContourDirection2(contour[i - 3], contour[i], contour[i + 3]))
+        {
+            addArcAndLineSegmentsToModel(modelTracker, arcSegment, currSumOfArcSegmentCurvatures, MIN_ARC_SEGMENT_SIZE,
+                                         lineSegment, isRightContour);
+
+
+            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature,contour[i]);
+            continue;
+        }
 
         // если встретилась точка контура, которая далеко от предыдущей, то это точно начался другой сегмент
         if (i > 0 && checkingForStartOfAnotherContour(contour[i - 1], contour[i]))
@@ -531,7 +564,18 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
 
     if (middleSegmentPoint.y < center.y) // если сегмент находится в верхней части плоскости
     {
-        double shiftAngle = RoadModelBuilder::calculateAngleShiftUpper(segment[0], center);
+        // TODO
+        cv::Point firstPointOfTheArc;
+        if (segment[0].y > segment[segment.size() - 1].y)
+        {
+            firstPointOfTheArc = segment[0];
+        }
+        else
+        {
+            firstPointOfTheArc = segment[segment.size() - 1];
+        }
+        //double shiftAngle = RoadModelBuilder::calculateAngleShiftUpper(segment[0], center);
+        double shiftAngle = RoadModelBuilder::calculateAngleShiftUpper(firstPointOfTheArc, center);
 
         startAngle = 180 + shiftAngle;
     }
@@ -539,7 +583,10 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
     {
         int indexOfLastArcSegment = segment.size() - 1;
         const int DELTA = 5;
-        cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
+
+        //TODO
+        //cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
+        cv::Point lastSegmentPoint = segment[0];
 
         double distanceError = std::abs(Utils::distanceBetweenPoints(lastSegmentPoint, center) - radiusOfTheCircle);
         if (distanceError > DELTA)
@@ -691,8 +738,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
     //std::cout << "lineSegment added" << std::endl;
-    cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(0);
 }
 
 void
@@ -801,11 +848,11 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPr
         return false;
     }
 
-    //std::cout << angle << std::endl;
+    std::cout << angle << std::endl;
 
-    const double ANGLE_THRESHOLD = 45;
+    const double ANGLE_THRESHOLD = 40;
 
-    if (angle < ANGLE_THRESHOLD)
+    if (angle <= ANGLE_THRESHOLD)
     {
         std::cout << "angle changed" << std::endl;
 //        std::cout << "\t" <<prevPrevPoint << std::endl;
