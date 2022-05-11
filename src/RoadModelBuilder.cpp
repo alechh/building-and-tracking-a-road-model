@@ -585,8 +585,17 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
         const int DELTA = 5;
 
         //TODO
+        cv::Point lastSegmentPoint;
         //cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
-        cv::Point lastSegmentPoint = segment[0];
+        //cv::Point lastSegmentPoint = segment[0];
+        if (segment[0].x > segment[segment.size() - 1].x)
+        {
+            lastSegmentPoint = segment[0];
+        }
+        else
+        {
+            lastSegmentPoint = segment[segment.size() - 1];
+        }
 
         double distanceError = std::abs(Utils::distanceBetweenPoints(lastSegmentPoint, center) - radiusOfTheCircle);
         if (distanceError > DELTA)
