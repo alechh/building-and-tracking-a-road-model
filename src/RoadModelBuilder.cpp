@@ -200,8 +200,33 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 //        cv::destroyWindow("angle");
 //    }
 //    std::cout << "END ARC SEGMENT" << std::endl;
-
-
+//
+//    cv::Point &p1 = arcSegment[0];
+//    cv::Point &p2 = arcSegment[arcSegment.size() - 1];
+//    cv::Point &middle = arcSegment[arcSegment.size() / 2];
+//    if (Utils::distanceBetweenPoints(p1, p2) < Utils::distanceBetweenPoints(p1, middle))
+//    {
+//        std::cout << "this arc segment is bad" << std::endl;
+//
+//        std::vector<cv::Point> newArcSegment;
+//        newArcSegment.emplace_back(arcSegment[0]);
+//        double currDistanceToFirstPoint = 0;
+//
+//        for (int i = 1; i < arcSegment.size(); ++i)
+//        {
+//            if (Utils::distanceBetweenPoints(newArcSegment[0], arcSegment[i]) > currDistanceToFirstPoint)
+//            {
+//                newArcSegment.emplace_back(arcSegment[i]);
+//                currDistanceToFirstPoint = Utils::distanceBetweenPoints(newArcSegment[0], arcSegment[i]);
+//            }
+//            else
+//            {
+//                break;
+//            }
+//        }
+//
+//        arcSegment = std::move(newArcSegment);
+//    }
 
     //const double curvature = currSumOfArcSegmentCurvatures / arcSegment.size();
     //double radiusOfTheCircle = 1.0 / curvature;
@@ -229,6 +254,11 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     const cv::Point center = calculateCenterOfTheArc2(arcSegment, radiusOfTheCircle);
 
     drawArcSegment(arcSegment, center);
+
+    if (checkIfArcSegmentIsStraight(arcSegment))
+    {
+        return false;
+    }
 
     double startAngle, endAngle;
 
@@ -748,8 +778,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
     //std::cout << "lineSegment added" << std::endl;
-    cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(0);
 }
 
 void
@@ -860,7 +890,7 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPr
 
     //std::cout << angle << std::endl;
 
-    const double ANGLE_THRESHOLD = 40;
+    const double ANGLE_THRESHOLD = 90; //40
 
     if (angle <= ANGLE_THRESHOLD)
     {
@@ -952,5 +982,51 @@ void RoadModelBuilder::setValuesForFirstPointOfTheContour(std::vector<cv::Point>
 {
     lineSegment.emplace_back(currPoint);
     prevCurvature = 0;
+}
+
+/**
+ * Calculation of the ratio of the change of the x coordinate and the y coordinate
+ * @param arcSegment
+ * @return
+ */
+bool RoadModelBuilder::checkIfArcSegmentIsStraight(const std::vector<cv::Point> &arcSegment)
+{
+    int minX = arcSegment[0].x;
+    int maxX = arcSegment[0].x;
+    int minY = arcSegment[0].y;
+    int maxY = arcSegment[0].y;
+
+    for (int i = 1; i < arcSegment.size(); ++i)
+    {
+        if (arcSegment[i].x < minX)
+        {
+            minX = arcSegment[i].x;
+        }
+
+        if (arcSegment[i].x > maxX)
+        {
+            maxX = arcSegment[i].x;
+        }
+
+        if (arcSegment[i].y < minY)
+        {
+            minY = arcSegment[i].y;
+        }
+
+        if (arcSegment[i].y > maxY)
+        {
+            maxY = arcSegment[i].y;
+        }
+    }
+
+    const double MIN_RATIO_OF_X_TO_Y = 0.3;
+    double ratio = static_cast<double>(maxX - minX) / (maxY - minY);
+    //std::cout << "ratio = " << ratio << std::endl;
+
+    if (ratio < MIN_RATIO_OF_X_TO_Y)
+    {
+        return true;
+    }
+    return false;
 }
 

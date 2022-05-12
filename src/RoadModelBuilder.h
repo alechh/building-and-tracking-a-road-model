@@ -78,6 +78,7 @@ private:
     static void setValuesForFirstPointOfTheContour(std::vector<cv::Point> &lineSegment, double &prevCurvature,
                                                    const cv::Point &currPoint);
 
+    static bool checkIfArcSegmentIsStraight(const std::vector<cv::Point> &arcSegment);
 };
 
 
