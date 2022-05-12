@@ -632,7 +632,8 @@ double RoadModelBuilder::calculateAngleOfTheArc(const std::vector<cv::Point> &se
     if (distMCenter > radiusOfTheCircle)
     {
         // the hypotenuse should be larger than the catheter
-        return 0;
+        //return 0;
+        radiusOfTheCircle = Utils::distanceBetweenPoints(segment[0], center);
     }
 
     double angleB = asin(distMCenter / radiusOfTheCircle);
@@ -747,8 +748,8 @@ RoadModelBuilder::addLineSegmentToModel(RoadModelTracker &modelTracker, std::vec
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
     //std::cout << "lineSegment added" << std::endl;
-//    cv::imshow("drawing", drawing);
-//    cv::waitKey(0);
+    cv::imshow("drawing", drawing);
+    cv::waitKey(0);
 }
 
 void
@@ -857,13 +858,13 @@ bool RoadModelBuilder::checkingChangeOfContourDirection2(const cv::Point &prevPr
         return false;
     }
 
-    std::cout << angle << std::endl;
+    //std::cout << angle << std::endl;
 
     const double ANGLE_THRESHOLD = 40;
 
     if (angle <= ANGLE_THRESHOLD)
     {
-        std::cout << "angle changed" << std::endl;
+        //std::cout << "angle changed" << std::endl;
 //        std::cout << "\t" <<prevPrevPoint << std::endl;
 //        std::cout << "\t" <<prevPoint << std::endl;
 //        std::cout << "\t" <<currPoint << std::endl;
