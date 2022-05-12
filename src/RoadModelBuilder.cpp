@@ -618,7 +618,7 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
         cv::Point lastSegmentPoint;
         //cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
         //cv::Point lastSegmentPoint = segment[0];
-        if (segment[0].x > segment[segment.size() - 1].x)
+        if (segment[0].x > segment[segment.size() - 1].x && segment[0].y < center.y)
         {
             lastSegmentPoint = segment[0];
         }
