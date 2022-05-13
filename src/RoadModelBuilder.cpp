@@ -262,7 +262,16 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     double startAngle, endAngle;
 
+    if (arcSegment[0].x == 1096 && arcSegment[0].y == 257)
+    {
+        std::cout << "debug" << std::endl;
+    }
+
     calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+
+
+    //calculationStartAndEndAnglesOfTheArc2(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
+
 
     if (std::isnan(startAngle) || startAngle == std::numeric_limits<double>::infinity())
     {
@@ -497,6 +506,11 @@ RoadModelBuilder::calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegme
 
     double angleC = asin(distAT / distAC) * 180 / CV_PI; // sin C = distAT / distAC (противолежащий катет / гипотенуза)
 
+    if (firstPointOfTheSegment.x > circleCenter.x)
+    {
+        angleC = 180 - angleC;
+    }
+
     return angleC;
 }
 
@@ -596,7 +610,7 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
     {
         // TODO
         cv::Point firstPointOfTheArc;
-        if (segment[0].y > segment[segment.size() - 1].y)
+        if (segment[0].y > segment[segment.size() - 1].y && (segment[0].y > center.y || segment[0].x < segment[segment.size() - 1].x))
         {
             firstPointOfTheArc = segment[0];
         }
@@ -1028,5 +1042,41 @@ bool RoadModelBuilder::checkIfArcSegmentIsStraight(const std::vector<cv::Point> 
         return true;
     }
     return false;
+}
+
+void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc2(double &startAngle, double &endAngle,
+                                                             const std::vector<cv::Point> &segment,
+                                                             const cv::Point &center, double radiusOfTheCircle)
+{
+
+    //TODO
+    const cv::Point &startPoint = segment[0];
+    cv::Point endPoint = segment[segment.size() - 1];
+
+    double distanceError = std::abs(Utils::distanceBetweenPoints(endPoint, center) - radiusOfTheCircle);
+    std::cout << "distance error = " << distanceError << std::endl;
+    if (distanceError > 5)
+    {
+        endPoint = getLastArcPoint(segment, radiusOfTheCircle, center);
+    }
+
+    double t1 = acos(static_cast<double>(startPoint.x - center.x) / radiusOfTheCircle);
+//    t1 *= 180.0 / CV_PI;
+//    t1 = 360 - t1;
+
+    double t2 = acos(static_cast<double>(endPoint.x - center.x) / radiusOfTheCircle);
+//    t2 *= 180.0 / CV_PI;
+//    t2 = 360 - t2;
+
+    startAngle = t1;
+    endAngle = t2;
+
+    //--------------------------
+    cv::Point p0(radiusOfTheCircle * cos(t1) + center.x, radiusOfTheCircle * sin(t1) + center.y);
+    cv::Point p1(radiusOfTheCircle * cos(t2) + center.x, radiusOfTheCircle * sin(t2) + center.y);
+
+    std::cout << "newAngles" << std::endl;
+    drawArcSegment(segment, p0);
+    drawArcSegment(segment, p1);
 }
 
