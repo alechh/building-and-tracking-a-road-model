@@ -501,6 +501,7 @@ RoadModelBuilder::calculateAngleShiftUpper(const cv::Point &firstPointOfTheSegme
 
     if (distAT > distAC)
     {
+        std::cerr << "RoadModelBuilder::calculateAngleShiftUpper: sin > 1" << std::endl;
         return 0;
     }
 
@@ -531,14 +532,16 @@ double RoadModelBuilder::calculateAngleShiftLower(const cv::Point &lastPointOfTh
 
     double distCMiddlePoint = Utils::distanceBetweenPoints(circleCenter, middlePoint);
 
-    if (distCMiddlePoint > radiusOfTheCircle)
-    {
-        std::cerr << "RoadModelBuilder::calculateAngleShiftLower: sin > 1!!" << std::endl;
-    }
+//    if (distCMiddlePoint > radiusOfTheCircle)
+//    {
+//        std::cerr << "RoadModelBuilder::calculateAngleShiftLower: sin > 1!!" << std::endl;
+//    }
+//    double angleLastPoint = asin(distCMiddlePoint / radiusOfTheCircle) * 180 / CV_PI;
+//    return 180 - 2 * angleLastPoint;
 
-    double angleLastPoint = asin(distCMiddlePoint / radiusOfTheCircle) * 180 / CV_PI;
+    double angleLastPoint = Utils::calculateAngleOfTriangle(lastPointOfTheSegment, circleCenter, P);
+    return angleLastPoint;
 
-    return 180 - 2 * angleLastPoint;
 }
 
 
