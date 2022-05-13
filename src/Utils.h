@@ -50,7 +50,7 @@ public:
                                                                int currIndex);
 
     static double
-    calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv::Point &prevPoint, const cv::Point &currPoint);
+    calculateAngleOfTriangle(const cv::Point &a, const cv::Point &b, const cv::Point &c);
 
 private:
     static int calculatingYThroughX(double x, double A, double B, double C);

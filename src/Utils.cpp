@@ -288,12 +288,19 @@ cv::Point Utils::calculateMidpoint(const cv::Point &a, const cv::Point &b)
     return midPoint;
 }
 
-double Utils::calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv::Point &prevPoint,
-                                       const cv::Point &currPoint)
+/**
+ * Calculate angle c of the triangle abc
+ * @param a
+ * @param b
+ * @param c
+ * @return
+ */
+double Utils::calculateAngleOfTriangle(const cv::Point &a, const cv::Point &b,
+                                       const cv::Point &c)
 {
-    double A = distanceBetweenPoints(prevPrevPoint, prevPoint);
-    double B = distanceBetweenPoints(prevPoint, currPoint);
-    double C = distanceBetweenPoints(currPoint, prevPrevPoint);
+    double A = distanceBetweenPoints(a, b);
+    double B = distanceBetweenPoints(b, c);
+    double C = distanceBetweenPoints(c, a);
 
     if (A * B * C == 0)
     {
@@ -301,14 +308,14 @@ double Utils::calculateAngleOfTriangle(const cv::Point &prevPrevPoint, const cv:
         return 0;
     }
 
-    double cosAngle = (A * A + B * B - C * C) / (2 * A * B);
-    double angle = 0;
+    double cosAngleC = (A * A + B * B - C * C) / (2 * A * B);
+    double angleC = 0;
 
-    if (-1 <= cosAngle && cosAngle <= 1)
+    if (-1 <= cosAngleC && cosAngleC <= 1)
     {
-        angle = acos(cosAngle);
-        angle *= 180 / CV_PI;
+        angleC = acos(cosAngleC);
+        angleC *= 180.0 / CV_PI;
         //std::cout << "angle = " << angle << std::endl;
     }
-    return angle;
+    return angleC;
 }
