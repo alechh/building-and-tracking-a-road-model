@@ -262,9 +262,11 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     double startAngle, endAngle;
 
-    if (arcSegment[0].x == 1096 && arcSegment[0].y == 257)
+    if (arcSegment[0] == cv::Point(1025, 195))
     {
         std::cout << "debug" << std::endl;
+//        drawArcSegment(arcSegment, arcSegment[0]);
+//        drawArcSegment(arcSegment, arcSegment[arcSegment.size() - 1]);
     }
 
     calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
@@ -362,7 +364,7 @@ void RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(RoadModelTracker &m
                                          lineSegment, isRightContour);
 
 
-            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature,contour[i]);
+            setValuesForFirstPointOfTheContour(lineSegment, prevCurvature, contour[i]);
             continue;
         }
 
@@ -613,7 +615,8 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
     {
         // TODO
         cv::Point firstPointOfTheArc;
-        if (segment[0].y > segment[segment.size() - 1].y && (segment[0].y > center.y || segment[0].x < segment[segment.size() - 1].x))
+        if (segment[0].y > segment[segment.size() - 1].y &&
+            (segment[0].y > center.y || segment[0].x < segment[segment.size() - 1].x))
         {
             firstPointOfTheArc = segment[0];
         }
@@ -635,7 +638,8 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
         cv::Point lastSegmentPoint;
         //cv::Point lastSegmentPoint = segment[indexOfLastArcSegment];
         //cv::Point lastSegmentPoint = segment[0];
-        if (segment[0].x > segment[segment.size() - 1].x && segment[0].y < center.y)
+        if (segment[0].x > segment[segment.size() - 1].x &&
+            (segment[0].y < center.y || segment[0].y > segment[segment.size() - 1].y))
         {
             lastSegmentPoint = segment[0];
         }
