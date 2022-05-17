@@ -31,7 +31,8 @@ public:
 
     static void drawContoursOnImage(const std::vector<std::vector<cv::Point>> &contours);
 
-    static void drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vector<cv::Point>> &contours);
+    static void drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vector<cv::Point>> &contours,
+                                         bool addMissingPoints);
 
     static void drawContourPointByPoint(cv::Mat &dst, const std::vector<cv::Point> &contour);
 

@@ -113,18 +113,56 @@ void Drawer::drawContoursOnImage(const std::vector<std::vector<cv::Point>> &cont
     imwrite("../images/contour.jpg", pictuteOfTheContour);
 }
 
-void Drawer::drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vector<cv::Point>> &contours)
+void Drawer::drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vector<cv::Point>> &contours,
+                                      bool addMissingPoints = false)
 {
-    for (const auto &contour: contours)
+    if (!addMissingPoints)
     {
-        srand(time(0));
-        int red = rand() % 255;
-        int green = rand() % 255;
-        int blue = rand() % 255;
-
-        for (const auto &point: contour)
+        for (const auto &contour: contours)
         {
-            cv::circle(dts, point, 1, cv::Scalar(blue, green, red));
+            for (const auto &point: contour)
+            {
+                cv::circle(dts, point, 1, cv::Scalar(0, 0, 0));
+            }
+        }
+    }
+    else
+    {
+        for (const auto &contour : contours)
+        {
+            const int DELTA = 2;
+            cv::Point prevPoint = contour[0];
+
+            cv::circle(dts, prevPoint, 1, cv::Scalar(0, 0, 0));
+
+            for (int i = 1; i < contour.size(); ++i)
+            {
+                const cv::Point &currPoint = contour[i];
+                cv::Point2f difference = currPoint - prevPoint;
+
+                difference.x = std::abs(difference.x);
+                difference.y = std::abs(difference.y);
+
+                if (difference.x > DELTA || difference.y > DELTA)
+                {
+                    const cv::Point directionalVector(currPoint.x - prevPoint.x, currPoint.y - prevPoint.y);
+
+                    double t = 0;
+
+                    while (std::abs(directionalVector.x * t + prevPoint.x - currPoint.x) > DELTA ||
+                           std::abs(directionalVector.y * t + prevPoint.y - currPoint.y) > DELTA)
+                    {
+                        t += 0.01; // 0.05 тоже внешне норм
+
+                        cv::Point2d newPoint;
+                        newPoint.x = directionalVector.x * t + prevPoint.x;
+                        newPoint.y = directionalVector.y * t + prevPoint.y;
+
+                        cv::circle(dts, newPoint, 1, cv::Scalar(0, 0, 0));
+                    }
+                }
+                prevPoint = currPoint;
+            }
         }
     }
 }
