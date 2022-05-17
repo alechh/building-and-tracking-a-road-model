@@ -253,7 +253,7 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     //const cv::Point center = calculateCenterOfTheArc(arcSegment, radiusOfTheCircle);
     const cv::Point center = calculateCenterOfTheArc2(arcSegment, radiusOfTheCircle);
 
-    drawArcSegment(arcSegment, center);
+    //drawArcSegment(arcSegment, center);
 
     if (checkIfArcSegmentIsStraight(arcSegment))
     {
@@ -262,18 +262,9 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
 
     double startAngle, endAngle;
 
-    if (arcSegment[0] == cv::Point(1025, 195))
-    {
-        std::cout << "debug" << std::endl;
-//        drawArcSegment(arcSegment, arcSegment[0]);
-//        drawArcSegment(arcSegment, arcSegment[arcSegment.size() - 1]);
-    }
-
     calculationStartAndEndAnglesOfTheArc(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
 
-
     //calculationStartAndEndAnglesOfTheArc2(startAngle, endAngle, arcSegment, center, radiusOfTheCircle);
-
 
     if (std::isnan(startAngle) || startAngle == std::numeric_limits<double>::infinity())
     {
@@ -306,8 +297,8 @@ RoadModelBuilder::addArcToTheModel(RoadModelTracker &modelTracker, std::vector<c
     cv::Mat drawing(800, 1500, 16, cv::Scalar(0, 0, 0));
     modelTracker.getRoadModelPointer()->drawModel(drawing);
     //std::cout << "arcSegment added" << std::endl;
-    cv::imshow("drawing", drawing);
-    cv::waitKey(0);
+//    cv::imshow("drawing", drawing);
+//    cv::waitKey(0);
 
     return true;
 }
@@ -615,7 +606,7 @@ void RoadModelBuilder::calculationStartAndEndAnglesOfTheArc(double &startAngle, 
     {
         // TODO
         cv::Point firstPointOfTheArc;
-        if (segment[0].y > segment[segment.size() - 1].y &&
+        if (/* segment[0].y > segment[segment.size() - 1].y && */
             (segment[0].y > center.y || segment[0].x < segment[segment.size() - 1].x))
         {
             firstPointOfTheArc = segment[0];
