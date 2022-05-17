@@ -95,7 +95,7 @@ void CircularArc::drawModelElement(cv::Mat &src) const
 {
     //cv::circle(src, this->center, 1, cv::Scalar(0, 0, 255));
     cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
-                cv::Scalar(255, 0, 0), 2);
+                cv::Scalar(255, 0, 0), 1);
 }
 
 void CircularArc::drawModelElementPoints(cv::Mat &src) const
@@ -424,11 +424,11 @@ void RoadModel::addElementToRight(const CircularArc &newCircularArc)
             curr = curr->next;
         }
 
-        if (addConnectingSegment(curr, newCircularArc))
-        {
-            //std::cout << "connecting segment was added" << std::endl;
-            curr = curr->next;
-        }
+//        if (addConnectingSegment(curr, newCircularArc))
+//        {
+//            //std::cout << "connecting segment was added" << std::endl;
+//            curr = curr->next;
+//        }
 
         curr->next = std::make_shared<CircularArc>(newCircularArc);
         this->modelRightElementCounter++;
@@ -450,11 +450,11 @@ void RoadModel::addElementToLeft(const CircularArc &newCircularArc)
             curr = curr->next;
         }
 
-        if (addConnectingSegment(curr, newCircularArc))
-        {
-            //std::cout << "connecting segment was added" << std::endl;
-            curr = curr->next;
-        }
+//        if (addConnectingSegment(curr, newCircularArc))
+//        {
+//            //std::cout << "connecting segment was added" << std::endl;
+//            curr = curr->next;
+//        }
 
         curr->next = std::make_shared<CircularArc>(newCircularArc);
         this->modelLeftElementCounter++;
@@ -476,11 +476,11 @@ void RoadModel::addElementToRight(const LineSegment &newLineSegment)
             curr = curr->next;
         }
 
-        if (addConnectingSegment(curr, newLineSegment))
-        {
-            //std::cout << "connecting segment was added" << std::endl;
-            curr = curr->next;
-        }
+//        if (addConnectingSegment(curr, newLineSegment))
+//        {
+//            //std::cout << "connecting segment was added" << std::endl;
+//            curr = curr->next;
+//        }
 
         curr->next = std::make_shared<LineSegment>(newLineSegment);
         this->modelRightElementCounter++;
@@ -502,11 +502,11 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
             curr = curr->next;
         }
 
-        if (addConnectingSegment(curr, newLineSegment))
-        {
-            //std::cout << "connecting segment was added" << std::endl;
-            curr = curr->next;
-        }
+//        if (addConnectingSegment(curr, newLineSegment))
+//        {
+//            //std::cout << "connecting segment was added" << std::endl;
+//            curr = curr->next;
+//        }
 
         curr->next = std::make_shared<LineSegment>(newLineSegment);
         this->modelLeftElementCounter++;
