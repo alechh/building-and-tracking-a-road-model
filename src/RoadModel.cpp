@@ -95,7 +95,7 @@ void CircularArc::drawModelElement(cv::Mat &src) const
 {
     //cv::circle(src, this->center, 1, cv::Scalar(0, 0, 255));
     cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
-                cv::Scalar(255, 0, 0), 1);
+                cv::Scalar(255, 0, 0), 2);
 }
 
 void CircularArc::drawModelElementPoints(cv::Mat &src) const

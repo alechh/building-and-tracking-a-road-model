@@ -226,12 +226,13 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
     //const int FRAME_NUMBER = 42;
     for (int i = 0; i < vectorOfFrameContours.size(); ++i)
     {
-        if (vectorOfFrameContours[i].numberOfFrame < 42)
-        {
-            continue;
-        }
+//        if (vectorOfFrameContours[i].numberOfFrame < 9)
+//        {
+//            continue;
+//        }
 
-        cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+        cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
+        cv::Mat contourPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
 
         std::cout << "frame number: " << vectorOfFrameContours[i].numberOfFrame << std::endl;
         std::vector<std::vector<cv::Point>> contours = vectorOfFrameContours[i].contours;
@@ -267,7 +268,10 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
 
             const bool addMissingPointsToImage = false;
             Drawer::drawContoursPointsDependingOnItsCurvatures(curvatureOnContourPicture, contours, contoursCurvatures,
-                                                               addMissingPointsToImage, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
+                                                               addMissingPointsToImage,
+                                                               MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
+
+            Drawer::drawContoursPointByPoint(contourPicture, contours, false);
 
             //cv::resize(curvatureOnContourPicture, curvatureOnContourPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
@@ -278,18 +282,27 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
             std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
             RoadModelTracker modelTracker(roadModelPointer);
 
-            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
+            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS,
+                                             MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
+
+            exportModelPoints(modelTracker, vectorOfFrameContours[i].numberOfFrame);
+
             //cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
 
-            cv::imshow(cv::format("contour_frame%d", vectorOfFrameContours[i].numberOfFrame), curvatureOnContourPicture);
+//            cv::imshow(cv::format("contour_frame%d", vectorOfFrameContours[i].numberOfFrame),
+//                       curvatureOnContourPicture);
+            //cv::imwrite(cv::format("../images/contours/frameNumber%d.jpg",
+            //                       vectorOfFrameContours[i].numberOfFrame), contourPicture);
 
             roadModelPointer->drawModel(roadModelPicture);
 
 
-            cv::imshow("model", roadModelPicture);
-            cv::waitKey(0);
-            cv::destroyWindow(cv::format("contour_frame%d", vectorOfFrameContours[i].numberOfFrame));
+            //cv::imshow("model", roadModelPicture);
+            //cv::imwrite(cv::format("../images/model/frameNumber%d.jpg",
+            //                      vectorOfFrameContours[i].numberOfFrame), roadModelPicture);
+            cv::waitKey(25);
+            //cv::destroyWindow(cv::format("contour_frame%d", vectorOfFrameContours[i].numberOfFrame));
         }
     }
 }
@@ -407,9 +420,10 @@ void RealDataTester::manualFindAndMarkDuplicatePoint(const std::vector<cv::Point
     drawing.release();
 }
 
-void RealDataTester::removeDuplicatePointsFromContours(std::vector<std::vector<cv::Point>> &contours, const int FRAME_NUMBER)
+void
+RealDataTester::removeDuplicatePointsFromContours(std::vector<std::vector<cv::Point>> &contours, const int FRAME_NUMBER)
 {
-    for (auto &contour : contours)
+    for (auto &contour: contours)
     {
         removeDuplicatePointsFromContour(contour, FRAME_NUMBER);
         removeLocallyIdenticalContourPoints(contour);
@@ -435,6 +449,140 @@ void RealDataTester::removeLocallyIdenticalContourPoints(std::vector<cv::Point> 
     }
 
     contour = std::move(newContour);
+}
+
+void RealDataTester::exportModelPoints(const RoadModelTracker &modelTracker, int frameNumber)
+{
+    static std::ofstream out;
+    if (!out.is_open())
+    {
+        out.open("../output.txt");
+    }
+
+    if (frameNumber != 1)
+    {
+        out << "\n";
+    }
+
+    out << std::to_string(frameNumber) << " : { [ ";
+
+    std::shared_ptr<RoadModel> model = modelTracker.getRoadModelPointer();
+
+    std::shared_ptr<ModelElement> curr;
+
+    if (model->getLeftHead())
+    {
+        curr = model->getLeftHead();
+
+        while (curr)
+        {
+            if (std::dynamic_pointer_cast<LineSegment>(curr))
+            {
+                exportLineSegment(out, std::dynamic_pointer_cast<LineSegment>(curr)->getBeginPoint(),
+                                  std::dynamic_pointer_cast<LineSegment>(curr)->getEndPoint());
+            }
+            else
+            {
+                std::shared_ptr<CircularArc> arc = std::dynamic_pointer_cast<CircularArc>(curr);
+                exportArcSegment(out, arc->getCenter(), arc->getRadius(), arc->getStartAngle(), arc->getEndAngle());
+            }
+
+            curr = curr->next;
+        }
+    }
+
+    if (model->getRightHead())
+    {
+        curr = model->getRightHead();
+
+        while (curr)
+        {
+            if (std::dynamic_pointer_cast<LineSegment>(curr))
+            {
+                exportLineSegment(out, std::dynamic_pointer_cast<LineSegment>(curr)->getBeginPoint(),
+                                  std::dynamic_pointer_cast<LineSegment>(curr)->getEndPoint());
+            }
+            else
+            {
+                std::shared_ptr<CircularArc> arc = std::dynamic_pointer_cast<CircularArc>(curr);
+                exportArcSegment(out, arc->getCenter(), arc->getRadius(), arc->getStartAngle(), arc->getEndAngle());
+            }
+
+            curr = curr->next;
+        }
+    }
+
+    out << "]\n}";
+    //out.close();
+    //cv::waitKey(0);
+}
+
+void RealDataTester::exportLineSegment(std::ofstream &out, const cv::Point &begin, const cv::Point &end)
+{
+    const int DELTA = 2;
+
+    cv::Point2f difference = end - begin;
+
+    difference.x = std::abs(difference.x);
+    difference.y = std::abs(difference.y);
+
+    if (difference.x > DELTA || difference.y > DELTA)
+    {
+        const cv::Point directionalVector(end.x - begin.x, end.y - begin.y);
+
+        double t = 0;
+
+        while (std::abs(directionalVector.x * t + begin.x - end.x) > DELTA ||
+               std::abs(directionalVector.y * t + begin.y - end.y) > DELTA)
+        {
+            t += 0.01; // 0.05 тоже внешне норм
+
+            cv::Point2d newPoint;
+            newPoint.x = directionalVector.x * t + begin.x;
+            newPoint.y = directionalVector.y * t + begin.y;
+
+            reverseScalePoint(newPoint);
+
+            out << "(" + std::to_string(newPoint.x) + ", " + std::to_string(newPoint.y) + ") ";
+        }
+    }
+}
+
+void RealDataTester::reverseScalePoint(cv::Point2d &point)
+{
+    const int SCALE_FACTOR = 15;
+    const int SHIFT_X = 900;
+    const int SHIFT_Y = 500;
+
+    point.x -= SHIFT_X;
+    point.x /= SCALE_FACTOR;
+
+    point.y -= SHIFT_Y;
+    point.y /= -SCALE_FACTOR;
+
+}
+
+void RealDataTester::exportArcSegment(std::ofstream &out, const cv::Point &center, double radius, double startAngle,
+                                      double endAngle)
+{
+    cv::Mat drawing(500, 1000, 16, cv::Scalar(0, 0, 0));
+    cv::ellipse(drawing, center, cv::Size(radius, radius), 0, startAngle, endAngle, cv::Scalar(255, 255, 255));
+
+    cv::cvtColor(drawing, drawing, cv::COLOR_BGR2GRAY);
+
+    std::vector <std::vector<cv::Point>> contours;
+
+    cv::findContours(drawing, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
+
+    for (const auto &contour: contours)
+    {
+        for (const auto &point: contour)
+        {
+            cv::Point2d newPoint(point);
+            reverseScalePoint(newPoint);
+            out << "(" + std::to_string(newPoint.x) + ", " + std::to_string(newPoint.y) + ") ";
+        }
+    }
 }
 
 
