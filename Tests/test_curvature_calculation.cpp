@@ -13,7 +13,7 @@ TEST(CurvatureTest, CircleCurvature)
 
     const int radius = 10000000;
 
-    std::vector< std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Point> circleContour = ContourBuilder::getCircleContour(radius);
     contours.emplace_back(circleContour);
 
@@ -23,7 +23,7 @@ TEST(CurvatureTest, CircleCurvature)
     double maxError = 0, minError = 1;
     int countInf = 0, countZero = 0;
 
-    for (auto i : circleCurvature)
+    for (auto i: circleCurvature)
     {
         if (i == circleCurvature[0])
         {
@@ -63,7 +63,7 @@ TEST(CurvatureTest, CircleCurvature)
 TEST(CurvatureTest, StraightVerticalLineCurvature)
 {
     // Curvature of the straight line = 0
-    std::vector< std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Point> lineContour = ContourBuilder::getStraightLineContour();
     contours.emplace_back(lineContour);
 
@@ -73,7 +73,7 @@ TEST(CurvatureTest, StraightVerticalLineCurvature)
 
     double maxError = 0, minError = 1;
 
-    for (auto i : lineCurvature)
+    for (auto i: lineCurvature)
     {
         if (i == lineCurvature[0] || i == lineCurvature[lineCurvature.size() - 1])
         {
@@ -101,7 +101,7 @@ TEST(CurvatureTest, StraightHorizontalLineCurvature)
 {
     // Curvature of the straight line = 0
 
-    std::vector< std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Point> lineContour = ContourBuilder::getStraightLineContour(false);
     contours.emplace_back(lineContour);
 
@@ -110,7 +110,7 @@ TEST(CurvatureTest, StraightHorizontalLineCurvature)
 
     double maxError = 0, minError = 1;
 
-    for (auto i : lineCurvature)
+    for (auto i: lineCurvature)
     {
         if (i == lineCurvature[0] || i == lineCurvature[lineCurvature.size() - 1])
         {
@@ -142,7 +142,7 @@ TEST(CurvatureTest, ParabolaCurvature)
     int rightXBoundary = 50;
     int xStep = 1;
 
-    std::vector< std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Point> parabolaContour = ContourBuilder::getParabolaContour(xStep, leftXBoundary, rightXBoundary);
     contours.emplace_back(parabolaContour);
 
@@ -170,7 +170,7 @@ TEST(CurvatureTest, ParabolaCurvature)
         }
 
         double exactValue = 6.0 / pow(1 + 36 * pow(x, 2), 1.5);
-        EXPECT_EQ(parabolaCurvature[i],  exactValue);
+        EXPECT_EQ(parabolaCurvature[i], exactValue);
 
         x += xStep;
         i++;
@@ -198,7 +198,7 @@ TEST(CurvatureTest, CircleCurvature2)
 
     const int radius = 1000;
 
-    std::vector< std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Point> circleContour = ContourBuilder::getCircleContour(radius);
     contours.emplace_back(circleContour);
 
@@ -233,7 +233,7 @@ TEST(CurvatureTest, ParabolaCurvature2)
     const int rightXBoundary = 50;
     const int xStep = 1;
 
-    std::vector< std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Point> parabolaContour = ContourBuilder::getParabolaContour(xStep, leftXBoundary, rightXBoundary);
     contours.emplace_back(parabolaContour);
 
@@ -280,4 +280,57 @@ TEST(CurvatureTest, ParabolaCurvature2)
     meanError /= countError;
 
     EXPECT_LE(meanError, 0.0005);
+}
+
+#include "fstream"
+
+TEST(CurvatureTest, varianceByCircle)
+{
+    const int radius = 1000;
+
+    std::vector<std::vector<cv::Point> > contours;
+    const std::vector<cv::Point> circleContour = ContourBuilder::getCircleContour(radius);
+    contours.emplace_back(circleContour);
+
+    for (int step = 1; step < 26; ++step)
+    {
+        std::vector<double> circleCurvature(circleContour.size());
+        CurvatureCalculator::calculateCurvature2(circleCurvature, circleContour, step);
+
+        double meanError = 0;
+        int count = 0;
+        double expectedValue = 0;
+        double variance = 0;
+
+        for (int i = 0; i < circleCurvature.size(); ++i)
+        {
+            if (circleCurvature[i] != std::numeric_limits<double>::infinity())
+            {
+                meanError += std::abs(1.0 / radius - circleCurvature[i]);
+                expectedValue += circleCurvature[i];
+                count++;
+            }
+        }
+
+        expectedValue /= count;
+        meanError /= count;
+
+        for (auto i: circleCurvature)
+        {
+            if (i == std::numeric_limits<double>::infinity())
+            {
+                continue;
+            }
+
+            variance += pow(i - expectedValue, 2);
+        }
+
+        variance /= count;
+
+//        std::cout << "Step = " << step << std::endl;
+//        std::cout << "\texpectedValue = " << expectedValue << std::endl;
+//        std::cout << "\tVariance = " << variance << std::endl;
+//        std::cout << "\tMean error = " << meanError << std::endl << std::endl;
+        //std::cout << variance << std::endl;
+    }
 }

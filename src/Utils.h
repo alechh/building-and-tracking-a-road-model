@@ -10,6 +10,7 @@
 #include <opencv2/core/types.hpp>
 #include <opencv2/core/mat.hpp>
 #include "RoadModel.h"
+#include "RoadModelTracker.h"
 
 class Utils
 {
@@ -18,11 +19,9 @@ public:
 
     static double meanCurvature(const std::vector<double> &curvature);
 
-    static cv::Point getMidpoint(const cv::Point &a, const cv::Point &b);
+    static cv::Point calculateMidpoint(const cv::Point &a, const cv::Point &b);
 
     static void sortVectorOfVectorsOfPoints(std::vector<std::vector<cv::Point>> &contours);
-
-    static void drawContours(const std::vector<std::vector<cv::Point>> &contours, cv::Mat &dst, int numberOfContours);
 
     static cv::Point2f
     calculateFirstDerivative(const cv::Point2f &pPlus, const cv::Point2f &pMinus, int iPlus, int iMinus, double h);
@@ -50,8 +49,8 @@ public:
                                                                const std::vector<cv::Point> &contour, int step,
                                                                int currIndex);
 
-    static void drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
-                                                         const std::vector<double> &contourCurvature);
+    static double
+    calculateAngleOfTriangle(const cv::Point &a, const cv::Point &b, const cv::Point &c);
 
 private:
     static int calculatingYThroughX(double x, double A, double B, double C);

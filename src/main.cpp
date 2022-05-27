@@ -9,51 +9,14 @@
 #include "RoadModelBuilder.h"
 #include "ContourBuilder.h"
 #include "CurvatureCalculator.h"
+#include "Drawer.h"
+#include "RoadModelTracker.h"
+#include "RealDataTester.h"
 
 
-/**
- * Drawing contour points according to the curvature in them.
- * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
- * @param dst -- destination image
- * @param contour -- vector of the points
- * @param contourCurvature -- vector of the curvature of the contour
- */
-void Utils::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
-{
-    for (int i = 0; i < contour.size(); ++i)
-    {
-        if (contourCurvature[i] == 0)
-        {
-            circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
-        }
-        else
-        {
-            circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
-        }
-    }
-}
-
-
-void saveContoursOnImage(const std::vector<std::vector<cv::Point>> &contours)
-{
-    const int ROWS = 500;
-    const int COLS = 1000;
-    const int TYPE = 16;
-
-    cv::Mat pictuteOfTheContour(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
-    for (const auto &contour: contours)
-    {
-        for (const auto &point: contour)
-        {
-            circle(pictuteOfTheContour, point, 1, cv::Scalar(255, 0, 0), 3);
-        }
-    }
-
-    imwrite("../images/contour.jpg", pictuteOfTheContour);
-}
-
-
-void calculateMeanError(double &minCurvatureError, int &minStepCurvature, const double EXACT_CURVATURE, const int CUR_STEP, const std::vector<double> &contourCurvature)
+void
+calculateMeanError(double &minCurvatureError, int &minStepCurvature, const double EXACT_CURVATURE, const int CUR_STEP,
+                   const std::vector<double> &contourCurvature)
 {
     double meanCurvature = 0;
     int count = 0;
@@ -81,77 +44,184 @@ void buildRoadModelByContour()
     const int COLS = 1000;
     const int TYPE = 16;
 
-    std::vector<std::vector<cv::Point> > contours;
-    contours.emplace_back(ContourBuilder::getSimpleRightContour());
+    const std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
+    RoadModelTracker modelTracker(roadModelPointer);
 
-    const double EXACT_CURVATURE = 0.01;
-
-    saveContoursOnImage(contours);
-
-    std::vector<std::vector<double> > contoursCurvatures(contours.size());
-
-    cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
-
-    double minCurvatureError = 10000;
-    int minStepCurvature = 0;
-
-    for (int iStep = 10; iStep <= 10; ++iStep)
+    for (int t = 0; t < 1; ++t) // < 460
     {
-        //std::cout << "iStep = " << iStep << std::endl << contours[0].size() << std::endl;
+        const std::vector<std::vector<cv::Point>> contours = ContourBuilder::getRightAndLeftContours(80, 100, 150, 300,
+                                                                                                     t);
+        cv::Mat contoursTImage(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
 
-        RoadModel roadModel;
-
-        cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
-        cv::Mat contourPointsPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
-
-        for (int i = 0; i < contours.size(); ++i)
+        for (const auto &i: contours)
         {
-            int betterStep = contours[i].size() / 10;
-
-            std::vector<double> tempCurvatureContour(contours[i].size());
-            CurvatureCalculator::calculateCurvature2(tempCurvatureContour, contours[i], betterStep);
-
-            contoursCurvatures[i] = std::move(tempCurvatureContour);
-
-            bool isRightContour;
-            if (contours[i][0].x < COLS / 2)
+            for (const auto &j: i)
             {
-                isRightContour = false;
-            } else
-            {
-                isRightContour = true;
+                cv::circle(contoursTImage, j, 1, cv::Scalar(255, 255, 255));
             }
-
-            RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(roadModel, contours[i],
-                                                                    contoursCurvatures[i],
-                                                                    isRightContour);
-
-            Utils::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
-                                                            contoursCurvatures[i]);
-
-            calculateMeanError(minCurvatureError, minStepCurvature, EXACT_CURVATURE, iStep, contoursCurvatures[i]);
         }
 
-        roadModel.drawModel(roadModelPicture);
-        imwrite("../images/frameRoadModel.jpg", roadModelPicture);
+        const double EXACT_CURVATURE = 0.01;
 
-        roadModel.printInformationOfTheModel();
+        Drawer::drawContoursOnImage(contours);
 
-        imwrite(cv::format("../images/curvatureOnContourPicture/curvatureContour%d.jpg", iStep),
-                curvatureOnContourPicture);
+        std::vector<std::vector<double>> contoursCurvatures(contours.size());
 
-        roadModel.drawModelPoints(contourPointsPicture);
-        imwrite("../images/showModelPoints/modelPoints.jpg", contourPointsPicture);
+        cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
+
+        double minCurvatureError = 10000;
+        int minStepCurvature = 0;
+
+        for (int iStep = 10; iStep <= 10; ++iStep)
+        {
+            //std::cout << "iStep = " << iStep << std::endl << contours[0].size() << std::endl;
+
+            cv::Mat curvatureOnContourPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+            cv::Mat contourPointsPicture(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
+
+            for (int i = 0; i < contours.size(); ++i)
+            {
+                int betterStep = contours[i].size() / 10;
+
+                std::vector<double> tempCurvatureContour(contours[i].size());
+                CurvatureCalculator::calculateCurvature2(tempCurvatureContour, contours[i], betterStep);
+
+                contoursCurvatures[i] = std::move(tempCurvatureContour);
+
+
+//                Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
+//                                                                 contoursCurvatures[i], 1);
+            }
+
+            Drawer::drawContoursPointByPoint(roadModelPicture, contours, false);
+
+            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS, 1);
+
+            modelTracker.getRoadModelPointer()->drawModel(roadModelPicture);
+            cv::imshow("model", roadModelPicture);
+            cv::waitKey(0);
+            imwrite(cv::format("../images/result.jpg", t), roadModelPicture);
+
+            //roadModelPointer->printInformationOfTheModel();
+
+            //imwrite(cv::format("../images/curvatureOnContourPicture/curvatureContour%d.jpg", iStep),
+            //        curvatureOnContourPicture);
+
+            roadModelPointer->drawModelPoints(contourPointsPicture);
+            //imwrite("../images/showModelPoints/modelPoints.jpg", contourPointsPicture);
+
+            roadModelPicture.release();
+        }
     }
 
-    std::cout << std::endl << "Min curvature error = " << minCurvatureError << "\niStep = " << minStepCurvature
-              << std::endl;
+
+//    std::cout << std::endl << "Min curvature error = " << minCurvatureError << "\niStep = " << minStepCurvature
+//              << std::endl;
+}
+
+
+void testModelBuildingOnRealData()
+{
+    const std::string PATH_VIDEO = "../videos/realData.MP4";
+    const std::string PATH_TXT = "../videos/bv_points.txt";
+//    RealDataTester::extractContourFromVideo(PATH_VIDEO);
+
+    RealDataTester::buildRoadModelByContour(PATH_TXT);
+}
+
+
+void testDirectionalVector()
+{
+    cv::Mat src = cv::imread("../videos/testDirectionalVector.png");
+    cv::Mat srcGray(src.clone());
+    cv::cvtColor(src, srcGray, cv::COLOR_BGR2GRAY);
+
+    std::vector<std::vector<cv::Point>> contour;
+    cv::findContours(srcGray, contour, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+    cv::Mat drawing(src.rows, src.cols, src.type(), cv::Scalar(255, 255, 255));
+
+//    for (int i = 0; i < 10; ++i)
+//    {
+//        contour.emplace_back(cv::Point(i, 0));
+//    }
+//    contour.emplace_back(cv::Point(9, 1));
+//    contour.emplace_back(cv::Point(9, 2));
+//    contour.emplace_back(cv::Point(9, 1));
+
+    cv::Point prevPoint = contour[1][0];
+    cv::Point prevPrevPoint = contour[1][0];
+
+    for (int i = 0; i < contour[1].size(); ++i)
+    {
+        cv::Point directionalVector(contour[1][i].x - prevPrevPoint.x, contour[1][i].y - prevPrevPoint.y);
+        std::cout << directionalVector << std::endl;
+
+        cv::circle(drawing, contour[1][i], 1, cv::Scalar(0, 0, 0));
+        cv::imshow("drawing", drawing);
+        if (cv::waitKey(25) == 107)
+        {
+            cv::waitKey(0);
+        }
+
+
+        prevPrevPoint = prevPoint;
+        prevPoint = contour[1][i];
+    }
+}
+
+void testAngelOfTriangleCalculation()
+{
+    cv::Point prevPrevPoint(0, 0);
+    cv::Point prevPoint(1, -1);
+    cv::Point currPoint(1, 0);
+
+    std::cout << Utils::calculateAngleOfTriangle(prevPrevPoint, prevPoint, currPoint) << std::endl;
+}
+
+
+void testExtractingEllipse()
+{
+    cv::Mat drawing(500, 1000, 16, cv::Scalar(0, 0, 0));
+    cv::Mat drawing2(500, 1000, 16, cv::Scalar(0, 0, 0));
+    cv::ellipse(drawing, cv::Point(500, 250), cv::Size(100, 100), 0, 90, 225, cv::Scalar(255, 255, 255));
+
+    cv::cvtColor(drawing, drawing, cv::COLOR_BGR2GRAY);
+
+    std::vector<std::vector<cv::Point>> contour;
+
+    cv::findContours(drawing, contour, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
+
+    std::cout << contour[0].size() << std::endl;
+
+
+
+    for (const auto &point: contour[0])
+    {
+        cv::circle(drawing2, point, 1, cv::Scalar(255, 129, 21));
+    }
+
+    cv::imshow("drawing", drawing2);
+    cv::waitKey(0);
+}
+
+
+void testDataExtraction()
+{
+    const std::string PATH_TXT = "../output.txt";
+
+    RealDataTester::buildRoadModelByContour(PATH_TXT);
 }
 
 
 int main()
 {
-    buildRoadModelByContour();
+    //buildRoadModelByContour();
+    //testModelBuildingOnRealData();
+    //testDirectionalVector();
+    //testAngelOfTriangleCalculation();
+    testDataExtraction();
 
+    //testExtractingEllipse();
     return 0;
 }

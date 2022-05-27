@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(building-and-tracking-a-road-model
 		src/main.cpp
-		src/Utils.cpp src/RoadModelBuilder.cpp src/RoadModelBuilder.h src/RoadModel.cpp src/RoadModel.h src/ContourBuilder.cpp src/ContourBuilder.h src/CurvatureCalculator.cpp src/CurvatureCalculator.h)
+		src/Drawer.h src/Drawer.cpp
+		src/Utils.cpp src/RoadModelBuilder.cpp src/RoadModelBuilder.h src/RoadModel.cpp src/RoadModel.h src/ContourBuilder.cpp src/ContourBuilder.h src/CurvatureCalculator.cpp src/CurvatureCalculator.h src/RoadModelTracker.cpp src/RoadModelTracker.h src/RealDataTester.cpp src/RealDataTester.h)
 
 # include_directories(src)
 

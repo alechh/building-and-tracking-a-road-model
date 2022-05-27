@@ -46,6 +46,10 @@ public:
     void printInformation() const override;
 
     void drawModelElementPoints(cv::Mat &src) const override;
+
+    cv::Point getBeginPoint() const;
+
+    cv::Point getEndPoint() const;
 };
 
 class CircularArc : public ModelElement
@@ -65,6 +69,14 @@ public:
     void printInformation() const override;
 
     void drawModelElementPoints(cv::Mat &src) const override;
+
+    double getRadius() const;
+
+    cv::Point getCenter() const;
+
+    double getStartAngle() const;
+
+    double getEndAngle() const;
 };
 
 
@@ -79,18 +91,33 @@ private:
     int modelLeftElementCounter;
     int modelRightElementCounter;
 
+    const int MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS = 100;
+
     void drawLeftSide(cv::Mat &dst) const;
 
     void drawRightSide(cv::Mat &dst) const;
 
     void drawRightSidePoints(cv::Mat &dst) const;
 
+    void drawLeftSidePoints(cv::Mat &dst) const;
+
     void printInformationOfTheRightSide() const;
 
     void printInformationOfTheLeftSide() const;
 
-public:
+    bool addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const LineSegment &newLineSegment);
 
+    bool addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const LineSegment &newLineSegment);
+
+    bool addConnectingSegment(std::shared_ptr<LineSegment> &lastLineSegment, const CircularArc &newCircularArc);
+
+    bool addConnectingSegment(std::shared_ptr<CircularArc> &lastCircularArc, const CircularArc &newCircularArc);
+
+    bool addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const CircularArc &newCircularArc);
+
+    bool addConnectingSegment(std::shared_ptr<ModelElement> &lastModelElement, const LineSegment &newLineSegment);
+
+public:
     RoadModel();
 
     void addElementToRight(cv::Point begin, cv::Point end);
@@ -98,10 +125,18 @@ public:
     void addElementToRight(cv::Point center, double radius, double startAngle, double endAngle,
                            std::vector<cv::Point> points);
 
+    void addElementToRight(const CircularArc &newCircularArc);
+
+    void addElementToRight(const LineSegment &newLineSegment);
+
     void addElementToLeft(cv::Point begin, cv::Point end);
 
     void addElementToLeft(cv::Point center, double radius, double startAngle, double endAngle,
                           std::vector<cv::Point> points);
+
+    void addElementToLeft(const CircularArc &newCircularArc);
+
+    void addElementToLeft(const LineSegment &newLineSegment);
 
     int getModelLeftElementCounter() const;
 
@@ -112,6 +147,16 @@ public:
     void printInformationOfTheModel() const;
 
     void drawModelPoints(cv::Mat &dst) const;
+
+    std::shared_ptr<ModelElement> getRightHead() const;
+
+    std::shared_ptr<ModelElement> getLeftHead() const;
+
+    void replaceModelRightElement(const std::shared_ptr<ModelElement> &newModelElement,
+                                  const std::shared_ptr<ModelElement> &prevModelElement);
+
+    void replaceModelLeftElement(const std::shared_ptr<ModelElement> &newModelElement,
+                                 const std::shared_ptr<ModelElement> &prevModelElement);
 };
 
 
