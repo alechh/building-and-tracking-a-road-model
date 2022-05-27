@@ -6,44 +6,44 @@
 
 #include <utility>
 
-RoadModelTracker::RoadModelTracker(std::shared_ptr<RoadModel> roadModel) : roadModel(std::move(roadModel))
+RoadModelTracker::RoadModelTracker(std::shared_ptr<RoadModel> roadModel) : roadModel(std::move(roadModel)),
+                                                                           isModelConstructed(false)
 {}
 
 void RoadModelTracker::trackRightSide(const CircularArc &newArcSegment)
 {
     std::shared_ptr<CircularArc> newArcSegmentPointer = std::make_shared<CircularArc>(newArcSegment);
 
-    if (this->roadModel->getModelRightElementCounter() == 6)
-    {
-        int a = 5;
-    }
     std::shared_ptr<ModelElement> currModelElement(this->roadModel->getRightHead());
 
     bool replaced = false;
 
-    while (currModelElement)
+    if (this->isModelConstructed)
     {
-        auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
-
-        if (!tempLineSegment) // если тип currModelElement -- CircularArc, то tempLineSegment == nullptr
+        while (currModelElement)
         {
-            auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
+            auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
 
-            if (!tempCircularArc)
+            if (!tempLineSegment) // если тип currModelElement -- CircularArc, то tempLineSegment == nullptr
             {
-                return;
+                auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
+
+                if (!tempCircularArc)
+                {
+                    return;
+                }
+
+                //std::shared_ptr<LineSegment> tempLineSegmentPointer = std::make_shared<LineSegment>(tempLineSegment);
+                if (needReplace(newArcSegmentPointer, *tempCircularArc))
+                {
+                    this->roadModel->replaceModelRightElement(newArcSegmentPointer, currModelElement);
+                    replaced = true;
+                    break;
+                }
             }
 
-            //std::shared_ptr<LineSegment> tempLineSegmentPointer = std::make_shared<LineSegment>(tempLineSegment);
-            if (needReplace(newArcSegmentPointer, *tempCircularArc))
-            {
-                this->roadModel->replaceModelRightElement(newArcSegmentPointer, currModelElement);
-                replaced = true;
-                break;
-            }
+            currModelElement = currModelElement->next;
         }
-
-        currModelElement = currModelElement->next;
     }
 
     // TODO Не надо просто добавлять
@@ -53,7 +53,8 @@ void RoadModelTracker::trackRightSide(const CircularArc &newArcSegment)
     }
 }
 
-bool RoadModelTracker::needReplace(const std::shared_ptr<CircularArc> &newArcSegment, const CircularArc &currModelArcSegment) const
+bool RoadModelTracker::needReplace(const std::shared_ptr<CircularArc> &newArcSegment,
+                                   const CircularArc &currModelArcSegment) const
 {
     cv::Point centerDelta = newArcSegment->getCenter() - currModelArcSegment.getCenter();
 
@@ -69,7 +70,8 @@ bool RoadModelTracker::needReplace(const std::shared_ptr<CircularArc> &newArcSeg
     return false;
 }
 
-bool RoadModelTracker::needReplace(const std::shared_ptr<LineSegment> &newLineSegment, const LineSegment &currModelLineSegment) const
+bool RoadModelTracker::needReplace(const std::shared_ptr<LineSegment> &newLineSegment,
+                                   const LineSegment &currModelLineSegment) const
 {
     cv::Point beginDelta = newLineSegment->getBeginPoint() - currModelLineSegment.getBeginPoint();
     cv::Point endDelta = newLineSegment->getEndPoint() - currModelLineSegment.getEndPoint();
@@ -96,23 +98,26 @@ void RoadModelTracker::trackRightSide(const LineSegment &newLineSegment)
 
     bool replaced = false;
 
-    while (currModelElement)
+    if (this->isModelConstructed)
     {
-        auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
-
-        if (!tempCircularArc) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
+        while (currModelElement)
         {
-            auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
+            auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
 
-            if (needReplace(newLineSegmentPointer, *tempLineSegment))
+            if (!tempCircularArc) // если тип currModelElement -- LineSegment, то tempLineSegment == nullptr
             {
-                this->roadModel->replaceModelRightElement(newLineSegmentPointer, currModelElement);
-                replaced = true;
-                break;
-            }
-        }
+                auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
 
-        currModelElement = currModelElement->next;
+                if (needReplace(newLineSegmentPointer, *tempLineSegment))
+                {
+                    this->roadModel->replaceModelRightElement(newLineSegmentPointer, currModelElement);
+                    replaced = true;
+                    break;
+                }
+            }
+
+            currModelElement = currModelElement->next;
+        }
     }
 
     // TODO Не надо просто добавлять
@@ -130,23 +135,26 @@ void RoadModelTracker::trackLeftSide(const CircularArc &newArcSegment)
 
     bool replaced = false;
 
-    while (currModelElement)
+    if (this->isModelConstructed)
     {
-        auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
-
-        if (!tempLineSegment)
+        while (currModelElement)
         {
-            auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
+            auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
 
-            if (needReplace(newArcSegmentPointer, *tempCircularArc))
+            if (!tempLineSegment)
             {
-                this->roadModel->replaceModelLeftElement(newArcSegmentPointer, currModelElement);
-                replaced = true;
-                break;
-            }
-        }
+                auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
 
-        currModelElement = currModelElement->next;
+                if (needReplace(newArcSegmentPointer, *tempCircularArc))
+                {
+                    this->roadModel->replaceModelLeftElement(newArcSegmentPointer, currModelElement);
+                    replaced = true;
+                    break;
+                }
+            }
+
+            currModelElement = currModelElement->next;
+        }
     }
 
     // TODO Не надо просто добавлять
@@ -164,23 +172,26 @@ void RoadModelTracker::trackLeftSide(const LineSegment &newLineSegment)
 
     bool replaced = false;
 
-    while (currModelElement)
+    if (this->isModelConstructed)
     {
-        auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
-
-        if (!tempCircularArc)
+        while (currModelElement)
         {
-            auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
+            auto *tempCircularArc = dynamic_cast<CircularArc *>(currModelElement.get());
 
-            if (needReplace(newLineSegmentPointer, *tempLineSegment))
+            if (!tempCircularArc)
             {
-                this->roadModel->replaceModelLeftElement(newLineSegmentPointer, currModelElement);
-                replaced = true;
-                break;
-            }
-        }
+                auto *tempLineSegment = dynamic_cast<LineSegment *>(currModelElement.get());
 
-        currModelElement = currModelElement->next;
+                if (needReplace(newLineSegmentPointer, *tempLineSegment))
+                {
+                    this->roadModel->replaceModelLeftElement(newLineSegmentPointer, currModelElement);
+                    replaced = true;
+                    break;
+                }
+            }
+
+            currModelElement = currModelElement->next;
+        }
     }
 
     // TODO Не надо просто добавлять
@@ -188,5 +199,15 @@ void RoadModelTracker::trackLeftSide(const LineSegment &newLineSegment)
     {
         this->roadModel->addElementToLeft(newLineSegment);
     }
+}
+
+void RoadModelTracker::modelHasBeenConstructed()
+{
+    this->isModelConstructed = true;
+}
+
+std::shared_ptr<RoadModel> RoadModelTracker::getRoadModelPointer() const
+{
+    return this->roadModel;
 }
 

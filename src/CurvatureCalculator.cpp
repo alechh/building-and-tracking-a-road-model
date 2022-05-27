@@ -135,3 +135,25 @@ void CurvatureCalculator::calculateCurvature2(std::vector<double> &contourCurvat
         contourCurvature[i] = 1.0 / R; // кривизна = 1 / R
     }
 }
+
+void CurvatureCalculator::calculateCurvature2ForAllContours(std::vector <std::vector<double>> &contoursCurvatures,
+                                                            const std::vector <std::vector<cv::Point>> &contours,
+                                                            const int step)
+{
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        contoursCurvatures[i].resize(contours[i].size());
+        calculateCurvature2(contoursCurvatures[i], contours[i], step);
+    }
+}
+
+void CurvatureCalculator::calculateCurvatureForAllContours(std::vector<std::vector<double>> &contoursCurvatures,
+                                                           const std::vector<std::vector<cv::Point>> &contours,
+                                                           const int step)
+{
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        contoursCurvatures[i].resize(contours[i].size());
+        calculateCurvature(contoursCurvatures[i], contours[i], step);
+    }
+}

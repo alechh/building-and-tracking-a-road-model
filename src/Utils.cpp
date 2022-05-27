@@ -2,6 +2,8 @@
 // Created by alechh on 17.11.2021.
 //
 
+#include "RoadModelTracker.h"
+#include "CurvatureCalculator.h"
 #include "RoadModelBuilder.h"
 #include "RoadModel.h"
 #include "Utils.h"
@@ -286,3 +288,34 @@ cv::Point Utils::calculateMidpoint(const cv::Point &a, const cv::Point &b)
     return midPoint;
 }
 
+/**
+ * Calculate angle c of the triangle abc
+ * @param a
+ * @param b
+ * @param c
+ * @return
+ */
+double Utils::calculateAngleOfTriangle(const cv::Point &a, const cv::Point &b,
+                                       const cv::Point &c)
+{
+    double A = distanceBetweenPoints(a, b);
+    double B = distanceBetweenPoints(b, c);
+    double C = distanceBetweenPoints(c, a);
+
+    if (A * B * C == 0)
+    {
+        //std::cerr << "A or B or C = 0" << std::endl;
+        return 0;
+    }
+
+    double cosAngleC = (A * A + B * B - C * C) / (2 * A * B);
+    double angleC = 0;
+
+    if (-1 <= cosAngleC && cosAngleC <= 1)
+    {
+        angleC = acos(cosAngleC);
+        angleC *= 180.0 / CV_PI;
+        //std::cout << "angle = " << angle << std::endl;
+    }
+    return angleC;
+}

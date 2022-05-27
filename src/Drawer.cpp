@@ -17,23 +17,59 @@
 
 /**
  * Drawing contour points according to the curvature in them.
- * If the curvature at the point = 0, then the point is drawn in blue, if != 0, then red
+ * If the curvature at the point = 0, then the point is drawn in red, if != 0, then blue
  * @param dst -- destination image
  * @param contour -- vector of the points
  * @param contourCurvature -- vector of the curvature of the contour
  */
-void Drawer::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour, const std::vector<double> &contourCurvature)
+void Drawer::drawContourPointsDependingOnItsCurvature(cv::Mat &dst, const std::vector<cv::Point> &contour,
+                                                      const std::vector<double> &contourCurvature,
+                                                      bool addMissingPoints,
+                                                      double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS)
 {
-    for (int i = 0; i < contour.size(); ++i)
+    if (!addMissingPoints)
     {
-        if (contourCurvature[i] == 0)
+        const double BORDER = contour.size() * MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS;
+        for (int i = 0; i < BORDER; ++i)
         {
-            circle(dst, contour[i], 1, cv::Scalar(255, 0, 0));
+            drawPointDependingOnCurvature(dst, contour[i], contourCurvature[i]);
         }
-        else
+        return;
+    }
+
+    const int DELTA = 2;
+    cv::Point prevPoint = contour[0];
+    double prevCurvature = contourCurvature[0];
+    drawPointDependingOnCurvature(dst, prevPoint, contourCurvature[0]);
+
+    for (int i = 1; i < contour.size() * MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS; ++i)
+    {
+        const cv::Point &currPoint = contour[i];
+        cv::Point2f difference = currPoint - prevPoint;
+
+        difference.x = std::abs(difference.x);
+        difference.y = std::abs(difference.y);
+
+        if (difference.x > DELTA || difference.y > DELTA)
         {
-            circle(dst, contour[i], 1, cv::Scalar(0, 0, 255));
+            const cv::Point directionalVector(currPoint.x - prevPoint.x, currPoint.y - prevPoint.y);
+
+            double t = 0;
+
+            while (std::abs(directionalVector.x * t + prevPoint.x - currPoint.x) > DELTA ||
+                   std::abs(directionalVector.y * t + prevPoint.y - currPoint.y) > DELTA)
+            {
+                t += 0.01; // 0.05 тоже внешне норм
+
+                cv::Point2d newPoint;
+                newPoint.x = directionalVector.x * t + prevPoint.x;
+                newPoint.y = directionalVector.y * t + prevPoint.y;
+
+                drawPointDependingOnCurvature(dst, newPoint, prevCurvature);
+            }
         }
+        prevPoint = currPoint;
+        prevCurvature = contourCurvature[i];
     }
 }
 
@@ -75,4 +111,91 @@ void Drawer::drawContoursOnImage(const std::vector<std::vector<cv::Point>> &cont
     }
 
     imwrite("../images/contour.jpg", pictuteOfTheContour);
+}
+
+void Drawer::drawContoursPointByPoint(cv::Mat &dts, const std::vector<std::vector<cv::Point>> &contours,
+                                      bool addMissingPoints = false)
+{
+    if (!addMissingPoints)
+    {
+        for (const auto &contour: contours)
+        {
+            for (const auto &point: contour)
+            {
+                cv::circle(dts, point, 1, cv::Scalar(0, 0, 0));
+            }
+        }
+    }
+    else
+    {
+        for (const auto &contour : contours)
+        {
+            const int DELTA = 2;
+            cv::Point prevPoint = contour[0];
+
+            cv::circle(dts, prevPoint, 1, cv::Scalar(0, 0, 0));
+
+            for (int i = 1; i < contour.size(); ++i)
+            {
+                const cv::Point &currPoint = contour[i];
+                cv::Point2f difference = currPoint - prevPoint;
+
+                difference.x = std::abs(difference.x);
+                difference.y = std::abs(difference.y);
+
+                if (difference.x > DELTA || difference.y > DELTA)
+                {
+                    const cv::Point directionalVector(currPoint.x - prevPoint.x, currPoint.y - prevPoint.y);
+
+                    double t = 0;
+
+                    while (std::abs(directionalVector.x * t + prevPoint.x - currPoint.x) > DELTA ||
+                           std::abs(directionalVector.y * t + prevPoint.y - currPoint.y) > DELTA)
+                    {
+                        t += 0.01; // 0.05 тоже внешне норм
+
+                        cv::Point2d newPoint;
+                        newPoint.x = directionalVector.x * t + prevPoint.x;
+                        newPoint.y = directionalVector.y * t + prevPoint.y;
+
+                        cv::circle(dts, newPoint, 1, cv::Scalar(0, 0, 0));
+                    }
+                }
+                prevPoint = currPoint;
+            }
+        }
+    }
+}
+
+void Drawer::drawContourPointByPoint(cv::Mat &dst, const std::vector<cv::Point> &contour)
+{
+    for (const auto &point: contour)
+    {
+        cv::circle(dst, point, 1, cv::Scalar(255, 255, 255));
+    }
+}
+
+void
+Drawer::drawContoursPointsDependingOnItsCurvatures(cv::Mat &dst, const std::vector<std::vector<cv::Point>> &contours,
+                                                   const std::vector<std::vector<double>> &contoursCurvatures,
+                                                   bool addMissingPoints,
+                                                   const double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS)
+{
+    for (int i = 0; i < contours.size(); ++i)
+    {
+        drawContourPointsDependingOnItsCurvature(dst, contours[i], contoursCurvatures[i], addMissingPoints, MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
+    }
+}
+
+void Drawer::drawPointDependingOnCurvature(cv::Mat &dst, const cv::Point &point, double curvature)
+{
+    const double CURVATURE_THRESHOLD = 0.005;
+    if (curvature <= CURVATURE_THRESHOLD)
+    {
+        circle(dst, point, 1, cv::Scalar(0, 0, 255));
+    }
+    else
+    {
+        circle(dst, point, 1, cv::Scalar(255, 0, 0));
+    }
 }
