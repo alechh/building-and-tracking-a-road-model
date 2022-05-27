@@ -44,13 +44,13 @@ void buildRoadModelByContour()
     const int COLS = 1000;
     const int TYPE = 16;
 
-    std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
+    const std::shared_ptr<RoadModel> roadModelPointer = std::make_shared<RoadModel>();
     RoadModelTracker modelTracker(roadModelPointer);
 
-    for (int t = 0; t < 460; ++t)
+    for (int t = 0; t < 1; ++t) // < 460
     {
-        std::cout << t << std::endl;
-        std::vector<std::vector<cv::Point> > contours = ContourBuilder::getRightAndLeftContours(80, 100, 150, 300, t);
+        const std::vector<std::vector<cv::Point>> contours = ContourBuilder::getRightAndLeftContours(80, 100, 150, 300,
+                                                                                                     t);
         cv::Mat contoursTImage(ROWS, COLS, TYPE, cv::Scalar(0, 0, 0));
 
         for (const auto &i: contours)
@@ -88,39 +88,27 @@ void buildRoadModelByContour()
 
                 contoursCurvatures[i] = std::move(tempCurvatureContour);
 
-                bool isRightContour;
-                if (contours[i][0].x < COLS / 2)
-                {
-                    isRightContour = false;
-                }
-                else
-                {
-                    isRightContour = true;
-                }
 
-                RoadModelBuilder::buildRoadModelBasedOnTheSingleContour(modelTracker, contours[i],
-                                                                        contoursCurvatures[i],
-                                                                        isRightContour);
-                //roadModelPointer->printInformationOfTheModel();
-
-                Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
-                                                                 contoursCurvatures[i]);
-
-                calculateMeanError(minCurvatureError, minStepCurvature, EXACT_CURVATURE, iStep, contoursCurvatures[i]);
+//                Drawer::drawContourPointsDependingOnItsCurvature(curvatureOnContourPicture, contours[i],
+//                                                                 contoursCurvatures[i], 1);
             }
 
-            modelTracker.roadModel->drawModel(roadModelPicture);
+            Drawer::drawContoursPointByPoint(roadModelPicture, contours, false);
+
+            RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS, 1);
+
+            modelTracker.getRoadModelPointer()->drawModel(roadModelPicture);
             cv::imshow("model", roadModelPicture);
-            cv::waitKey(25);
-            imwrite(cv::format("../images/model/frameRoadModel%d.jpg", t), roadModelPicture);
+            cv::waitKey(0);
+            imwrite(cv::format("../images/result.jpg", t), roadModelPicture);
 
             //roadModelPointer->printInformationOfTheModel();
 
-            imwrite(cv::format("../images/curvatureOnContourPicture/curvatureContour%d.jpg", iStep),
-                    curvatureOnContourPicture);
+            //imwrite(cv::format("../images/curvatureOnContourPicture/curvatureContour%d.jpg", iStep),
+            //        curvatureOnContourPicture);
 
             roadModelPointer->drawModelPoints(contourPointsPicture);
-            imwrite("../images/showModelPoints/modelPoints.jpg", contourPointsPicture);
+            //imwrite("../images/showModelPoints/modelPoints.jpg", contourPointsPicture);
 
             roadModelPicture.release();
         }
@@ -142,10 +130,98 @@ void testModelBuildingOnRealData()
 }
 
 
+void testDirectionalVector()
+{
+    cv::Mat src = cv::imread("../videos/testDirectionalVector.png");
+    cv::Mat srcGray(src.clone());
+    cv::cvtColor(src, srcGray, cv::COLOR_BGR2GRAY);
+
+    std::vector<std::vector<cv::Point>> contour;
+    cv::findContours(srcGray, contour, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+    cv::Mat drawing(src.rows, src.cols, src.type(), cv::Scalar(255, 255, 255));
+
+//    for (int i = 0; i < 10; ++i)
+//    {
+//        contour.emplace_back(cv::Point(i, 0));
+//    }
+//    contour.emplace_back(cv::Point(9, 1));
+//    contour.emplace_back(cv::Point(9, 2));
+//    contour.emplace_back(cv::Point(9, 1));
+
+    cv::Point prevPoint = contour[1][0];
+    cv::Point prevPrevPoint = contour[1][0];
+
+    for (int i = 0; i < contour[1].size(); ++i)
+    {
+        cv::Point directionalVector(contour[1][i].x - prevPrevPoint.x, contour[1][i].y - prevPrevPoint.y);
+        std::cout << directionalVector << std::endl;
+
+        cv::circle(drawing, contour[1][i], 1, cv::Scalar(0, 0, 0));
+        cv::imshow("drawing", drawing);
+        if (cv::waitKey(25) == 107)
+        {
+            cv::waitKey(0);
+        }
+
+
+        prevPrevPoint = prevPoint;
+        prevPoint = contour[1][i];
+    }
+}
+
+void testAngelOfTriangleCalculation()
+{
+    cv::Point prevPrevPoint(0, 0);
+    cv::Point prevPoint(1, -1);
+    cv::Point currPoint(1, 0);
+
+    std::cout << Utils::calculateAngleOfTriangle(prevPrevPoint, prevPoint, currPoint) << std::endl;
+}
+
+
+void testExtractingEllipse()
+{
+    cv::Mat drawing(500, 1000, 16, cv::Scalar(0, 0, 0));
+    cv::Mat drawing2(500, 1000, 16, cv::Scalar(0, 0, 0));
+    cv::ellipse(drawing, cv::Point(500, 250), cv::Size(100, 100), 0, 90, 225, cv::Scalar(255, 255, 255));
+
+    cv::cvtColor(drawing, drawing, cv::COLOR_BGR2GRAY);
+
+    std::vector<std::vector<cv::Point>> contour;
+
+    cv::findContours(drawing, contour, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
+
+    std::cout << contour[0].size() << std::endl;
+
+
+
+    for (const auto &point: contour[0])
+    {
+        cv::circle(drawing2, point, 1, cv::Scalar(255, 129, 21));
+    }
+
+    cv::imshow("drawing", drawing2);
+    cv::waitKey(0);
+}
+
+
+void testDataExtraction()
+{
+    const std::string PATH_TXT = "../output.txt";
+
+    RealDataTester::buildRoadModelByContour(PATH_TXT);
+}
+
+
 int main()
 {
     //buildRoadModelByContour();
-    testModelBuildingOnRealData();
+    //testModelBuildingOnRealData();
+    //testDirectionalVector();
+    //testAngelOfTriangleCalculation();
+    testDataExtraction();
 
+    //testExtractingEllipse();
     return 0;
 }

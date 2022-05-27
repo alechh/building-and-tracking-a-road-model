@@ -226,10 +226,10 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
     //const int FRAME_NUMBER = 42;
     for (int i = 0; i < vectorOfFrameContours.size(); ++i)
     {
-//        if (vectorOfFrameContours[i].numberOfFrame < 9)
-//        {
-//            continue;
-//        }
+        if (vectorOfFrameContours[i].numberOfFrame < 22)
+        {
+            continue;
+        }
 
         cv::Mat roadModelPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
         cv::Mat contourPicture(ROWS, COLS, TYPE, cv::Scalar(255, 255, 255));
@@ -285,7 +285,7 @@ void RealDataTester::buildRoadModelByContour(const std::string &PATH)
             RoadModelBuilder::buildRoadModel(modelTracker, contours, contoursCurvatures, COLS,
                                              MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS);
 
-            exportModelPoints(modelTracker, vectorOfFrameContours[i].numberOfFrame);
+            //exportModelPoints(modelTracker, vectorOfFrameContours[i].numberOfFrame);
 
             //cv::resize(roadModelPicture, roadModelPicture, cv::Size(), RESIZE_FACTOR, RESIZE_FACTOR);
 
