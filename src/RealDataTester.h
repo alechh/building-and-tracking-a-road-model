@@ -21,6 +21,10 @@ class RealDataTester
 public:
     static void buildRoadModelByContour(const std::string &PATH);
 
+    static void makeVideoOfModelBuilding(const std::string &PATH);
+
+    static void removeClumpedPoints(std::vector<cv::Point> &contour);
+
 private:
     static cv::Point2f extractPointFromString(const std::string &s);
 
@@ -38,7 +42,7 @@ private:
 
     static void removeDuplicatePointsFromContour(std::vector<cv::Point> &contour, int FRAME_NUMBER);
 
-    static void removeClumpedPoints(std::vector<cv::Point> &contour);
+
 
     static void manualFindAndMarkDuplicatePoint(const std::vector<cv::Point> &contour, int NUMBER_OF_CONTOUR);
 

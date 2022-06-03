@@ -50,6 +50,8 @@ public:
     cv::Point getBeginPoint() const;
 
     cv::Point getEndPoint() const;
+
+    friend void addLineSegmentPoints(std::vector<cv::Point2f> &modelPoints, const LineSegment &lineSegment);
 };
 
 class CircularArc : public ModelElement
@@ -157,6 +159,8 @@ public:
 
     void replaceModelLeftElement(const std::shared_ptr<ModelElement> &newModelElement,
                                  const std::shared_ptr<ModelElement> &prevModelElement);
+
+    std::vector<cv::Point2f> getModelPoints() const;
 };
 
 

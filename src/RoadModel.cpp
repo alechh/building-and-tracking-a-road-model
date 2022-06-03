@@ -49,7 +49,8 @@ LineSegment::LineSegment(cv::Point begin, cv::Point end) : ModelElement(), begin
 
 void LineSegment::drawModelElement(cv::Mat &src) const
 {
-    cv::line(src, this->begin, this->end, cv::Scalar(0, 0, 255), 1);
+    //cv::line(src, this->begin, this->end, cv::Scalar(0, 0, 255), 3);
+    cv::line(src, cv::Point(this->begin.x + 810, this->begin.y), cv::Point(this->end.x + 810, this->end.y), cv::Scalar(0, 0, 255), 3);
 }
 
 void LineSegment::drawModelElementPoints(cv::Mat &src) const
@@ -94,7 +95,7 @@ CircularArc::CircularArc(cv::Point center, double radius, double startAngle, dou
 void CircularArc::drawModelElement(cv::Mat &src) const
 {
     //cv::circle(src, this->center, 1, cv::Scalar(0, 0, 255));
-    cv::ellipse(src, this->center, cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
+    cv::ellipse(src, cv::Point(this->center.x + 810, this->center.y), cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
                 cv::Scalar(255, 0, 0), 2);
 }
 
@@ -105,10 +106,12 @@ void CircularArc::drawModelElementPoints(cv::Mat &src) const
         if (point == this->pointsOfTheArc[0] || point == this->pointsOfTheArc[this->pointsOfTheArc.size() - 1])
         {
             cv::circle(src, point, 4, cv::Scalar(0, 255, 0));
+            //cv::circle(src, cv::Point(point.x+810, point.y+540), 4, cv::Scalar(0, 255, 0));
         }
         else
         {
             cv::circle(src, point, 1, cv::Scalar(255, 0, 0));
+            //cv::circle(src, cv::Point(point.x+810, point.y+540), 1, cv::Scalar(255, 0, 0));
         }
     }
 }
@@ -714,5 +717,119 @@ void RoadModel::drawLeftSidePoints(cv::Mat &dst) const
         currModelElement->drawModelElementPoints(dst);
         currModelElement = currModelElement->next;
     }
+}
+
+
+void addLineSegmentPoints(std::vector<cv::Point2f> &modelPoints, const LineSegment &lineSegment)
+{
+    const int DELTA = 2;
+
+    cv::Point2f difference = lineSegment.end - lineSegment.begin;
+
+    difference.x = std::abs(difference.x);
+    difference.y = std::abs(difference.y);
+
+    if (difference.x > DELTA || difference.y > DELTA)
+    {
+        const cv::Point directionalVector(lineSegment.end.x - lineSegment.begin.x,
+                                          lineSegment.end.y - lineSegment.begin.y);
+
+        double t = 0;
+
+        while (std::abs(directionalVector.x * t + lineSegment.begin.x - lineSegment.end.x) > DELTA ||
+               std::abs(directionalVector.y * t + lineSegment.begin.y - lineSegment.end.y) > DELTA)
+        {
+            t += 0.01; // 0.05 тоже внешне норм
+
+            cv::Point2f newPoint;
+            newPoint.x = directionalVector.x * t + lineSegment.begin.x;
+            newPoint.y = directionalVector.y * t + lineSegment.begin.y;
+
+            newPoint.y += 540;
+
+            modelPoints.emplace_back(newPoint);
+        }
+    }
+}
+
+
+void addArcSegmentPoints(std::vector<cv::Point2f> &modelPoints, const CircularArc &circularArc)
+{
+    cv::Mat drawing(1080, 1920, 16, cv::Scalar(0, 0, 0));
+    cv::ellipse(drawing, circularArc.getCenter(),
+                cv::Size(circularArc.getRadius(), circularArc.getRadius()), 0,
+                circularArc.getStartAngle(), circularArc.getEndAngle(),
+                cv::Scalar(255, 255, 255));
+
+    cv::cvtColor(drawing, drawing, cv::COLOR_BGR2GRAY);
+
+    std::vector<std::vector<cv::Point>> contours;
+
+    cv::findContours(drawing, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
+
+    for (const auto &contour: contours)
+    {
+        for (const auto &point: contour)
+        {
+            cv::Point2f newPoint(point);
+
+            newPoint.y += 540;
+
+            modelPoints.emplace_back(newPoint);
+        }
+    }
+}
+
+
+std::vector<cv::Point2f> RoadModel::getModelPoints() const
+{
+    std::vector<cv::Point2f> modelPoints;
+    if (this->rightHead)
+    {
+        std::shared_ptr<ModelElement> currModelElement(this->rightHead);
+
+        while (currModelElement)
+        {
+            std::shared_ptr<LineSegment> lineSegmentPointer = std::dynamic_pointer_cast<LineSegment>(currModelElement);
+            if (lineSegmentPointer)
+            {
+                addLineSegmentPoints(modelPoints, *(lineSegmentPointer.get()));
+            }
+            else
+            {
+                std::shared_ptr<CircularArc> circularArcPointer = std::dynamic_pointer_cast<CircularArc>(
+                        currModelElement);
+
+                addArcSegmentPoints(modelPoints, *(circularArcPointer.get()));
+            }
+
+            currModelElement = currModelElement->next;
+        }
+    }
+
+    if (this->leftHead)
+    {
+        std::shared_ptr<ModelElement> currModelElement(this->leftHead);
+
+        while (currModelElement)
+        {
+            std::shared_ptr<LineSegment> lineSegmentPointer = std::dynamic_pointer_cast<LineSegment>(currModelElement);
+            if (lineSegmentPointer)
+            {
+                addLineSegmentPoints(modelPoints, *(lineSegmentPointer.get()));
+            }
+            else
+            {
+                std::shared_ptr<CircularArc> circularArcPointer = std::dynamic_pointer_cast<CircularArc>(
+                        currModelElement);
+
+                addArcSegmentPoints(modelPoints, *(circularArcPointer.get()));
+            }
+
+            currModelElement = currModelElement->next;
+        }
+    }
+
+    return modelPoints;
 }
 
