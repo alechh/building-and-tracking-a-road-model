@@ -25,10 +25,10 @@ void ModelElement::setNextElement(const ModelElement &nextElement)
 //     */
 //}
 
-void ModelElement::drawModelElement(cv::Mat &src) const
+void ModelElement::drawModelElement(cv::Mat &src, int size) const
 {}
 
-void ModelElement::drawModelElementPoints(cv::Mat &src) const
+void ModelElement::drawModelElementPoints(cv::Mat &src, int size) const
 {}
 
 void ModelElement::setNextElement(const LineSegment &nextElement)
@@ -47,15 +47,27 @@ void ModelElement::printInformation() const
 LineSegment::LineSegment(cv::Point begin, cv::Point end) : ModelElement(), begin(std::move(begin)), end(std::move(end))
 {}
 
-void LineSegment::drawModelElement(cv::Mat &src) const
+void LineSegment::drawModelElement(cv::Mat &src, int size) const
 {
     //cv::line(src, this->begin, this->end, cv::Scalar(0, 0, 255), 3);
-    cv::line(src, cv::Point(this->begin.x + 810, this->begin.y), cv::Point(this->end.x + 810, this->end.y), cv::Scalar(0, 0, 255), 3);
+    if (size == 0)
+    {
+        cv::line(src, cv::Point(this->begin.x + 810, this->begin.y), cv::Point(this->end.x + 810, this->end.y), cv::Scalar(0, 0, 255), 3);
+    }
+    else if (size == -1)
+    {
+        cv::line(src, cv::Point(this->begin.x + 810, this->begin.y), cv::Point(this->end.x + 810, this->end.y), cv::Scalar(0, 0, 255), 1);
+    }
+    else
+    {
+        cv::line(src, cv::Point(this->begin.x + 810, this->begin.y), cv::Point(this->end.x + 810, this->end.y), cv::Scalar(0, 0, 255), 1);
+    }
+
 }
 
-void LineSegment::drawModelElementPoints(cv::Mat &src) const
+void LineSegment::drawModelElementPoints(cv::Mat &src, int size) const
 {
-    this->drawModelElement(src);
+    this->drawModelElement(src, size);
 }
 
 void LineSegment::printInformation() const
@@ -92,14 +104,23 @@ CircularArc::CircularArc(cv::Point center, double radius, double startAngle, dou
     }
 }
 
-void CircularArc::drawModelElement(cv::Mat &src) const
+void CircularArc::drawModelElement(cv::Mat &src, int size) const
 {
     //cv::circle(src, this->center, 1, cv::Scalar(0, 0, 255));
-    cv::ellipse(src, cv::Point(this->center.x + 810, this->center.y), cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
-                cv::Scalar(255, 0, 0), 2);
+    if (size == 0)
+    {
+        cv::ellipse(src, cv::Point(this->center.x + 810, this->center.y), cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
+                    cv::Scalar(255, 0, 0), 2);
+    }
+    else
+    {
+        cv::ellipse(src, cv::Point(this->center.x + 810, this->center.y), cv::Size(this->radius, this->radius), 0, this->startAngle, this->endAngle,
+                    cv::Scalar(255, 0, 0), 2);
+    }
+
 }
 
-void CircularArc::drawModelElementPoints(cv::Mat &src) const
+void CircularArc::drawModelElementPoints(cv::Mat &src, int size) const
 {
     for (const auto &point: this->pointsOfTheArc)
     {
@@ -236,7 +257,7 @@ int RoadModel::getModelRightElementCounter() const
     return this->modelRightElementCounter;
 }
 
-void RoadModel::drawModel(cv::Mat &dst) const
+void RoadModel::drawModel(cv::Mat &dst, int size) const
 {
     if (this->leftHead)
     {
@@ -245,28 +266,28 @@ void RoadModel::drawModel(cv::Mat &dst) const
 
     if (this->rightHead)
     {
-        drawRightSide(dst);
+        drawRightSide(dst, size);
     }
 }
 
-void RoadModel::drawRightSide(cv::Mat &dst) const
+void RoadModel::drawRightSide(cv::Mat &dst, int size) const
 {
     std::shared_ptr<ModelElement> currModelElement(this->rightHead);
 
     while (currModelElement)
     {
-        currModelElement->drawModelElement(dst);
+        currModelElement->drawModelElement(dst, size);
         currModelElement = currModelElement->next;
     }
 }
 
-void RoadModel::drawLeftSide(cv::Mat &dst) const
+void RoadModel::drawLeftSide(cv::Mat &dst, int size) const
 {
     std::shared_ptr<ModelElement> currModelElement(this->leftHead);
 
     while (currModelElement)
     {
-        currModelElement->drawModelElement(dst);
+        currModelElement->drawModelElement(dst, size);
         currModelElement = currModelElement->next;
     }
 }
@@ -505,11 +526,15 @@ void RoadModel::addElementToLeft(const LineSegment &newLineSegment)
             curr = curr->next;
         }
 
-//        if (addConnectingSegment(curr, newLineSegment))
-//        {
-//            //std::cout << "connecting segment was added" << std::endl;
-//            curr = curr->next;
-//        }
+        if (newLineSegment.getBeginPoint().x < 150 && newLineSegment.getEndPoint().x < 150)
+        {
+            if (addConnectingSegment(curr, newLineSegment))
+            {
+                //std::cout << "connecting segment was added" << std::endl;
+                curr = curr->next;
+            }
+        }
+
 
         curr->next = std::make_shared<LineSegment>(newLineSegment);
         this->modelLeftElementCounter++;

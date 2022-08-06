@@ -27,11 +27,11 @@ public:
 
     void setNextElement(const CircularArc &nextElement);
 
-    virtual void drawModelElement(cv::Mat &src) const;
+    virtual void drawModelElement(cv::Mat &src, int size = 0) const;
 
     virtual void printInformation() const;
 
-    virtual void drawModelElementPoints(cv::Mat &src) const;
+    virtual void drawModelElementPoints(cv::Mat &src, int size = 0) const;
 };
 
 class LineSegment : public ModelElement
@@ -41,11 +41,11 @@ private:
 public:
     LineSegment(cv::Point begin, cv::Point end);
 
-    void drawModelElement(cv::Mat &src) const override;
+    void drawModelElement(cv::Mat &src, int size = 0) const override;
 
     void printInformation() const override;
 
-    void drawModelElementPoints(cv::Mat &src) const override;
+    void drawModelElementPoints(cv::Mat &src, int size = 0) const override;
 
     cv::Point getBeginPoint() const;
 
@@ -66,11 +66,11 @@ private:
 public:
     CircularArc(cv::Point center, double radius, double startAngle, double endAngle, std::vector<cv::Point> points);
 
-    void drawModelElement(cv::Mat &src) const override;
+    void drawModelElement(cv::Mat &src, int size = 0) const override;
 
     void printInformation() const override;
 
-    void drawModelElementPoints(cv::Mat &src) const override;
+    void drawModelElementPoints(cv::Mat &src, int size = 0) const override;
 
     double getRadius() const;
 
@@ -95,9 +95,9 @@ private:
 
     const int MAX_DISTANCE_BETWEEN_ADJACENT_MODEL_ELEMENTS = 100;
 
-    void drawLeftSide(cv::Mat &dst) const;
+    void drawLeftSide(cv::Mat &dst, int size = 0) const;
 
-    void drawRightSide(cv::Mat &dst) const;
+    void drawRightSide(cv::Mat &dst, int size = 0) const;
 
     void drawRightSidePoints(cv::Mat &dst) const;
 
@@ -144,7 +144,7 @@ public:
 
     int getModelRightElementCounter() const;
 
-    void drawModel(cv::Mat &dst) const;
+    void drawModel(cv::Mat &dst, int size = 0) const;
 
     void printInformationOfTheModel() const;
 

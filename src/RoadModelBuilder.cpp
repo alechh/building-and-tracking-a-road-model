@@ -799,6 +799,10 @@ RoadModelBuilder::buildRoadModel(RoadModelTracker &modelTracker, const std::vect
                                  const std::vector<std::vector<double>> &contoursCurvatures, int COLS,
                                  double MULTIPLIER_OF_NUMBER_OF_CONTOUR_POINTS)
 {
+    if (COLS == 1800)
+    {
+        modelTracker.modelHasBeenConstructed();
+    }
     for (int contourNumber = 0; contourNumber < contours.size(); ++contourNumber)
     {
         bool isRightContour;
